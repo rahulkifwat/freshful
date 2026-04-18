@@ -11,7 +11,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm-6">
-                        <h2 class="fs-2 mb-1">Chicken</h2>
+                        <h2 class="fs-2 mb-1">{{ $cat->name }}</h2>
                     </div>
                     <div class="col-sm-6">
                         <div class="d-flex justify-content-end align-items-center gap-sm-4 gap-2">
@@ -35,47 +35,47 @@
                     <!-- Additional required wrapper -->
                     <div class="row ">
                         <!-- Slides -->
-                        @for ($i = 1; $i <= 6; $i++)
-                            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
-                            <div class="pro-card">
-                                <div class="pro-card-img">
-                                    <a href="{{ url('/product_detail') }}">
-                                        <img src="{{ asset('assets/image/product/01.jpg') }}" alt="Product 1" class="img-fluid">
-                                    </a>
-                                </div>
-                                <div class="pro-card-category-btn">
-                                    <p class="text-white m-0">Fruits & Vegetables</p>
-                                </div>
-                                <div class="pro-card-item">
-                                    <a href="{{ url('/product_detail') }}" class="fs-5  fw-bold text-black w-full">
-                                        Apple Golden Fuji
-                                    </a>
-                                    <p class="mb-0 text-black-50 fw-normal text-truncate   fs-6" style="max-width:350px;">Chicken Breast Boneless is a meatier cut sourced from the br...</p>
-                                    <div class="d-flex justify-content-start align-items-center gap-2 mt-2">
-                                        <img src="{{ asset('assets/image/product/weight.png') }}" alt="weight" class="img-fluid pro-weight">
-                                        <p class="text-muted fs-6 mb-0 text-body">500 Gram</p>
+                        @foreach ($products as $product)
+                            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4 col-xxl-4 mb-4 product-item">
+                                <div class="pro-card">
+                                    <div class="pro-card-img">
+                                        <a href="{{ route('product_detail', ['id' => $product->id]) }}">
+                                            <img src="{{ asset('uploads/images/products/'. $product->product_image) }}" alt="Product 1" class="img-fluid">
+                                        </a>
                                     </div>
-
-                                    <div class="pro-card-price d-flex justify-content-between align-items-end mt-4">
-                                        <div class=" d-flex justify-content-center align-items-end gap-3">
-                                            <div>
-                                                <p class="text-muted fs-8 mb-0 text-black-50 text-decoration-line-through">₹ 250.00</p>
-                                                <h4 class="fs-5 m-0 text-primary">MRP ₹ 299.00</h4>
-                                            </div>
-                                            <h5 class="fs-5 mb-0 text-success">17% off</h5>
+                                    <div class="pro-card-category-btn">
+                                        <p class="text-white m-0">{{ $product->category->name }}</p>
+                                    </div>
+                                    <div class="pro-card-item">
+                                        <a href="{{ route('product_detail', ['id' => $product->id]) }}" class="fs-5  fw-bold text-black w-full">
+                                            {{ $product->product_name }}
+                                        </a>
+                                        <p class="mb-0 text-black-50 fw-normal text-truncate   fs-6" style="max-width:350px;">{{ $product->description }}</p>
+                                        <div class="d-flex justify-content-start align-items-center gap-2 mt-2">
+                                            <img src="{{ asset('assets/image/product/weight.png') }}" alt="weight" class="img-fluid pro-weight">
+                                            <p class="text-muted fs-6 mb-0 text-body">{{ $product->gross_quantity }} {{ $product->product_unit }}</p>
                                         </div>
-                                        <a href="{{ url('/') }}" class="btn btn-primary fs-8 fw-bold" style="border-radius: 5px;">Add to Cart</a>
-                                    </div>
-                                    <div class="pro-card-footer border-top py-1 mt-2 d-flex justify-content-center align-items-center gap-2">
-                                        <img src="{{ asset('assets/image/product/delivery_boy.png') }}" alt="weight" class="img-fluid pro-delivery-boy">
-                                        <p class="m-0 fs-6">Today 06PM - 07PM</p>
+
+                                        <div class="pro-card-price d-flex justify-content-between align-items-end mt-4">
+                                            <div class=" d-flex justify-content-center align-items-end gap-3">
+                                                <div>
+                                                    <p class="text-muted fs-8 mb-0 text-black-50 text-decoration-line-through">₹ {{ $product->cost_price }}</p>
+                                                    <h4 class="fs-5 m-0 text-primary">MRP ₹ {{ $product->main_price }}</h4>
+                                                </div>
+                                                <h5 class="fs-5 mb-0 text-success">{{ $product->off ?? 0 }}% off</h5>
+                                            </div>
+                                            <a href="javascript:void(0);" onclick="addToCart({{ $product->id }})"  class="btn btn-primary fs-8 fw-bold" style="border-radius: 5px;">Add to Cart</a>
+                                        </div>
+                                        <div class="pro-card-footer border-top py-1 mt-2 d-flex justify-content-center align-items-center gap-2">
+                                            <img src="{{ asset('assets/image/product/delivery_boy.png') }}" alt="weight" class="img-fluid pro-delivery-boy">
+                                            <p class="m-0 fs-6">Today 06PM - 07PM</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                    </div>
-                    @endfor
+                        @endforeach
                     <div class="d-flex justify-content-center align-items-center mt-3">
-                        <button class="btn btn-primary-alt lh-2 pb-2 px-3" style="border-radius: 50px;">view more</button>
+                        <button id="loadMoreBtn" class="btn btn-primary-alt lh-2 pb-2 px-3" style="border-radius: 50px;">view more</button>
                     </div>
                 </div>
             </div>
@@ -118,3 +118,41 @@
 </main>
 
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        let products = document.querySelectorAll(".product-item");
+        let loadBtn = document.getElementById("loadMoreBtn");
+
+        let itemsToShow = 9;
+        let currentItems = 9;
+
+        // hide products after 9
+        products.forEach((item, index) => {
+            if (index >= itemsToShow) {
+                item.style.display = "none";
+            }
+        });
+
+        loadBtn.addEventListener("click", function () {
+
+            let items = [...products].slice(currentItems, currentItems + itemsToShow);
+
+            items.forEach(el => {
+                el.style.display = "block";
+            });
+
+            currentItems += itemsToShow;
+
+            // hide button if no more products
+            if (currentItems >= products.length) {
+                loadBtn.style.display = "none";
+            }
+
+        });
+
+    });
+</script>
+    
+@endpush

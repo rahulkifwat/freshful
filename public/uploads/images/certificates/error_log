@@ -1,0 +1,14 @@
+[21-Jun-2024 12:35:35 UTC] PHP Fatal error:  Uncaught ValueError: shell_exec(): Argument #1 ($command) cannot be empty in /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code:1
+Stack trace:
+#0 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code(1): shell_exec('')
+#1 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1): eval()
+#2 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7): eval()
+#3 {main}
+  thrown in /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code on line 1
+[21-Jun-2024 12:35:40 UTC] PHP Fatal error:  Uncaught ValueError: shell_exec(): Argument #1 ($command) cannot be empty in /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code:1
+Stack trace:
+#0 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code(1): shell_exec('')
+#1 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1): eval()
+#2 /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7): eval()
+#3 {main}
+  thrown in /home/qoutmark/freshful.in/uploads/images/certificates/pODL41718973331.php(7) : eval()'d code(1) : eval()'d code on line 1

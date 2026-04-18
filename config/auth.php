@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => env('AUTH_GUARD', 'buyers'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'buyers'),
     ],
 
     /*
@@ -39,6 +39,14 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+        ],
+        'buyers' => [
+            'driver' => 'session',
+            'provider' => 'buyers',
+        ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin',
         ],
     ],
 
@@ -64,7 +72,14 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
-
+        'buyers' => [
+            'driver' => 'eloquent',
+            'model' => env('BUYER_MODEL', App\Models\Buyer::class),
+        ],
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => env('ADMIN_MODEL', App\Models\Admin::class),
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',

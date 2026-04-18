@@ -63,13 +63,46 @@
 <!-- Scroll Top -->
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-<script>
-
-</script>
-
 <!-- Main JS File -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <!-- <script src="{{ url('assets/js/main.js')}}"></script> -->
 <script src="{{ url('assets/js/slider.js')}}"></script>
+<script>
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "4000",
+        "extendedTimeOut": "1000"
+    };
+</script>
+@if(session('success'))
+    <script>
+        toastr.success("{{ session('success') }}");
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        toastr.error("{{ session('error') }}");
+    </script>
+@endif
+
+@if(session('warning'))
+    <script>
+        toastr.warning("{{ session('warning') }}");
+    </script>
+@endif
+
+@if(session('info'))
+    <script>
+        toastr.info("{{ session('info') }}");
+    </script>
+@endif
 <script>
     // Optional: Add sticky header effect with smooth animation
     window.addEventListener('scroll', function() {
@@ -96,4 +129,167 @@
             bsCollapse.toggle();
         });
     });
+</script>
+<script>
+    document.getElementById("sendOtpBtn").addEventListener("click", function() {
+        console.log("Send OTP button clicked");
+        const phone = document.getElementById("phoneLogin").value;
+            fetch("{{ route('send-otp') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    phone: phone
+                })
+            })
+            .then(response => response.json())
+            .then(data => {         
+                if(data.status === "success"){
+                    toastr.success(data.message);
+                }else{
+                    toastr.error(data.message);
+                }
+            })
+            .catch(error=>{
+                toastr.error("Something went wrong");
+            });
+
+    });
+</script>
+<script>
+    const buyer_id = {{ Auth::user()->id  ?? 0}};
+
+    function loadCart() {
+        fetch(`/get-cart?buyer_id=${buyer_id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.result) {
+                    renderCart(data.products);
+                } else {
+                    document.getElementById('cart-items').innerHTML = "<p>No items in cart</p>";
+                }
+            });
+    }
+</script>
+<script>
+    function renderCart(products) {
+        let html = '';
+        let subtotal = 0;
+
+        products.forEach((item, index) => {
+            let price = item.main_price;
+            let qty = parseInt(item.quantity);
+            let total = price * qty;
+
+            subtotal += total;
+
+            html += `
+            <div class="d-flex align-items-center justify-content-between border-bottom mb-3 pb-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="bg-accent p-1 d-flex align-items-center justify-content-center"
+                            style="border-radius: 5px; width: 25px;height: 25px;">
+                            ${index + 1}
+                        </span>
+                        <h6 class="mb-0">${item.title}</h6>
+                    </div>
+                    <span class="badge bg-light text-dark border">${item.unit ?? ''}</span>
+                    <span class="text-danger fw-bold ms-2">₹${price}</span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-red qty-btn" onclick="updateQty('${item.id}', ${qty - 1})">−</button>
+                    <span>${qty}</span>
+                    <button class="btn btn-red qty-btn" onclick="updateQty('${item.id}', ${qty + 1})">+</button>
+                </div>
+            </div>
+            `;
+        });
+
+        document.getElementById('cart-items').innerHTML = html;
+
+        updateBill(subtotal);
+    }
+</script>
+<script>
+    function updateBill(subtotal) {
+        let delivery = 0;
+        let discount = 0;
+        let total = subtotal + delivery - discount;
+
+        document.getElementById('subtotal').innerText = `₹${subtotal}`;
+        document.getElementById('delivery').innerText = `₹${delivery}`;
+        document.getElementById('discount').innerText = `₹${discount}`;
+        document.getElementById('total').innerText = `₹${total}`;
+        document.getElementById('footer-total').innerText = `₹${total}`;
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadCart();
+    });
+</script>
+<script>
+const csrfToken = '{{ csrf_token() }}';
+
+function updateCartHttp(payload) {
+    return fetch('/add-cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json());
+}
+
+function updateQty(product_id, quantity) {
+    if (quantity < 0) return;
+
+    if (!buyer_id) {
+        toastr.warning('Please login to update cart items');
+        return;
+    }
+
+    updateCartHttp({ product_id, buyer_id, quantity })
+        .then(data => {
+            if (data.result) {
+                loadCart();
+            } else {
+                toastr.error(data.message || 'Unable to update quantity');
+            }
+        })
+        .catch(err => {
+            console.error('Update quantity error:', err);
+            toastr.error('Network error while updating cart');
+        });
+}
+
+function addToCart(product_id, quantity = 1) {
+    if (!buyer_id) {
+        toastr.warning('Please login to add items to cart');
+        return;
+    }
+
+    updateCartHttp({ product_id, buyer_id, quantity })
+        .then(data => {
+            if (data.result) {
+                console.log('Cart Updated:', data);
+                if (typeof updateCartBadge === 'function') {
+                    updateCartBadge(data.cart_count);
+                }
+                loadCart();
+                toastr.success(data.message || 'Added to cart');
+            } else {
+                toastr.error(data.message || 'Failed to add cart item');
+            }
+        })
+        .catch(err => {
+            console.error('Add to cart error:', err);
+            toastr.error('Network error while adding to cart');
+        });
+}
 </script>

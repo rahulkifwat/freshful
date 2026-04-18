@@ -42,246 +42,42 @@
                           </tr>
                         </thead>
                         <tbody>
+                          @foreach($orders as $order)
+                          <tr>
+                              <td>{{ $order->order_id }}</td>
+                              <td>{{ $order->date_added }}</td>
+                              <td>{{ $order->customer_name }}</td>
+                              <td>{{ $order->total_amount }}</td>
 
+                              <td>
+                                  <select class="change_status"
+                                      data-id="{{ $order->id }}"
+                                      data-order_id="{{ $order->order_id }}">
 
+                                      @foreach([
+                                          'Order Pending',
+                                          'Order Cancel',
+                                          'Order Placed',
+                                          'Order Processed',
+                                          'Order Shipped',
+                                          'Order Delivered'
+                                      ] as $status)
 
+                                          <option value="{{ $status }}"
+                                              {{ $order->order_status == $status ? 'selected' : '' }}>
+                                              {{ $status }}
+                                          </option>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                          <tr role="row" class="odd">
-                            <td class="sorting_1">ORD200086</td>
-                            <td>2024-04-24 10:37:58</td>
-                            <td>Ahmed</td>
-                            <!--<td>Chicken Cu....</td>-->
-                            <td>27</td>
-                            <td>
-                              <select class="change_status" data-id="100" data-order_id="ORD200086" data-status_name="order_status">
-                                <option value="Order Pending">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered" selected="">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
+                                      @endforeach
+                                  </select>
+                              </td>
                           </tr>
-                          <tr role="row" class="even">
-                            <td class="sorting_1">ORD200096</td>
-                            <td>2024-05-08 00:54:17</td>
-                            <td>Ahmed</td>
-                            <!--<td>Beans Indi....</td>-->
-                            <td>40</td>
-                            <td>
-                              <select class="change_status" data-id="110" data-order_id="ORD200096" data-status_name="order_status">
-                                <option value="Order Pending">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered" selected="">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="odd">
-                            <td class="sorting_1">ORD200111</td>
-                            <td>2024-05-20 17:34:35</td>
-                            <td>Prakash </td>
-                            <!--<td>Chicken Mi....</td>-->
-                            <td>39.75</td>
-                            <td>
-                              <select class="change_status" data-id="128" data-order_id="ORD200111" data-status_name="order_status">
-                                <option value="Order Pending" selected="">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="even">
-                            <td class="sorting_1">ORD200112</td>
-                            <td>2024-05-20 18:01:12</td>
-                            <td>Prakash </td>
-                            <!--<td>Chicken Mi....</td>-->
-                            <td>200.0</td>
-                            <td>
-                              <select class="change_status" data-id="131" data-order_id="ORD200112" data-status_name="order_status">
-                                <option value="Order Pending" selected="">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="odd">
-                            <td class="sorting_1">ORD200114</td>
-                            <td>2024-06-14 08:48:38</td>
-                            <td>Ahmed</td>
-                            <!--<td>Chicken Th....</td>-->
-                            <td>185.0</td>
-                            <td>
-                              <select class="change_status" data-id="133" data-order_id="ORD200114" data-status_name="order_status">
-                                <option value="Order Pending">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="even">
-                            <td class="sorting_1">ORD200115</td>
-                            <td>2024-07-25 12:54:09</td>
-                            <td>Ahmed</td>
-                            <!--<td>Chicken Th....</td>-->
-                            <td>185.0</td>
-                            <td>
-                              <select class="change_status" data-id="134" data-order_id="ORD200115" data-status_name="order_status">
-                                <option value="Order Pending">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered" selected="">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="odd">
-                            <td class="sorting_1">ORD200116</td>
-                            <td>2024-12-10 09:42:57</td>
-                            <td>tragg</td>
-                            <!--<td>Beans Indi....</td>-->
-                            <td>25</td>
-                            <td>
-                              <select class="change_status" data-id="135" data-order_id="ORD200116" data-status_name="order_status">
-                                <option value="Order Pending" selected="">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="even">
-                            <td class="sorting_1">ORD200117</td>
-                            <td>2024-12-10 13:04:09</td>
-                            <td>tragg</td>
-                            <!--<td>Beans Indi....</td>-->
-                            <td>25</td>
-                            <td>
-                              <select class="change_status" data-id="136" data-order_id="ORD200117" data-status_name="order_status">
-                                <option value="Order Pending" selected="">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="odd">
-                            <td class="sorting_1">ORD200118</td>
-                            <td>2024-12-15 19:02:15</td>
-                            <td>Ahmed</td>
-                            <!--<td>Chicken Mi....</td>-->
-                            <td>33.5</td>
-                            <td>
-                              <select class="change_status" data-id="137" data-order_id="ORD200118" data-status_name="order_status">
-                                <option value="Order Pending">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
-                          <tr role="row" class="even">
-                            <td class="sorting_1">ORD200119</td>
-                            <td>2025-01-25 08:23:23</td>
-                            <td>Ahmed</td>
-                            <!--<td>Chicken Ch....</td>-->
-                            <td>20.0</td>
-                            <td>
-                              <select class="change_status" data-id="139" data-order_id="ORD200119" data-status_name="order_status">
-                                <option value="Order Pending" selected="">Order Pending</option>
-                                <option value="Order Cancel">Order Cancel</option>
-                                <option value="Order Placed">Order Placed</option>
-                                <option value="Order Processed">Order Processed</option>
-                                <option value="Order Shipped">Order Shipped</option>
-                                <option value="Order Delivered">Order Delivered</option>
-                              </select>
-                            </td>
-
-                            <!--<td>
-                          <button class="btn btn-outline-primary">View</button>
-                        </td>-->
-                          </tr>
+                          @endforeach
                         </tbody>
                       </table>
-                      <div class="dataTables_info" id="order-listing_info" role="status" aria-live="polite">Showing 1 to 10 of 26 entries</div>
-                      <div class="dataTables_paginate paging_simple_numbers" id="order-listing_paginate"><a class="paginate_button previous disabled" aria-controls="order-listing" data-dt-idx="0" tabindex="0" id="order-listing_previous">Previous</a><span><a class="paginate_button current" aria-controls="order-listing" data-dt-idx="1" tabindex="0">1</a><a class="paginate_button " aria-controls="order-listing" data-dt-idx="2" tabindex="0">2</a><a class="paginate_button " aria-controls="order-listing" data-dt-idx="3" tabindex="0">3</a></span><a class="paginate_button next" aria-controls="order-listing" data-dt-idx="4" tabindex="0" id="order-listing_next">Next</a></div>
+                      {{ $orders->links() }}
+                      {{-- <div class="dataTables_info" id="order-listing_info" role="status" aria-live="polite">Showing 1 to 10 of 26 entries</div>
+                      <div class="dataTables_paginate paging_simple_numbers" id="order-listing_paginate"><a class="paginate_button previous disabled" aria-controls="order-listing" data-dt-idx="0" tabindex="0" id="order-listing_previous">Previous</a><span><a class="paginate_button current" aria-controls="order-listing" data-dt-idx="1" tabindex="0">1</a><a class="paginate_button " aria-controls="order-listing" data-dt-idx="2" tabindex="0">2</a><a class="paginate_button " aria-controls="order-listing" data-dt-idx="3" tabindex="0">3</a></span><a class="paginate_button next" aria-controls="order-listing" data-dt-idx="4" tabindex="0" id="order-listing_next">Next</a></div> --}}
                     </div>
                   </div><!-- /.order-content -->
                 </div><!-- /.content-details -->

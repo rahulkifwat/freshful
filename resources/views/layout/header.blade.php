@@ -74,11 +74,14 @@
             </div>
             <div class="col-sm-6 col-6 col-md-3 col-lg-3 rder-lg-4 order-4">
                 <div class="d-flex gap-3 align-items-center justify-content-lg-center justify-content-end">
-
+                    @if(Auth::check())
+                    <a href="{{ route('myaccount') }}" class="border rounded-pill px-md-4 py-md-2 d-flex align-items-center gap-2 header-btn">My Account</a>
+                    @else
                     <a data-bs-toggle="offcanvas" href="#loginoffcanvas" role="button" aria-controls="loginoffcanvas" class="border rounded-pill px-md-4 py-md-2 d-flex align-items-center gap-2 header-btn top-login-btn">
                         <i class="bi bi-person-circle"></i>
                         <span class="d-none d-md-inline">Login</span>
                     </a>
+                    @endif
                     <a data-bs-toggle="offcanvas" href="#cardoffcanvas" role="button" aria-controls="cardoffcanvas" class="border rounded-pill px-md-4 py-md-2 d-flex align-items-center gap-2 header-btn">
                         <i class="bi bi-cart "></i>
                         <span class="d-none d-md-inline">Cart </span>
@@ -143,108 +146,127 @@
             </li>
 
         </ul>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        @if(session()->has('success'))
+            <div class="alert alert-success">
+                {{ session()->get('success') }}
+            </div>
+        @endif
 
         <!-- Pills content -->
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-otp" role="tabpanel"
                 aria-labelledby="pills-otp-tab">
 
-                <div class="mb-2">
-                    <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Phone Number</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-telephone"></i>
-                        </span>
-                        <input
-                            type="tel"
-                            class="form-control"
-                            id="phone"
-                            name="phone"
-                            pattern="[0-9]{10}"
+                <form action="{{ route('user.login') }}" method="POST">
+                    @csrf
+                    <div class="mb-2">
+                        <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="phoneLogin"
+                                name="phone"
+                                pattern="[0-9]{10}"
+                                value="{{ old('phone') }}"
 
-
-                            required>
-                        <div class="invalid-feedback">
-                            Please enter a valid 10-digit phone number.
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter a valid 10-digit phone number.
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="mb-2">
-                    <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">OTP</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-lock"></i>
-                        </span>
-                        <input
-                            type="tel"
-                            class="form-control"
-                            name="password"
-                            pattern="[0-9]{4}"
-
-                            required>
-                        <div class="invalid-feedback">
-                            Please enter a valid 4-digit OTP.
+                    <div class="mb-2">
+                        <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">OTP</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                name="otp"
+                                pattern="[0-9]{6}">
+                            <div class="invalid-feedback">
+                                Please enter a valid 6-digit OTP.
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <button class="btn btn-outline-primary fs-7 fw-normal py-1" style="border-radius: 5px;">Send OTP</button>
-                </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary fs-7 fw-normal py-1" id='sendOtpBtn' style="border-radius: 5px;">Send OTP</button>
+                    </div>
+                    <div class="d-flex gap-2 w-100 text-center">
+                        <button type="submit" class="btn btn-primary rounded-pill w-100 flex-1">Login with OTP</button>
+                    </div>
+                </form>
 
 
             </div>
             <div class="tab-pane fade" id="pills-password" role="tabpanel"
                 aria-labelledby="pills-password-tab">
+                <form action="{{ route('user.login') }}" method="POST">
+                    @csrf
+                    <div class="mb-2">
+                        <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id=""
+                                name="phone"
+                                pattern="[0-9]{10}"
+                                value="{{ old('phone') }}"
 
-                <div class="mb-2">
-                    <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Phone Number</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-telephone"></i>
-                        </span>
-                        <input
-                            type="tel"
-                            class="form-control"
-                            id="phone"
-                            name="phone"
-                            pattern="[0-9]{10}"
-
-
-                            required>
-                        <div class="invalid-feedback">
-                            Please enter a valid 10-digit phone number.
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter a valid 10-digit phone number.
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="mb-2">
-                    <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-shield-lock"></i>
-                        </span>
-                        <input
-                            type="password"
-                            class="form-control"
-                            id="phone"
-                            name="phone"
-                            pattern="[0-9]{8}"
+                    <div class="mb-2">
+                        <label for="phone" class="form-label fs-7 fw-bolder mb-1 text-black-50 text-start">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-shield-lock"></i>
+                            </span>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id=""
+                                name="password"
 
-                            required>
-                        <div class="invalid-feedback">
-                            Please enter a valid 4-digit OTP.
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter a valid Password.
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="mb-4">
-                    <a href="{{ url('/') }}" class="text-primary-alt fs-7 fw-normal py-1" style="border-radius: 5px;">forgot password?</a>
-                </div>
+                    <div class="mb-4">
+                        <a href="{{ url('/') }}" class="text-primary-alt fs-7 fw-normal py-1" style="border-radius: 5px;">forgot password?</a>
+                    </div>
+                    <div class="d-flex gap-2 w-100 text-center">
+                        <button type="submit" class="btn btn-primary rounded-pill w-100 flex-1">Login with Password</button>
+                    </div>
+                </form>
             </div>
 
         </div>
 
-        <div class="d-flex gap-2 w-100 text-center">
-            <button type="button" class="btn btn-primary rounded-pill w-100 flex-1">Login</button>
-        </div>
         <div class="mt-3 text-center">
             <p class="fs-7 mb-0">By signing in you agree to our</p>
             <a href="{{ url('/terms') }}" target="_blank" class="text-primary-alt fs-6 fw-bold">Terms & Conditions</a>
@@ -266,22 +288,7 @@
             <!-- Item -->
             <div class="card-body ">
 
-                <div class="d-flex align-items-center justify-content-between border-bottom mb-3 pb-3">
-                    <div>
-                        <div class="d-flex align-items-center  gap-2 mb-2">
-                            <span class="bg-accent p-1 text-center d-flex align-items-center justify-content-center " style="border-radius: 5px; width: 25px;height: 25px;">1</span>
-                            <h6 class="mb-0">Cabbage</h6>
-                        </div>
-                        <span class="badge bg-light text-dark border">500 Gram</span>
-                        <span class="text-danger fw-bold ms-2">₹50</span>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-red qty-btn">−</button>
-                        <span>1</span>
-                        <button class="btn btn-red qty-btn">+</button>
-                    </div>
-                </div>
+                <div id="cart-items"></div>
 
 
 
@@ -290,28 +297,28 @@
 
                 <div class="d-flex justify-content-between mt-1 pb-1 border-bottom ">
                     <span class="fs-7">Subtotal</span>
-                    <span class="fs-7">₹50</span>
+                    <span class="fs-7"  id="subtotal">₹0</span>
                 </div>
                 <div class="d-flex justify-content-between mt-1 pb-1 border-bottom">
                     <span class="fs-7">Delivery Charge</span>
-                    <span class="fs-7">₹0</span>
+                    <span class="fs-7" id="delivery">₹0</span>
                 </div>
                 <div class="d-flex justify-content-between mt-1 pb-1 border-bottom">
                     <span class="fs-7">Discount</span>
-                    <span class="fs-7">₹0</span>
+                    <span class="fs-7" id="discount">₹0</span>
                 </div>
 
 
 
                 <div class="d-flex justify-content-between fw-bold mt-2">
                     <span>Total</span>
-                    <span class="text-primary fs-6">₹50</span>
+                    <span class="text-primary fs-6" id="total">₹0</span>
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="p-3 total-bar d-flex card-footer shadow-sm justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold fs-5">Total : <span class="text-primary fs-4">₹50</span></h5>
+                <h5 class="mb-0 fw-bold fs-5">Total : <span class="text-primary fs-4" id="footer-total">₹0</span></h5>
                 <a href="{{ url('/checkout') }}" class="btn btn-primary py-2 fw-bold">
                     Proceed To Checkout
                 </a>

@@ -1,24 +1,19 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AuthController;
 
 // Route::get('/', function () {
 //     return view('welcome');
 // });
-Route::get('/', function () {
-    return view('home');
-});
-Route::get('/product', function () {
-    return view('product');
-});
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/product/{category?}/{type?}', [HomeController::class, 'product'])->name('product');
 
-Route::get('/product_detail', function () {
-    return view('product_detail');
-});
+Route::get('/product_detail', [HomeController::class, 'product_detail'])->name('product_detail');
 
-Route::get('/view_product', function () {
-    return view('view_product');
-});
+Route::get('/view_product/{category?}/{type?}', [HomeController::class, 'view_product'])->name('view_product');
 
 Route::get('/about', function () {
     return view('about');
@@ -51,30 +46,27 @@ Route::get('/refund_policy', function () {
 Route::get('/why-freshful', function () {
     return view('why-freshful');
 });
-Route::get('/myaccount', function () {
-    return view('myaccount');
-});
-Route::get('/checkout', function () {
-    return view('checkout');
-});
 
+Route::get('/checkout', [HomeController::class, 'checkout'])->name('checkout');
 
 Route::prefix('admin')->group(function () {
-    Route::get('/login', function () {
-        return view('admin.login');
+
+    Route::middleware(['redirectMiddleware'])->group(function () {
+        Route::view('/login', 'admin.login')->name('admin.login');
+        Route::post('/login', [AuthController::class, 'AdminLogin'])->name('admin.loginSubmit');
     });
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    });
-    Route::get('/all_orders', function () {
-        return view('admin.all_orders');
-    });
-    Route::get('/order', function () {
-        return view('admin.order');
-    });
-    Route::get('/products', function () {
-        return view('admin.products');
-    });
+
+    Route::middleware(['admin'])->group(function () {
+        Route::get('', [AdminController::class, 'index'])->name('admin.dashboard');
+
+        Route::get('/all_orders', [AdminController::class, 'all_orders'])->name('admin.all_orders');
+
+        Route::get('/order', [AdminController::class, 'order'])->name('admin.order');
+        Route::get('/products', [AdminController::class, 'products'])->name('admin.products');
+    
+    // Route::get('/order', function () {
+    //     return view('admin.order');
+    // });
     Route::get('/edit_product', function () {
         return view('admin.edit_product');
     });
@@ -272,7 +264,22 @@ Route::prefix('admin')->group(function () {
     Route::get('/sale_summary', function () {
         return view('admin.sale_summary');
     }); 
+});
 
 
 
 });
+
+Route::prefix('/user')->group(function () {
+    Route::post('/login', [AuthController::class, 'userLogin'])->name('user.login');
+    Route::get('/logout', [AuthController::class, 'logout'])->name('user.logout');
+    Route::get('/myaccount', [HomeController::class, 'myAccount'])->name('myaccount');
+    Route::post('/storeAddress', [HomeController::class, 'storeAddress'])->name('storeAddress');
+    Route::get('/deleteAddress/{id}', [HomeController::class, 'deleteAddress'])->name('deleteAddress');
+    Route::post('updateAccount', [HomeController::class, 'updateAccount'])->name('updateAccount');
+});
+
+Route::post('/add-order', [HomeController::class, 'addOrder'])->name('add-order');
+Route::post('/send-otp', [AuthController::class, 'sendOtp'])->name('send-otp');
+Route::get('/get-cart', [HomeController::class, 'cart'])->name('get-cart');
+Route::post('/add-cart', [HomeController::class, 'addCart'])->name('add-cart');
