@@ -1,67 +1,125 @@
 @extends('admin.layout.master')
 
-@section('content') 
+@section('content')
 <div class="dashboard-contents">
   <div class="contents-inner">
-    <div class="row"> 
+    <div class="row">
       <div class="full-wdt">
-        <div class="col-md-3">
-        </div>
-        <div class="col-md-12">
-          <div class="section-content">
-            <div class="content-head">
-              <h4 class="content-title">View Buyer</h4><!-- /.content-title -->
 
-            </div><!-- /.content-head -->
+        <div class="contents-inner">
+          <div class="row">
+            <div class="col-12">
+              <div class="section-content">
+                <div class="content-head">
+                  <h4 class="content-title">Buyer Detail</h4>
+                  <a href="{{ route('admin.buyers') }}" class="btn btn-secondary btn-sm" style="float:right;">
+                    <i class="fa fa-arrow-left"></i> Back
+                  </a>
+                </div>
 
-            <div class="content-details show">
-              <div id="pay-invoice" class="card pay-invoice">
-                <div class="card-body">
-                  <form class="" id="view_buyer_form" name="view_buyer_form" action="ajax/update_buyer.php" onsubmit="return false;" method="post" novalidate="novalidate">
-                    <input type="hidden" name="id" value="7">
-
-                    <div class="row form-group">
-                      <div class="col col-md-3"><label for="name" class="form-control-label"> Name</label></div>
-                      <div class="col-12 col-md-9"><input type="text" id="name" name="name" value="Suhail Ahmed" placeholder=" Name" class="form-control"></div>
-                    </div>
-
-                    <div class="row form-group">
-                      <div class="col col-md-3"><label for="email-input" class=" form-control-label">Email</label></div>
-                      <div class="col-12 col-md-9"><input type="email" id="email-input" name="email" value="anaikar786@gmail.com" placeholder="Enter Email" class="form-control" readonly=""></div>
-                    </div>
-                    <div class="row form-group">
-                      <div class="col col-md-3"><label class="form-control-label">Status</label></div>
-                      <div class="col-12 col-md-9">
-                        <select name="status" class="form-control select2 select2-hidden-accessible" data-select2-id="select2-data-1-zz91" tabindex="-1" aria-hidden="true">
-                          <option value="active" selected="" data-select2-id="select2-data-3-impk">Active</option>
-                          <option value="disabled">Disabled</option>
-                        </select><span class="select2 select2-container select2-container--default" dir="ltr" data-select2-id="select2-data-2-ergh" style="width: 562.273px;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-disabled="false" aria-labelledby="select2-status-c2-container" aria-controls="select2-status-c2-container"><span class="select2-selection__rendered" id="select2-status-c2-container" role="textbox" aria-readonly="true" title="Active">Active</span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
+                <div class="content-details show">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <p><strong>ID:</strong> {{ $buyer->id }}</p>
+                          <p><strong>Name:</strong> {{ $buyer->name }}</p>
+                          <p><strong>Email:</strong> {{ $buyer->email }}</p>
+                          <p><strong>Phone:</strong> {{ $buyer->phone ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                          <p><strong>Wallet:</strong> {{ $buyer->wallet_amount ?? 0 }}</p>
+                          <p><strong>Status:</strong>
+                            <span class="badge badge-{{ ($buyer->status ?? 'inactive') === 'active' ? 'success' : 'secondary' }}">
+                              {{ $buyer->status ?? '-' }}
+                            </span>
+                          </p>
+                          @if(!empty($buyer->date_added))
+                            <p><strong>Joined:</strong> {{ \Carbon\Carbon::parse($buyer->date_added)->format('d-m-Y') }}</p>
+                          @endif
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div class="card-footer">
-                      <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fa fa-dot-circle-o"></i> Update
-                      </button>
-                      <button type="reset" id="delete_buyer" class="btn btn-danger btn-sm">
-                        <i class="fa fa-ban"></i> Delete
-                      </button>
-                    </div>
-                  </form>
+                  <div class="content-head mt-4">
+                    <h4 class="content-title">Addresses</h4>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Address</th>
+                          <th>City</th>
+                          <th>Phone</th>
+                          <th>Pincode</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($addresses as $i => $a)
+                          <tr>
+                            <td>{{ $i + 1 }}</td>
+                            <td>{{ trim(($a->address ?? '').' '.($a->address2 ?? '')) }}</td>
+                            <td>{{ $a->city ?? '-' }}</td>
+                            <td>{{ $a->phone ?? '-' }}</td>
+                            <td>{{ $a->pincode ?? '-' }}</td>
+                          </tr>
+                        @empty
+                          <tr><td colspan="5" class="text-center">No addresses on file.</td></tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="content-head mt-4">
+                    <h4 class="content-title">Recent Orders</h4>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Date</th>
+                          <th>Type</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($orders as $o)
+                          <tr>
+                            <td>{{ $o->order_id }}</td>
+                            <td>{{ $o->date_added ? \Carbon\Carbon::parse($o->date_added)->format('d-m-Y') : '-' }}</td>
+                            <td>{{ $o->delivery_type ?? '-' }}</td>
+                            <td>{{ $o->total_amount }}</td>
+                            <td>
+                              <span class="badge
+                                @if($o->order_status == 'Order Pending') badge-secondary
+                                @elseif($o->order_status == 'Order Cancel') badge-danger
+                                @elseif($o->order_status == 'Order Placed') badge-info
+                                @elseif($o->order_status == 'Order Processed') badge-warning
+                                @elseif($o->order_status == 'Order Shipped') badge-primary
+                                @else badge-success
+                                @endif">
+                                {{ $o->order_status }}
+                              </span>
+                            </td>
+                          </tr>
+                        @empty
+                          <tr><td colspan="5" class="text-center">No orders yet.</td></tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
+
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-        </div>
       </div>
-
     </div>
-  </div><!-- /.contents-inner -->
-
-
-
-</div><!-- /.dashboard-contents -->
-
+  </div>
+</div>
 @endsection

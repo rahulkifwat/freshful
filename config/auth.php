@@ -48,6 +48,34 @@ return [
             'driver' => 'session',
             'provider' => 'admin',
         ],
+        'account_managers' => [
+            'driver' => 'session',
+            'provider' => 'account_managers',
+        ],
+        'area_managers' => [
+            'driver' => 'session',
+            'provider' => 'area_managers',
+        ],
+        'country_managers' => [
+            'driver' => 'session',
+            'provider' => 'country_managers',
+        ],
+        'customer_care_managers' => [
+            'driver' => 'session',
+            'provider' => 'customer_care_managers',
+        ],
+        'hr_managers' => [
+            'driver' => 'session',
+            'provider' => 'hr_managers',
+        ],
+        'hub_users' => [
+            'driver' => 'session',
+            'provider' => 'hub_users',
+        ],
+        'marketing_managers' => [
+            'driver' => 'session',
+            'provider' => 'marketing_managers',
+        ],
     ],
 
     /*
@@ -79,6 +107,34 @@ return [
         'admin' => [
             'driver' => 'eloquent',
             'model' => env('ADMIN_MODEL', App\Models\Admin::class),
+        ],
+        'account_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AccountManager::class,
+        ],
+        'area_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AreaManager::class,
+        ],
+        'country_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\CountryManager::class,
+        ],
+        'customer_care_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\CustomerCareManager::class,
+        ],
+        'hr_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\HrManager::class,
+        ],
+        'hub_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\HubUser::class,
+        ],
+        'marketing_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\MarketingManager::class,
         ],
         // 'users' => [
         //     'driver' => 'database',

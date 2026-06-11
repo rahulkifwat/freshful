@@ -247,14 +247,10 @@ class HomeController extends Controller
                     ->delete();
 
                 if ($deletedRows) {
-                    Buyer::where('id', $buyer_id)
-                        ->where('cart_count', '>', 0)
-                        ->decrement('cart_count');
-
                     $deleted = true;
                 }
             } else {
-                $product = Product::where('id', $product_id)->first();
+                $product = product::where('id', $product_id)->first();
                 $price = ($product && $product->main_price) ? floatval($product->main_price) : 0;
                 $total_price = $price * floatval($quantity);
 
@@ -264,27 +260,22 @@ class HomeController extends Controller
 
                 if ($cart) {
                     $cart->update([
-                        'quantity' => $quantity,
+                        'quantity'    => $quantity,
                         'total_price' => $total_price,
                     ]);
                     $updated = true;
                 } else {
                     Cart::create([
-                        'product_id' => $product_id,
-                        'buyer_id'   => $buyer_id,
-                        'quantity'   => $quantity,
+                        'product_id'  => $product_id,
+                        'buyer_id'    => $buyer_id,
+                        'quantity'    => $quantity,
                         'total_price' => $total_price,
                     ]);
-
-                    Buyer::where('id', $buyer_id)
-                        ->increment('cart_count');
-
                     $inserted = true;
                 }
             }
 
-            $buyer = Buyer::find($buyer_id);
-            $cart_count = $buyer ? $buyer->cart_count : 0;
+            $cart_count = Cart::where('buyer_id', $buyer_id)->count();
 
             DB::commit();
 

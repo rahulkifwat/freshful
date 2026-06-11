@@ -12,6 +12,7 @@
 
 
     @include('admin.layout.footer')
+    @stack('scripts')
 </body>
 
 </html>

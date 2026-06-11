@@ -5,74 +5,86 @@
   <div class="contents-inner">
     <div class="row">
       <div class="full-wdt">
-
         <div class="contents-inner">
           <div class="row">
             <div class="col-12">
               <div class="section-content">
+
                 <div class="content-head">
-                  <h4 class="content-title">Sales Summary</h4><!-- /.content-title -->
-                </div><!-- /.content-head -->
+                  <h4 class="content-title">Sale Summary</h4>
+                </div>
 
                 <div class="content-details show">
-                  <div id="data-table_wrapper" class="dataTables_wrapper container-fluid dt-bootstrap4 no-footer">
+                  <form method="get" action="{{ route('admin.sale_summary') }}" class="mb-3">
                     <div class="row">
-                      <div class="col-sm-12 col-md-6">
-                        <div class="dataTables_length" id="data-table_length"><label>Show <select name="data-table_length" aria-controls="data-table" class="form-control form-control-sm">
-                              <option value="10">10</option>
-                              <option value="25">25</option>
-                              <option value="50">50</option>
-                              <option value="100">100</option>
-                            </select> entries</label></div>
+                      <div class="col-md-3">
+                        <label>From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
                       </div>
-                      <div class="col-sm-12 col-md-6">
-                        <div id="data-table_filter" class="dataTables_filter"><label>Search:<input type="search" class="form-control form-control-sm" placeholder="" aria-controls="data-table"></label></div>
+                      <div class="col-md-3">
+                        <label>To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                      </div>
+                      <div class="col-md-3 align-self-end">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        @if(request()->hasAny(['date_from','date_to']))
+                          <a href="{{ route('admin.sale_summary') }}" class="btn btn-outline-secondary">Reset</a>
+                        @endif
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-sm-12">
-                        <table id="data-table" class="table data-table table-striped table-bordered dataTable no-footer" role="grid" aria-describedby="data-table_info">
-                          <thead>
-                            <tr role="row">
-                              <th class="sorting_asc" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Date: activate to sort column descending" style="width: 150.458px;">Date</th>
-                              <th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="Order Id: activate to sort column ascending" style="width: 238.312px;">Order Id</th>
-                              <th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="Amount: activate to sort column ascending" style="width: 232.812px;">Amount</th>
-                              <th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="Unit: activate to sort column ascending" style="width: 139.75px;">Unit</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr class="odd">
-                              <td valign="top" colspan="4" class="dataTables_empty">No data available in table</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                  </form>
+
+                  <div class="row mb-3">
+                    <div class="col-md-3">
+                      <div class="statistic-box m-0">
+                        <h4 class="statistic-title float-left">Delivered Orders</h4>
+                        <div class="statistic-details">
+                          <span class="count float-left">{{ $totals->total_orders ?? 0 }}</span>
+                        </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-sm-12 col-md-5">
-                        <div class="dataTables_info" id="data-table_info" role="status" aria-live="polite">Showing 0 to 0 of 0 entries</div>
-                      </div>
-                      <div class="col-sm-12 col-md-7">
-                        <div class="dataTables_paginate paging_simple_numbers" id="data-table_paginate">
-                          <ul class="pagination">
-                            <li class="paginate_button page-item previous disabled" id="data-table_previous"><a href="#" aria-controls="data-table" data-dt-idx="0" tabindex="0" class="page-link">Previous</a></li>
-                            <li class="paginate_button page-item next disabled" id="data-table_next"><a href="#" aria-controls="data-table" data-dt-idx="1" tabindex="0" class="page-link">Next</a></li>
-                          </ul>
+                    <div class="col-md-3">
+                      <div class="statistic-box m-0">
+                        <h4 class="statistic-title float-left">Total Revenue</h4>
+                        <div class="statistic-details">
+                          <span class="count float-left">{{ number_format((float) $totalRevenue, 2) }}</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div><!-- /.content-details -->
+
+                  <div class="table-responsive">
+                    <table id="data-table" class="table data-table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Date</th>
+                          <th>Line Items</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($orders as $o)
+                          <tr>
+                            <td>{{ $o->order_id }}</td>
+                            <td>{{ $o->date_added ? \Carbon\Carbon::parse($o->date_added)->format('d-m-Y') : '-' }}</td>
+                            <td>{{ $o->line_items }}</td>
+                            <td>{{ $o->total_amount }}</td>
+                          </tr>
+                        @empty
+                          <tr><td colspan="4" class="text-center">No delivered orders in range.</td></tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="mt-3">{{ $orders->links() }}</div>
+                </div>
               </div>
             </div>
-
           </div>
-        </div><!-- /.contents-inner -->
-
+        </div>
       </div>
     </div>
-
   </div>
 </div>
-
 @endsection

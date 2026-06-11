@@ -5,49 +5,90 @@
   <div class="contents-inner">
     <div class="row">
       <div class="full-wdt">
-        <div class="col-md-12">
-          <div class="section-content">
-            <div class="content-head">
-              <h4 class="content-title">Edit Profile</h4><!-- /.content-title -->
-            </div><!-- /.content-head -->
+        <div class="contents-inner">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="section-content">
 
-            <div class="content-details show">
-              <div id="pay-invoice" class="card pay-invoice">
-                <div class="card-body">
-                  <form class="" id="edit_profile_form" name="edit_profile_form" action="ajax/edit_profile.php" onsubmit="return false;" method="post" enctype="multipart/form-data" novalidate="novalidate">
-                    <input type="hidden" name="id" value="1">
-                    <input type="hidden" name="table" value="admins">
-                    <div class="form-group">
-                      <label class="control-label mb-1">Name</label>
-                      <input id="name" name="name" type="text" aria-required="true" value="Admin" placeholder="Enter name" class="form-control">
+                <div class="content-head">
+                  <h4 class="content-title">Edit Profile</h4>
+                </div>
+
+                <div class="content-details show">
+                  @if($errors->any())
+                    <div class="alert alert-danger">
+                      <ul class="mb-0">
+                        @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                      </ul>
                     </div>
-                    <div class="form-group">
-                      <label class="control-label mb-1">Email</label>
-                      <input id="email" name="email" type="text" aria-required="true" value="admin@gmail.com" placeholder="Enter email" class="form-control" readonly="">
+                  @endif
+                  @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                  @endif
+
+                  <div class="card pay-invoice">
+                    <div class="card-body">
+                      <form method="post" action="{{ route('admin.update_profile') }}">
+                        @csrf
+
+                        <div class="row form-group">
+                          <div class="col col-md-3"><label>Name</label></div>
+                          <div class="col-12 col-md-9">
+                            <input type="text" name="name" class="form-control" required
+                                   value="{{ old('name', $admin->name) }}">
+                          </div>
+                        </div>
+
+                        <div class="row form-group">
+                          <div class="col col-md-3"><label>Email</label></div>
+                          <div class="col-12 col-md-9">
+                            <input type="email" name="email" class="form-control" required
+                                   value="{{ old('email', $admin->email) }}">
+                          </div>
+                        </div>
+
+                        <div class="row form-group">
+                          <div class="col col-md-3"><label>Phone</label></div>
+                          <div class="col-12 col-md-9">
+                            <input type="text" name="phone" class="form-control" maxlength="20"
+                                   value="{{ old('phone', $admin->phone ?? '') }}">
+                          </div>
+                        </div>
+
+                        <hr>
+                        <p class="text-muted">Leave password fields blank to keep your current password.</p>
+
+                        <div class="row form-group">
+                          <div class="col col-md-3"><label>New Password</label></div>
+                          <div class="col-12 col-md-9">
+                            <input type="password" name="password" class="form-control" minlength="6">
+                          </div>
+                        </div>
+
+                        <div class="row form-group">
+                          <div class="col col-md-3"><label>Confirm Password</label></div>
+                          <div class="col-12 col-md-9">
+                            <input type="password" name="password_confirmation" class="form-control" minlength="6">
+                          </div>
+                        </div>
+
+                        <div class="card-footer">
+                          <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa fa-dot-circle-o"></i> Save Changes
+                          </button>
+                          <a href="{{ route('admin.profile') }}" class="btn btn-secondary btn-sm">Cancel</a>
+                        </div>
+                      </form>
                     </div>
-                    <div class="form-group">
-                      <label class="control-label mb-1">Address</label>
-                      <input id="address" name="address" type="text" aria-required="true" value="Indira Nagar, Bangalore" placeholder="Enter Address" class="form-control">
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label mb-1">Image</label>
-                      <input id="profile_image" name="image" type="file" aria-required="true" class="form-control">
-                    </div>
-                    <div>
-                      <button id="payment-button" type="submit" class="btn btn-primary">
-                        <span id="payment-button-amount">send</span>
-                      </button>
-                    </div>
-                  </form>
+                  </div>
+
                 </div>
               </div>
-            </div><!-- /.content-details -->
+            </div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
-
 @endsection

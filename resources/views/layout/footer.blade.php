@@ -270,7 +270,12 @@ function updateQty(product_id, quantity) {
 
 function addToCart(product_id, quantity = 1) {
     if (!buyer_id) {
-        toastr.warning('Please login to add items to cart');
+        var loginCanvas = document.getElementById('loginoffcanvas');
+        if (loginCanvas) {
+            new bootstrap.Offcanvas(loginCanvas).show();
+        } else {
+            toastr.warning('Please login to add items to cart');
+        }
         return;
     }
 

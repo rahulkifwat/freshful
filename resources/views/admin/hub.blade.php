@@ -2,451 +2,93 @@
 
 @section('content')
 <div class="dashboard-contents">
-	<div class="contents-inner">
-		<div class="row">
-			<div class="full-wdt">
+  <div class="contents-inner">
+    <div class="row">
+      <div class="full-wdt">
+        <div class="contents-inner">
+          <div class="row">
+            <div class="col-12">
+              <div class="section-content">
 
-				<div class="contents-inner">
-					<div class="row">
-						<div class="col-md-12">
-							<div class="section-content">
-								<div class="content-head">
-									<h4 class="content-title">Update hub</h4><!-- /.content-title -->
-								</div><!-- /.content-head -->
+                <div class="content-head">
+                  <h4 class="content-title">Hubs</h4>
+                  <a href="{{ route('admin.hub_form') }}" class="btn btn-primary btn-sm" style="float:right;">
+                    <i class="fa fa-dot-circle-o"></i> Add Hub
+                  </a>
+                </div>
 
-								<div class="content-details show">
-									<div id="pay-invoice" class="card pay-invoice">
-										<div class="card-body">
-											<form class="" id="update_hub_form" name="update_hub_form" action="ajax/update_hub.php" onsubmit="return false;" method="post" novalidate="novalidate">
+                @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+                @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
-												<input type="hidden" name="table" value="hubs">
-												<input type="hidden" id="map_type" name="type" value="polygon">
-												<input type="hidden" name="id" value="27">
+                <div class="content-details show">
+                  <form method="get" action="{{ route('admin.hub') }}" class="mb-3">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Search hub" value="{{ request('search') }}">
+                      </div>
+                      <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        @if(request('search'))<a href="{{ route('admin.hub') }}" class="btn btn-outline-secondary">Reset</a>@endif
+                      </div>
+                    </div>
+                  </form>
 
-												<div class="row form-group">
-													<div class="col col-md-3"><label for="hub" class="form-control-label">City Name</label></div>
-													<div class="col-12 col-md-9">
-														<select name="city_id" id="city_id" class="form-control">
-															<option value="">Select City</option>
-															<option value="1" data-city_name="Mumbai">Mumbai</option>
-															<option value="2" data-city_name="New Delhi">New Delhi</option>
-															<option value="3" data-city_name="Ambur">Ambur</option>
-															<option value="4" data-city_name="Vaniyambadi" selected="">Vaniyambadi</option>
-															<option value="5" data-city_name="Bengaluru">Bengaluru</option>
-															<option value="6" data-city_name="Ambaji">Ambaji</option>
-															<option value="7" data-city_name="Chandigarh">Chandigarh</option>
-															<option value="8" data-city_name="Vadodara">Vadodara</option>
-															<option value="9" data-city_name="Vellore">Vellore</option>
-															<option value="10" data-city_name="Bhopal">Bhopal</option>
-															<option value="13" data-city_name="Thanjavur">Thanjavur</option>
-															<option value="14" data-city_name="Indore">Indore</option>
-														</select>
-													</div>
-												</div>
+                  <div class="table-responsive">
+                    <table id="data-table" class="table data-table table-striped table-bordered">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Hub</th>
+                          <th>City</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($hubs as $h)
+                          <tr>
+                            <td>{{ $h->id }}</td>
+                            <td>{{ $h->hub }}</td>
+                            <td>{{ $h->city_name ?? '-' }}</td>
+                            <td>
+                              <label class="switch">
+                                <input type="checkbox" name="status"
+                                       class="status_enable switch-warning change_status"
+                                       data-table="hubs"
+                                       data-id="{{ $h->id }}"
+                                       value="{{ $h->status ?? 'active' }}"
+                                       {{ ($h->status ?? 'active') === 'active' ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                              </label>
+                            </td>
+                            <td>
+                              <a href="{{ route('admin.hub_form', ['id' => $h->id]) }}" class="btn btn-info btn-sm">
+                                <i class="fa fa-pencil-square-o"></i>
+                              </a>
+                              <button type="button"
+                                      data-table="hubs"
+                                      data-id="{{ $h->id }}"
+                                      class="btn btn-danger btn-sm deleteRecord">
+                                <i class="fa fa-trash"></i> Delete
+                              </button>
+                            </td>
+                          </tr>
+                        @empty
+                          <tr><td colspan="5" class="text-center">No hubs found.</td></tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
 
-												<div class="row form-group">
-													<div class="col col-md-3"><label for="hub" class="form-control-label">hub Name</label></div>
-													<div class="col-12 col-md-9"><input type="text" id="hub" name="hub" value="VNB" placeholder="hub Name" class="form-control"></div>
-												</div>
+                  <div class="mt-3">{{ $hubs->links() }}</div>
 
-												<div class="row form-group">
-													<div class="col col-md-2"><label for="hub" class="form-control-label">hub Location</label></div>
-													<div class="col-12 col-md-12">
-														<div id="googleMap" style="width: 100%; height: 500px; position: relative; overflow: hidden;">
-															<div style="height: 100%; width: 100%; position: absolute; top: 0px; left: 0px; background-color: rgb(229, 227, 223);">
-																<div><button draggable="false" aria-label="Keyboard shortcuts" title="Keyboard shortcuts" type="button" style="background: none transparent; display: block; border: none; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; z-index: 1000002; outline-offset: 3px; right: 0px; bottom: 0px; transform: translateX(100%);"></button></div>
-																<div tabindex="0" aria-label="Map" aria-roledescription="map" role="region" aria-describedby="14A8E041-ED77-4AF3-8D8A-9E3AE504EA31" style="position: absolute; height: 100%; width: 100%; padding: 0px; border-width: 0px; margin: 0px; left: 0px; top: 0px;">
-																	<div id="14A8E041-ED77-4AF3-8D8A-9E3AE504EA31" style="display: none;">
-																		<div class="LGLeeN-keyboard-shortcuts-view">
-																			<table>
-																				<tbody>
-																					<tr>
-																						<td><kbd aria-label="Left arrow">←</kbd></td>
-																						<td aria-label="Move left.">Move left</td>
-																					</tr>
-																					<tr>
-																						<td><kbd aria-label="Right arrow">→</kbd></td>
-																						<td aria-label="Move right.">Move right</td>
-																					</tr>
-																					<tr>
-																						<td><kbd aria-label="Up arrow">↑</kbd></td>
-																						<td aria-label="Move up.">Move up</td>
-																					</tr>
-																					<tr>
-																						<td><kbd aria-label="Down arrow">↓</kbd></td>
-																						<td aria-label="Move down.">Move down</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>+</kbd></td>
-																						<td aria-label="Zoom in.">Zoom in</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>-</kbd></td>
-																						<td aria-label="Zoom out.">Zoom out</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>Home</kbd></td>
-																						<td aria-label="Jump left by 75%.">Jump left by 75%</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>End</kbd></td>
-																						<td aria-label="Jump right by 75%.">Jump right by 75%</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>Page Up</kbd></td>
-																						<td aria-label="Jump up by 75%.">Jump up by 75%</td>
-																					</tr>
-																					<tr>
-																						<td><kbd>Page Down</kbd></td>
-																						<td aria-label="Jump down by 75%.">Jump down by 75%</td>
-																					</tr>
-																				</tbody>
-																			</table>
-																		</div>
-																	</div>
-																</div>
-																<div class="gm-style" style="position: absolute; z-index: 0; left: 0px; top: 0px; height: 100%; width: 100%; padding: 0px; border-width: 0px; margin: 0px;">
-																	<div style="position: absolute; z-index: 0; left: 0px; top: 0px; height: 100%; width: 100%; padding: 0px; border-width: 0px; margin: 0px; cursor: url(&quot;https://maps.gstatic.com/mapfiles/openhand_8_8.cur&quot;), default; touch-action: pan-x pan-y;">
-																		<div style="z-index: 1; position: absolute; left: 50%; top: 50%; width: 100%; will-change: transform; transform: translate(0px, 0px);">
-																			<div style="position: absolute; left: 0px; top: 0px; z-index: 100; width: 100%;">
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 0;">
-																					<div style="position: absolute; z-index: 985; transform: matrix(1, 0, 0, 1, -32, -97);">
-																						<div style="position: absolute; left: 0px; top: 0px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -256px; top: 0px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -256px; top: -256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: 0px; top: -256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: 256px; top: -256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: 256px; top: 0px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: 256px; top: 256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: 0px; top: 256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -256px; top: 256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -512px; top: 256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -512px; top: 0px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																						<div style="position: absolute; left: -512px; top: -256px; width: 256px; height: 256px;">
-																							<div style="width: 256px; height: 256px;"></div>
-																						</div>
-																					</div>
-																				</div>
-																			</div>
-																			<div style="position: absolute; left: 0px; top: 0px; z-index: 101; width: 100%;">
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 30;">
-																					<div style="position: absolute; z-index: 985; transform: matrix(1, 0, 0, 1, -32, -97);">
-																						<div style="width: 256px; height: 256px; position: absolute; left: 0px; top: 0px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -256px; top: 0px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -256px; top: -256px;"></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: 0px; top: -256px;"></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: 256px; top: -256px;"></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: 256px; top: 0px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: 256px; top: 256px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: 0px; top: 256px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -256px; top: 256px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -512px; top: 256px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -512px; top: 0px;"><canvas width="422" height="422" draggable="false" style="width: 256px; height: 256px; user-select: none; position: absolute; left: 0px; top: 0px;"></canvas></div>
-																						<div style="width: 256px; height: 256px; position: absolute; left: -512px; top: -256px;"></div>
-																					</div>
-																				</div>
-																			</div>
-																			<div style="position: absolute; left: 0px; top: 0px; z-index: 102; width: 100%;"></div>
-																			<div style="position: absolute; left: 0px; top: 0px; z-index: 103; width: 100%;"></div>
-																			<div style="position: absolute; left: 0px; top: 0px; z-index: 0;">
-																				<div style="position: absolute; z-index: 985; transform: matrix(1, 0, 0, 1, -32, -97);">
-																					<div style="position: absolute; left: 0px; top: -256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23540!3i15217!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=130394" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -256px; top: 0px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23539!3i15218!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=6967" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: 256px; top: -256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23541!3i15217!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=26486" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -256px; top: -256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23539!3i15217!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=71310" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: 0px; top: 0px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23540!3i15218!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=66051" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: 256px; top: 0px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23541!3i15218!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=93214" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -512px; top: 0px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23538!3i15218!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=113093" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: 0px; top: 256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23540!3i15219!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=3926" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: 256px; top: 256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23541!3i15219!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=31089" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -512px; top: 256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23538!3i15219!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=50968" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -256px; top: 256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23539!3i15219!4i256!2m3!1e0!2sm!3i765528974!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=75913" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																					<div style="position: absolute; left: -512px; top: -256px; width: 256px; height: 256px; transition: opacity 200ms linear;"><img draggable="false" alt="" role="presentation" src="https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i15!2i23538!3i15217!4i256!2m3!1e0!2sm!3i765528902!2m3!1e2!6m1!3e5!3m18!2sen-IN!3sUS!5e18!12m5!1e68!2m2!1sset!2sRoadmap!4e2!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2zcC5zOi02MHxwLmw6LTYw!4e0!5m2!1e3!5f2!23i46991212!23i47054750!23i47083502&amp;key=AIzaSyDaY6CxhlSHLMSvtUPXK6FSNMdcR8POkAE&amp;token=44147" style="width: 256px; height: 256px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none;"></div>
-																				</div>
-																			</div>
-																		</div>
-																		<div style="z-index: 3; position: absolute; height: 100%; width: 100%; padding: 0px; border-width: 0px; margin: 0px; left: 0px; top: 0px; touch-action: pan-x pan-y;">
-																			<div style="z-index: 4; position: absolute; left: 50%; top: 50%; width: 100%; will-change: transform; transform: translate(0px, 0px);">
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 104; width: 100%;"></div>
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 105; width: 100%;"></div>
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 106; width: 100%;">
-																					<slot></slot><span id="FA7D9D76-200E-407D-87C2-9F70005252C7" aria-live="polite" style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0px; overflow: hidden; clip-path: inset(100%); white-space: nowrap; border: 0px;"></span>
-																					<div style="position: absolute; left: 0px; top: 0px; z-index: 0;">
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -5px; top: -5px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -365px; top: 29px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -734px; top: 458px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -575px; top: 923px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 110px; top: 981px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 519px; top: 618px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 320px; top: 156px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																					</div>
-																					<div style="position: absolute; left: 0px; top: 0px; z-index: -1;">
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -185px; top: 12px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -549px; top: 244px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -655px; top: 690px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: -233px; top: 952px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 314px; top: 800px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 419px; top: 387px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																						<div style="display: block; width: 11px; height: 11px; cursor: pointer; touch-action: none; position: absolute; left: 157px; top: 75px;">
-																							<div style="position: absolute; left: 0px; top: 0px; width: 9px; height: 9px; border-width: 1px; border-style: solid; border-radius: 6px; opacity: 0.5; background-color: white; border-color: rgb(255, 0, 0);"></div>
-																						</div>
-																					</div>
-																				</div>
-																				<div style="position: absolute; left: 0px; top: 0px; z-index: 107; width: 100%;"><button type="button" title="Undo last edit" aria-label="Undo last edit" style="background: transparent; border: none; margin: 0px; padding: 0px; z-index: -202; cursor: pointer; display: none; touch-action: none;"><span style="display: inline-block;">
-																							<div style="width: 30px; height: 27px; overflow: hidden; position: relative;"><img alt="" src="https://maps.gstatic.com/mapfiles/undo_poly.png" draggable="false" style="position: absolute; left: 0px; top: 0px; user-select: none; border: 0px; padding: 0px; margin: 0px; max-width: none; width: 90px; height: 27px;"></div>
-																						</span></button></div>
-																			</div>
-																		</div>
-																		<div class="gm-style-moc" style="z-index: 4; position: absolute; height: 100%; width: 100%; padding: 0px; border-width: 0px; margin: 0px; left: 0px; top: 0px; transition-property: opacity, display; transition-behavior: allow-discrete; opacity: 0; display: none;">
-																			<p class="gm-style-mot"></p>
-																		</div>
-																	</div><iframe aria-hidden="true" frameborder="0" tabindex="-1" style="z-index: -1; position: absolute; width: 100%; height: 100%; top: 0px; left: 0px; border: none; opacity: 0;"></iframe>
-																	<div style="pointer-events: none; width: 100%; height: 100%; box-sizing: border-box; position: absolute; z-index: 1000002; opacity: 0; border: 2px solid rgb(26, 115, 232);"></div>
-																	<div></div>
-																	<div></div>
-																	<div></div>
-																	<div></div>
-																	<div><button draggable="false" aria-label="Toggle fullscreen view" title="Toggle fullscreen view" type="button" aria-pressed="false" class="gm-control-active gm-fullscreen-control" style="background: none rgb(255, 255, 255); border: 0px; margin: 10px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; border-radius: 2px; height: 40px; width: 40px; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; overflow: hidden; top: 0px; right: 0px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2018%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M0%200v6h2V2h4V0H0zm16%200h-4v2h4v4h2V0h-2zm0%2016h-4v2h6v-6h-2v4zM2%2012H0v6h6v-2H2v-4z%22/%3E%3C/svg%3E" alt="" style="height: 18px; width: 18px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2018%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M0%200v6h2V2h4V0H0zm16%200h-4v2h4v4h2V0h-2zm0%2016h-4v2h6v-6h-2v4zM2%2012H0v6h6v-2H2v-4z%22/%3E%3C/svg%3E" alt="" style="height: 18px; width: 18px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2018%22%3E%3Cpath%20fill%3D%22%23111%22%20d%3D%22M0%200v6h2V2h4V0H0zm16%200h-4v2h4v4h2V0h-2zm0%2016h-4v2h6v-6h-2v4zM2%2012H0v6h6v-2H2v-4z%22/%3E%3C/svg%3E" alt="" style="height: 18px; width: 18px;"></button></div>
-																	<div></div>
-																	<div></div>
-																	<div></div>
-																	<div></div>
-																	<div>
-																		<div class="gmnoprint gm-bundled-control gm-bundled-control-on-bottom" draggable="false" data-control-width="40" data-control-height="72" style="margin: 10px; user-select: none; position: absolute; bottom: 86px; right: 40px;">
-																			<div class="gmnoprint" data-control-width="40" data-control-height="40" style="display: none; position: absolute;">
-																				<div style="background-color: rgb(255, 255, 255); box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; border-radius: 2px; width: 40px; height: 40px;"><button draggable="false" aria-label="Rotate map clockwise" title="Rotate map clockwise" type="button" class="gm-control-active" style="background: none; display: none; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; left: 0px; top: 0px; overflow: hidden; width: 40px; height: 40px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23111%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"></button>
-																					<div style="position: relative; overflow: hidden; width: 30px; height: 1px; margin: 0px 5px; background-color: rgb(230, 230, 230); display: none;"></div><button draggable="false" aria-label="Rotate map counterclockwise" title="Rotate map counterclockwise" type="button" class="gm-control-active" style="background: none; display: none; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; left: 0px; top: 0px; overflow: hidden; width: 40px; height: 40px; transform: scaleX(-1);"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22/%3E%3Cpath%20fill%3D%22%23111%22%20d%3D%22m12.06%209.06%204-4-4-4-1.41%201.41%201.59%201.59h-.18c-2.3%200-4.6.88-6.35%202.64-3.52%203.51-3.52%209.21%200%2012.72%201.5%201.5%203.4%202.36%205.36%202.58v-2.02c-1.44-.21-2.84-.86-3.95-1.97-2.73-2.73-2.73-7.17%200-9.9%201.37-1.37%203.16-2.05%204.95-2.05h.17l-1.59%201.59%201.41%201.41zm8.94%203c-.19-1.74-.88-3.32-1.91-4.61l-1.43%201.43c.69.92%201.15%202%201.32%203.18H21zm-7.94%207.92V22c1.74-.19%203.32-.88%204.61-1.91l-1.43-1.43c-.91.68-2%201.15-3.18%201.32zm4.6-2.74%201.43%201.43c1.04-1.29%201.72-2.88%201.91-4.61h-2.02c-.17%201.18-.64%202.27-1.32%203.18z%22/%3E%3C/svg%3E" style="width: 20px; height: 20px;"></button>
-																					<div style="position: relative; overflow: hidden; width: 30px; height: 1px; margin: 0px 5px; background-color: rgb(230, 230, 230); display: none;"></div><button draggable="false" aria-label="Tilt map" title="Tilt map" type="button" class="gm-tilt gm-control-active" style="background: none; display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; top: 0px; left: 0px; overflow: hidden; width: 40px; height: 40px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M0%2016h8V9H0v7zm10%200h8V9h-8v7zM0%207h8V0H0v7zm10-7v7h8V0h-8z%22/%3E%3C/svg%3E" style="width: 18px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2016%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M0%2016h8V9H0v7zm10%200h8V9h-8v7zM0%207h8V0H0v7zm10-7v7h8V0h-8z%22/%3E%3C/svg%3E" style="width: 18px;"><img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2018%2016%22%3E%3Cpath%20fill%3D%22%23111%22%20d%3D%22M0%2016h8V9H0v7zm10%200h8V9h-8v7zM0%207h8V0H0v7zm10-7v7h8V0h-8z%22/%3E%3C/svg%3E" style="width: 18px;"></button>
-																				</div>
-																			</div><gmp-internal-camera-control data-control-width="40" data-control-height="40" draggable="false" class="gmnoprint" style="position: absolute; cursor: pointer; user-select: none; left: 0px; top: 0px;"><button draggable="false" aria-label="Map camera controls" title="Map camera controls" type="button" class="gm-control-active" aria-expanded="false" aria-controls="DE77C9C7-EA54-4250-A9B4-0CD4A8E3022F" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2019.175%202.125-2.125%201.425%201.4L12%2022l-3.55-3.55%201.425-1.4L12%2019.175zM4.825%2012l2.125%202.125-1.4%201.425L2%2012l3.55-3.55%201.4%201.425L4.825%2012zm14.35%200L17.05%209.875l1.4-1.425L22%2012l-3.55%203.55-1.4-1.425L19.175%2012zM12%204.825%209.875%206.95%208.45%205.55%2012%202l3.55%203.55-1.425%201.4L12%204.825z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2019.175%202.125-2.125%201.425%201.4L12%2022l-3.55-3.55%201.425-1.4L12%2019.175zM4.825%2012l2.125%202.125-1.4%201.425L2%2012l3.55-3.55%201.4%201.425L4.825%2012zm14.35%200L17.05%209.875l1.4-1.425L22%2012l-3.55%203.55-1.4-1.425L19.175%2012zM12%204.825%209.875%206.95%208.45%205.55%2012%202l3.55%203.55-1.425%201.4L12%204.825z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%231A73E8%22%20d%3D%22m12%2019.175%202.125-2.125L15.55%2018.45%2012%2022%208.45%2018.45%209.875%2017.05%2012%2019.175ZM4.825%2012l2.125%202.125L5.55%2015.55%202%2012%205.55%208.45%206.95%209.875%204.825%2012ZM19.175%2012%2017.05%209.875%2018.45%208.45%2022%2012%2018.45%2015.55%2017.05%2014.125%2019.175%2012ZM12%204.825%209.875%206.95%208.45%205.55%2012%202%2015.55%205.55%2014.125%206.95%2012%204.825Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23D1D1D1%22%20d%3D%22m12%2019.175%202.125-2.125L15.55%2018.45%2012%2022%208.45%2018.45%209.875%2017.05%2012%2019.175ZM4.825%2012l2.125%202.125L5.55%2015.55%202%2012%205.55%208.45%206.95%209.875%204.825%2012ZM19.175%2012%2017.05%209.875%2018.45%208.45%2022%2012%2018.45%2015.55%2017.05%2014.125%2019.175%2012ZM12%204.825%209.875%206.95%208.45%205.55%2012%202%2015.55%205.55%2014.125%206.95%2012%204.825Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button>
-																				<menu id="DE77C9C7-EA54-4250-A9B4-0CD4A8E3022F" style="list-style: none; padding: 0px; display: none; position: absolute; z-index: 999999; margin: 10px; width: 140px; height: 140px; right: 100%; bottom: -10px;">
-																					<li><button draggable="false" aria-label="Move up" title="Move up" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; top: 0px; left: 50%; transform: translateX(-50%);"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2010.8-4.6%204.6L6%2014l6-6%206%206-1.4%201.4-4.6-4.6z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22m12%2010.8-4.6%204.6L6%2014l6-6%206%206L16.6%2015.4%2012%2010.8Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2010.8-4.6%204.6L6%2014l6-6%206%206-1.4%201.4-4.6-4.6z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23D1D1D1%22%20d%3D%22m12%2010.8-4.6%204.6L6%2014l6-6%206%206L16.6%2015.4%2012%2010.8Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																					<li><button draggable="false" aria-label="Move left" title="Move left" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; bottom: 50%; left: 0px; transform: translateY(50%);"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m14%2018-6-6%206-6%201.4%201.4-4.6%204.6%204.6%204.6L14%2018z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22m14%2018-6-6%206-6L15.4%207.4%2010.8%2012%2015.4%2016.6%2014%2018Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m14%2018-6-6%206-6%201.4%201.4-4.6%204.6%204.6%204.6L14%2018z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23D1D1D1%22%20d%3D%22m14%2018-6-6%206-6L15.4%207.4%2010.8%2012%2015.4%2016.6%2014%2018Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																					<li><button draggable="false" aria-label="Move right" title="Move right" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; bottom: 50%; right: 0px; transform: translateY(50%);"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M12.6%2012%208%207.4%209.4%206l6%206-6%206L8%2016.6l4.6-4.6z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M12.6%2012%208%207.4%209.4%206l6%206-6%206L8%2016.6%2012.6%2012Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M12.6%2012%208%207.4%209.4%206l6%206-6%206L8%2016.6l4.6-4.6z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23D1D1D1%22%20d%3D%22M12.6%2012%208%207.4%209.4%206l6%206-6%206L8%2016.6%2012.6%2012Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																					<li><button draggable="false" aria-label="Move down" title="Move down" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; bottom: 0px; left: 50%; transform: translateX(-50%);"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2015.4-6-6L7.4%208l4.6%204.6L16.6%208%2018%209.4l-6%206z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22m12%2015.4-6-6L7.4%208l4.6%204.6L16.6%208%2018%209.4l-6%206Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2015.4-6-6L7.4%208l4.6%204.6L16.6%208%2018%209.4l-6%206Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22m12%2015.4-6-6L7.4%208l4.6%204.6L16.6%208%2018%209.4l-6%206z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																					<li><button draggable="false" aria-label="Zoom in" title="Zoom in" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; top: 0px; right: 0px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23666%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23333%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23111%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23d1d1d1%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																					<li><button draggable="false" aria-label="Zoom out" title="Zoom out" type="button" class="gm-control-active" style="background: none 6px center / 28px no-repeat rgb(255, 255, 255); display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; overflow: hidden; width: 40px; height: 40px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; bottom: 0px; right: 0px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23666%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M200-440v-80h560v80H200Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23333%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M200-440v-80h560v80H200Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23111%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M200-440v-80h560v80H200Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22%23d1d1d1%22%20viewBox%3D%220%20-960%20960%20960%22%3E%3Cpath%20d%3D%22M200-440v-80h560v80H200Z%22/%3E%3C/svg%3E" alt="" style="height: 28px; width: 28px;"></button></li>
-																				</menu>
-																			</gmp-internal-camera-control><button draggable="false" aria-label="Drag Pegman onto the map to open Street View" title="Drag Pegman onto the map to open Street View" type="button" style="background: none; display: block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: absolute; cursor: pointer; user-select: none; left: 20px; top: 72px;"></button>
-																		</div>
-																	</div>
-																	<div>
-																		<div style="margin: 0px 5px; z-index: 1000000; position: absolute; left: 0px; bottom: 0px;"><a target="_blank" rel="noopener" title="Open this area in Google Maps (opens a new window)" aria-label="Open this area in Google Maps (opens a new window)" href="https://maps.google.com/maps?ll=12.700585,78.619517&amp;z=15&amp;t=m&amp;hl=en-IN&amp;gl=US&amp;mapclient=apiv3" style="display: inline;">
-																				<div style="width: 66px; height: 26px;"><img alt="Google" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2069%2029%22%3E%3Cg%20fill%3D%22%23fff%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.5%22%20opacity%3D%22.6%22%3E%3Cpath%20d%3D%22M17.4706%207.33616%2018.0118%206.79504%2017.4599%206.26493C16.0963%204.95519%2014.2582%203.94522%2011.7008%203.94522c-4.613699999999999%200-8.50262%203.75517-8.50262%208.395779999999998C3.19818%2016.9817%207.0871%2020.7368%2011.7008%2020.7368%2014.1712%2020.7368%2016.0773%2019.918%2017.574%2018.3689%2019.1435%2016.796%2019.5956%2014.6326%2019.5956%2012.957%2019.5956%2012.4338%2019.5516%2011.9316%2019.4661%2011.5041L19.3455%2010.9012H10.9508V14.4954H15.7809C15.6085%2015.092%2015.3488%2015.524%2015.0318%2015.8415%2014.403%2016.4629%2013.4495%2017.1509%2011.7008%2017.1509%209.04835%2017.1509%206.96482%2015.0197%206.96482%2012.341%206.96482%209.66239%209.04835%207.53119%2011.7008%207.53119%2013.137%207.53119%2014.176%208.09189%2014.9578%208.82348L15.4876%209.31922%2016.0006%208.80619%2017.4706%207.33616Z%22/%3E%3Cpath%20d%3D%22M24.8656%2020.7286C27.9546%2020.7286%2030.4692%2018.3094%2030.4692%2015.0594%2030.4692%2011.7913%2027.953%209.39011%2024.8656%209.39011%2021.7783%209.39011%2019.2621%2011.7913%2019.2621%2015.0594c0%203.25%202.514499999999998%205.6692%205.6035%205.6692ZM24.8656%2012.8282C25.8796%2012.8282%2026.8422%2013.6652%2026.8422%2015.0594%2026.8422%2016.4399%2025.8769%2017.2905%2024.8656%2017.2905%2023.8557%2017.2905%2022.8891%2016.4331%2022.8891%2015.0594%2022.8891%2013.672%2023.853%2012.8282%2024.8656%2012.8282Z%22/%3E%3Cpath%20d%3D%22M35.7511%2017.2905H35.7469C34.737%2017.2905%2033.7703%2016.4331%2033.7703%2015.0594%2033.7703%2013.672%2034.7343%2012.8282%2035.7469%2012.8282%2036.7608%2012.8282%2037.7234%2013.6652%2037.7234%2015.0594%2037.7234%2016.4439%2036.7554%2017.2962%2035.7511%2017.2905ZM35.7387%2020.7286C38.8277%2020.7286%2041.3422%2018.3094%2041.3422%2015.0594%2041.3422%2011.7913%2038.826%209.39011%2035.7387%209.39011%2032.6513%209.39011%2030.1351%2011.7913%2030.1351%2015.0594%2030.1351%2018.3102%2032.6587%2020.7286%2035.7387%2020.7286Z%22/%3E%3Cpath%20d%3D%22M51.953%2010.4357V9.68573H48.3999V9.80826C47.8499%209.54648%2047.1977%209.38187%2046.4808%209.38187%2043.5971%209.38187%2041.0168%2011.8998%2041.0168%2015.0758%2041.0168%2017.2027%2042.1808%2019.0237%2043.8201%2019.9895L43.7543%2020.0168%2041.8737%2020.797%2041.1808%2021.0844%2041.4684%2021.7772C42.0912%2023.2776%2043.746%2025.1469%2046.5219%2025.1469%2047.9324%2025.1469%2049.3089%2024.7324%2050.3359%2023.7376%2051.3691%2022.7367%2051.953%2021.2411%2051.953%2019.2723v-8.8366Zm-7.2194%209.9844L44.7334%2020.4196C45.2886%2020.6201%2045.878%2020.7286%2046.4808%2020.7286%2047.1616%2020.7286%2047.7866%2020.5819%2048.3218%2020.3395%2048.2342%2020.7286%2048.0801%2021.0105%2047.8966%2021.2077%2047.6154%2021.5099%2047.1764%2021.7088%2046.5219%2021.7088%2045.61%2021.7088%2045.0018%2021.0612%2044.7336%2020.4201ZM46.6697%2012.8282C47.6419%2012.8282%2048.5477%2013.6765%2048.5477%2015.084%2048.5477%2016.4636%2047.6521%2017.2987%2046.6697%2017.2987%2045.6269%2017.2987%2044.6767%2016.4249%2044.6767%2015.084%2044.6767%2013.7086%2045.6362%2012.8282%2046.6697%2012.8282ZM55.7387%205.22083v-.75H52.0788V20.4412H55.7387V5.220829999999999Z%22/%3E%3Cpath%20d%3D%22M63.9128%2016.0614%2063.2945%2015.6492%2062.8766%2016.2637C62.4204%2016.9346%2061.8664%2017.3069%2061.0741%2017.3069%2060.6435%2017.3069%2060.3146%2017.2088%2060.0544%2017.0447%2059.9844%2017.0006%2059.9161%2016.9496%2059.8498%2016.8911L65.5497%2014.5286%2066.2322%2014.2456%2065.9596%2013.5589%2065.7406%2013.0075C65.2878%2011.8%2063.8507%209.39832%2060.8278%209.39832%2057.8445%209.39832%2055.5034%2011.7619%2055.5034%2015.0676%2055.5034%2018.2151%2057.8256%2020.7369%2061.0659%2020.7369%2063.6702%2020.7369%2065.177%2019.1378%2065.7942%2018.2213L66.2152%2017.5963%2065.5882%2017.1783%2063.9128%2016.0614ZM61.3461%2012.8511%2059.4108%2013.6526C59.7903%2013.0783%2060.4215%2012.7954%2060.9017%2012.7954%2061.067%2012.7954%2061.2153%2012.8161%2061.3461%2012.8511Z%22/%3E%3C/g%3E%3Cpath%20fill%3D%22%234285F4%22%20d%3D%22M11.7008%2019.9868C7.48776%2019.9868%203.94818%2016.554%203.94818%2012.341%203.94818%208.12803%207.48776%204.69522%2011.7008%204.69522%2014.0331%204.69522%2015.692%205.60681%2016.9403%206.80583L15.4703%208.27586C14.5751%207.43819%2013.3597%206.78119%2011.7008%206.78119%208.62108%206.78119%206.21482%209.26135%206.21482%2012.341%206.21482%2015.4207%208.62108%2017.9009%2011.7008%2017.9009%2013.6964%2017.9009%2014.8297%2017.0961%2015.5606%2016.3734%2016.1601%2015.7738%2016.5461%2014.9197%2016.6939%2013.7454h-4.9931V11.6512h7.0298C18.8045%2012.0207%2018.8456%2012.4724%2018.8456%2012.957%2018.8456%2014.5255%2018.4186%2016.4637%2017.0389%2017.8434%2015.692%2019.2395%2013.9838%2019.9868%2011.7008%2019.9868Z%22/%3E%3Cpath%20fill%3D%22%23E94235%22%20d%3D%22M29.7192%2015.0594C29.7192%2017.8927%2027.5429%2019.9786%2024.8656%2019.9786%2022.1884%2019.9786%2020.0121%2017.8927%2020.0121%2015.0594%2020.0121%2012.2096%2022.1884%2010.1401%2024.8656%2010.1401%2027.5429%2010.1401%2029.7192%2012.2096%2029.7192%2015.0594ZM27.5922%2015.0594C27.5922%2013.2855%2026.3274%2012.0782%2024.8656%2012.0782S22.1391%2013.2937%2022.1391%2015.0594C22.1391%2016.8086%2023.4038%2018.0405%2024.8656%2018.0405S27.5922%2016.8168%2027.5922%2015.0594Z%22/%3E%3Cpath%20fill%3D%22%23FABB05%22%20d%3D%22M40.5922%2015.0594C40.5922%2017.8927%2038.4159%2019.9786%2035.7387%2019.9786%2033.0696%2019.9786%2030.8851%2017.8927%2030.8851%2015.0594%2030.8851%2012.2096%2033.0614%2010.1401%2035.7387%2010.1401%2038.4159%2010.1401%2040.5922%2012.2096%2040.5922%2015.0594ZM38.4734%2015.0594C38.4734%2013.2855%2037.2087%2012.0782%2035.7469%2012.0782%2034.2851%2012.0782%2033.0203%2013.2937%2033.0203%2015.0594%2033.0203%2016.8086%2034.2851%2018.0405%2035.7469%2018.0405%2037.2087%2018.0487%2038.4734%2016.8168%2038.4734%2015.0594Z%22/%3E%3Cpath%20fill%3D%22%234285F4%22%20d%3D%22M51.203%2010.4357v8.8366C51.203%2022.9105%2049.0595%2024.3969%2046.5219%2024.3969%2044.132%2024.3969%2042.7031%2022.7955%2042.161%2021.4897L44.0417%2020.7095C44.3784%2021.5143%2045.1997%2022.4588%2046.5219%2022.4588%2048.1479%2022.4588%2049.1499%2021.4487%2049.1499%2019.568V18.8617H49.0759C48.5914%2019.4612%2047.6552%2019.9786%2046.4808%2019.9786%2044.0171%2019.9786%2041.7668%2017.8352%2041.7668%2015.0758%2041.7668%2012.3%2044.0253%2010.1319%2046.4808%2010.1319%2047.6552%2010.1319%2048.5914%2010.6575%2049.0759%2011.2323H49.1499V10.4357H51.203ZM49.2977%2015.084C49.2977%2013.3512%2048.1397%2012.0782%2046.6697%2012.0782%2045.175%2012.0782%2043.9267%2013.3429%2043.9267%2015.084%2043.9267%2016.8004%2045.175%2018.0487%2046.6697%2018.0487%2048.1397%2018.0487%2049.2977%2016.8004%2049.2977%2015.084Z%22/%3E%3Cpath%20fill%3D%22%2334A853%22%20d%3D%22M54.9887%205.22083V19.6912H52.8288V5.220829999999999H54.9887Z%22/%3E%3Cpath%20fill%3D%22%23E94235%22%20d%3D%22M63.4968%2016.6854%2065.1722%2017.8023C64.6301%2018.6072%2063.3244%2019.9869%2061.0659%2019.9869%2058.2655%2019.9869%2056.2534%2017.827%2056.2534%2015.0676%2056.2534%2012.1439%2058.2901%2010.1483%2060.8278%2010.1483%2063.3818%2010.1483%2064.6301%2012.1768%2065.0408%2013.2773L65.2625%2013.8357%2058.6843%2016.5623C59.1853%2017.5478%2059.9737%2018.0569%2061.0741%2018.0569%2062.1746%2018.0569%2062.9384%2017.5067%2063.4968%2016.6854ZM58.3312%2014.9115%2062.7331%2013.0884C62.4867%2012.4724%2061.764%2012.0454%2060.9017%2012.0454%2059.8012%2012.0454%2058.2737%2013.0145%2058.3312%2014.9115Z%22/%3E%3C/svg%3E" draggable="false" style="position: absolute; left: 0px; top: 0px; width: 66px; height: 26px; user-select: none; border: 0px; padding: 0px; margin: 0px;"></div>
-																			</a></div>
-																	</div>
-																	<div></div>
-																	<div>
-																		<div style="display: inline-flex; position: absolute; right: 0px; bottom: 0px;">
-																			<div class="gmnoprint" style="z-index: 1000001;">
-																				<div draggable="false" class="gm-style-cc" style="user-select: none; position: relative; height: 14px; line-height: 14px;">
-																					<div style="opacity: 0.7; width: 100%; height: 100%; position: absolute;">
-																						<div style="width: 1px;"></div>
-																						<div style="background-color: rgb(245, 245, 245); width: auto; height: 100%; margin-left: 1px;"></div>
-																					</div>
-																					<div style="position: relative; padding-right: 6px; padding-left: 6px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif; font-size: 10px; color: rgb(0, 0, 0); white-space: nowrap; direction: ltr; text-align: right; vertical-align: middle; display: inline-block;"><button draggable="false" aria-label="Keyboard shortcuts" title="Keyboard shortcuts" type="button" style="background: none; display: inline-block; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; color: rgb(0, 0, 0); font-family: inherit; line-height: inherit;">Keyboard shortcuts</button></div>
-																				</div>
-																			</div>
-																			<div class="gmnoprint" style="z-index: 1000001;">
-																				<div draggable="false" class="gm-style-cc" style="user-select: none; position: relative; height: 14px; line-height: 14px;">
-																					<div style="opacity: 0.7; width: 100%; height: 100%; position: absolute;">
-																						<div style="width: 1px;"></div>
-																						<div style="background-color: rgb(245, 245, 245); width: auto; height: 100%; margin-left: 1px;"></div>
-																					</div>
-																					<div style="position: relative; padding-right: 6px; padding-left: 6px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif; font-size: 10px; color: rgb(0, 0, 0); white-space: nowrap; direction: ltr; text-align: right; vertical-align: middle; display: inline-block;"><button draggable="false" aria-label="Map Data" title="Map Data" type="button" style="background: none; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; color: rgb(0, 0, 0); font-family: inherit; line-height: inherit; display: none;">Map Data</button><span >Map data ©2026</span></div>
-																				</div>
-																			</div>
-																			<div class="gmnoscreen">
-																				<div style="font-family: Roboto, Arial, sans-serif; font-size: 11px; color: rgb(0, 0, 0); direction: ltr; text-align: right; background-color: rgb(245, 245, 245);">Map data ©2026</div>
-																			</div><button draggable="false" aria-label="Map scale: 200 m per 43 pixels" title="Map scale: 200 m per 43 pixels" type="button" class="gm-style-cc" aria-describedby="2DC38F75-821C-4ED5-AF07-1B877456C8F1" style="background: none; display: none; border: 0px; margin: 0px; padding: 0px; text-transform: none; appearance: none; position: relative; cursor: pointer; user-select: none; height: 14px; line-height: 14px;">
-																				<div style="opacity: 0.7; width: 100%; height: 100%; position: absolute;">
-																					<div style="width: 1px;"></div>
-																					<div style="background-color: rgb(245, 245, 245); width: auto; height: 100%; margin-left: 1px;"></div>
-																				</div>
-																				<div style="position: relative; padding-right: 6px; padding-left: 6px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif; font-size: 10px; color: rgb(0, 0, 0); white-space: nowrap; direction: ltr; text-align: right; vertical-align: middle; display: inline-block;"><span style="color: rgb(0, 0, 0);">200 m&nbsp;</span>
-																					<div style="position: relative; display: inline-block; height: 8px; bottom: -1px; width: 47px;">
-																						<div style="width: 100%; height: 4px; position: absolute; left: 0px; top: 0px;"></div>
-																						<div style="width: 4px; height: 8px; left: 0px; top: 0px;"></div>
-																						<div style="width: 4px; height: 8px; position: absolute; right: 0px; bottom: 0px;"></div>
-																						<div style="position: absolute; background-color: rgb(0, 0, 0); height: 2px; left: 1px; bottom: 1px; right: 1px;"></div>
-																						<div style="position: absolute; width: 2px; height: 6px; left: 1px; top: 1px; background-color: rgb(0, 0, 0);"></div>
-																						<div style="width: 2px; height: 6px; position: absolute; background-color: rgb(0, 0, 0); bottom: 1px; right: 1px;"></div>
-																					</div>
-																				</div><span id="2DC38F75-821C-4ED5-AF07-1B877456C8F1" style="display: none;">Click to toggle between metric and imperial units</span>
-																			</button>
-																			<div class="gmnoprint gm-style-cc" draggable="false" style="z-index: 1000001; user-select: none; position: relative; height: 14px; line-height: 14px;">
-																				<div style="opacity: 0.7; width: 100%; height: 100%; position: absolute;">
-																					<div style="width: 1px;"></div>
-																					<div style="background-color: rgb(245, 245, 245); width: auto; height: 100%; margin-left: 1px;"></div>
-																				</div>
-																				<div style="position: relative; padding-right: 6px; padding-left: 6px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif; font-size: 10px; color: rgb(0, 0, 0); white-space: nowrap; direction: ltr; text-align: right; vertical-align: middle; display: inline-block;"><a aria-label="Terms (opens in new tab)" href="https://www.google.com/intl/en-IN_US/help/terms_maps.html" target="_blank" rel="noopener" style="text-decoration: none; cursor: pointer; color: rgb(0, 0, 0);">Terms</a></div>
-																			</div>
-																			<div draggable="false" class="gm-style-cc" style="user-select: none; position: relative; height: 14px; line-height: 14px;">
-																				<div style="opacity: 0.7; width: 100%; height: 100%; position: absolute;">
-																					<div style="width: 1px;"></div>
-																					<div style="background-color: rgb(245, 245, 245); width: auto; height: 100%; margin-left: 1px;"></div>
-																				</div>
-																				<div style="position: relative; padding-right: 6px; padding-left: 6px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif; font-size: 10px; color: rgb(0, 0, 0); white-space: nowrap; direction: ltr; text-align: right; vertical-align: middle; display: inline-block;"><a target="_blank" rel="noopener" title="Report errors in the road map or imagery to Google" dir="ltr" href="https://www.google.com/maps/@12.7005853,78.6195174,15z/data=!10m1!1e1!12b1?source=apiv3&amp;rapsrc=apiv3" style="font-family: Roboto, Arial, sans-serif; font-size: 10px; text-decoration: none; position: relative; color: rgb(0, 0, 0);">Report a map error</a></div>
-																			</div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-															<div style="background-color: white; font-weight: 500; font-family: Roboto, sans-serif; padding: 15px 25px; box-sizing: border-box; top: 5px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 5px; left: 50%; max-width: 375px; position: absolute; transform: translateX(-50%); width: calc(100% - 10px); z-index: 1;">
-																<div><img alt="" src="https://maps.gstatic.com/mapfiles/api-3/images/google_gray.svg" draggable="false" style="padding: 0px; margin: 0px; border: 0px; height: 17px; vertical-align: middle; width: 52px; user-select: none;"></div>
-																<div style="line-height: 20px; margin: 15px 0px;"><span style="color: rgba(0, 0, 0, 0.87); font-size: 14px;">This page can't load Google Maps correctly.</span></div>
-																<table style="width: 100%;">
-																	<tr>
-																		<td style="line-height: 16px; vertical-align: middle;"><a href="http://g.co/dev/maps-no-account" target="_blank" rel="noopener" style="color: rgba(0, 0, 0, 0.54); font-size: 12px;">Do you own this website?</a></td>
-																		<td style="text-align: right;"><button class="dismissButton">OK</button></td>
-																	</tr>
-																</table>
-															</div>
-														</div>
-													</div>
-												</div>
-
-												<div class="row form-group">
-													<div class="col col-md-3"><label for="latlng" class="form-control-label">hubs lat long</label></div>
-													<div class="col-12 col-md-9">
-														<!--<input type="text" id="hub_lat" name="hub_lat" placeholder="hub latitude" class="form-control" readonly>-->
-														<input type="text" name="all_latlng" id="latlng" value="[ {  &quot;lat&quot;: 12.70058533814469,  &quot;lng&quot;: 78.61951737333882 }, {  &quot;lat&quot;: 12.69916191381088,  &quot;lng&quot;: 78.60410003592122 }, {  &quot;lat&quot;: 12.681206197179083,  &quot;lng&quot;: 78.5882481806432 }, {  &quot;lat&quot;: 12.66174183784786,  &quot;lng&quot;: 78.595055627123 }, {  &quot;lat&quot;: 12.659313268188793,  &quot;lng&quot;: 78.62445263792623 }, {  &quot;lat&quot;: 12.674491449054829,  &quot;lng&quot;: 78.64200501371968 }, {  &quot;lat&quot;: 12.693855401405148,  &quot;lng&quot;: 78.63346486021626 }]" class="form-control" readonly="">
-													</div>
-												</div>
-
-												<!--<div class="row form-group">
-							<div class="col col-md-3"><label for="hub_lat" class="form-control-label">hub latitude</label></div>
-							<div class="col-12 col-md-9"><input type="text" id="hub_lat" name="hub_lat" placeholder="hub latitude" value="12.700585338145" class="form-control" readonly></div>
-						  </div>
-
-							<div class="row form-group">
-							<div class="col col-md-3"><label for="hub_lng" class="form-control-label">hub longitude</label></div>
-							<div class="col-12 col-md-9"><input type="text" id="hub_lng" name="hub_lng" placeholder="hub longitude" value="78.619517373339" class="form-control" readonly></div>
-						  </div>-->
-
-												<!--<div class="row form-group">
-							<div class="col col-md-3"><label for="status" class="form-control-label">Status</label></div>
-							<div class="col-12 col-md-9">
-								<select class="form-control" name="status">
-									<option value="1" selected>Active</option>
-									<option value="0" >InActive</option>
-								</select>
-							</div>
-						  </div>-->
-
-												<div class="card-footer">
-													<button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-dot-circle-o"></i> Update</button>
-													<a href="hub.php">
-														<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-dot-circle-o"></i> Back</button>
-													</a>
-													<button id="clear-all" type="reset" class="btn btn-sm btn-secondary">Reset all</button>
-												</div>
-											</form>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-md-12">
-							<div class="section-content">
-
-								<div class="content-details show table-responsive">
-									<div id="data-table_wrapper" class="dataTables_wrapper container-fluid dt-bootstrap4 no-footer">
-
-
-										<table id="data-table" class="table data-table table-striped table-bordered dataTable no-footer" role="grid" aria-describedby="data-table_info">
-											<thead>
-												<tr role="row">
-													<th class="sorting_asc" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="ID: activate to sort column descending" style="width: 53.2197px;">ID</th>
-													<th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="City: activate to sort column ascending" style="width: 208.835px;">City</th>
-													<th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="hub: activate to sort column ascending" style="width: 104.574px;">hub</th>
-													<th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="Status: activate to sort column ascending" style="width: 130.502px;">Status</th>
-													<th class="sorting" tabindex="0" aria-controls="data-table" rowspan="1" colspan="1" aria-label="Actions: activate to sort column ascending" style="width: 136.866px;">Actions</th>
-												</tr>
-											</thead>
-											<tbody> 
-
-												<tr role="row" class="even">
-													<td class="sorting_1">21</td>
-													<td>Chandigarh</td>
-													<td>SHD</td>
-													<td>
-														<label class="switch">
-															<input type="checkbox" name="status" class="status_enable switch-warning change_status" data-table="hubs" checked="" data-id="21" value="active">
-															<span class="slider round"></span>
-														</label>
-													</td>
-													<td>
-														<a href="{{url('admin/hub')}}"><button class="btn btn-outline-primary">Edit</button></a>
-													</td>
-												</tr>
-											</tbody>
-										</table>
-
-									</div>
-								</div><!-- /.content-details -->
-							</div>
-						</div>
-
-
-					</div>
-				</div><!-- /.contents-inner -->
-
-			</div>
-
-		</div>
-	</div><!-- /.contents-inner -->
-
-
-
-</div><!-- /.dashboard-contents -->
-
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection

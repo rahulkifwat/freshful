@@ -61,11 +61,11 @@
              <div class="dropdown user-menu">
                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
 
-                     <h4 class="name">Admin Name</h4>
+                     <h4 class="name">{{ Auth::guard('admin')->user()->name ?? 'Admin' }}</h4>
                  </a>
                  <ul class="dropdown-menu">
-                     <li><a href="{{url('admin/profile')}}"><i class="fa fa-user"></i> My Profile</a></li>
-                     <li><a href="{{url('admin/profile')}}"><i class="fa fa-power-off"></i> Logout</a></li>
+                     <li><a href="{{ url('admin/profile') }}"><i class="fa fa-user"></i> My Profile</a></li>
+                     <li><a href="{{ route('admin.logout') }}"><i class="fa fa-power-off"></i> Logout</a></li>
                  </ul>
              </div>
 

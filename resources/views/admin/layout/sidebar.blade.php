@@ -139,12 +139,12 @@
            <i class="icon icon-user"></i><span class="menu-title">Policies</span>
          </a>
          <div class="dropdown-menu">
-           <a class="nav-link" href="policies.php?type=privacy-policy">Privacy Policy</a>
-           <a class="nav-link" href="policies.php?type=shipping_policy">Shipping Policy</a>
-           <a class="nav-link" href="policies.php?type=terms">Terms & Conditions</a>
-           <a class="nav-link" href="policies.php?type=about">About</a>
-           <a class="nav-link" href="policies.php?type=refund_ploicy">Refund Policy</a>
-           <a class="nav-link" href="policies.php?type=faq">Faq</a>
+           <a class="nav-link" href="policies?type=privacy-policy">Privacy Policy</a>
+           <a class="nav-link" href="policies?type=shipping_policy">Shipping Policy</a>
+           <a class="nav-link" href="policies?type=terms">Terms & Conditions</a>
+           <a class="nav-link" href="policies?type=about">About</a>
+           <a class="nav-link" href="policies?type=refund_policy">Refund Policy</a>
+           <a class="nav-link" href="policies?type=faq">Faq</a>
          </div>
        </li>
 

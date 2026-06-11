@@ -5,44 +5,39 @@
   <div class="contents-inner">
     <div class="row">
       <div class="full-wdt">
-
         <div class="contents-inner">
           <div class="row">
-            <div class="col-12">
+            <div class="col-md-12">
               <div class="section-content">
-                <div class="">
-                  <div class="col-md-12">
-                    <div class="section-content">
-                      <div class="card pb-3">
-                        <div class="card-header content-head mb-3">
-                          <strong class="card-title mb-3">Profile</strong>
-                        </div>
-                        <div class="card-body">
-                          <div class="mx-auto d-block">
-                            <img class="rounded-circle mx-auto d-block" src="images/avatar/" alt="Card image cap">
-                            <h5 class="text-sm-center mt-2 mb-1">Admin</h5>
-                            <div class="location text-sm-center"><i class="fa fa-map-marker"></i> Indira Nagar, Bangalore</div>
-                          </div>
-                          <hr>
-                          <div class="card-text text-sm-center">
-                            <a href="{{url('admin/edit_profile')}}"><button class="btn app-btn btn-primary" style="color: #fff;"><i class="fa fa-edit"></i> Edit Profile</button></a>
-                          </div>
-                        </div>
-                      </div>
-                    </div><!-- /.section-content -->
-                  </div>
+
+                <div class="content-head">
+                  <h4 class="content-title">My Profile</h4>
+                  <a href="{{ route('admin.edit_profile') }}" class="btn btn-primary btn-sm" style="float:right;">
+                    <i class="fa fa-pencil"></i> Edit Profile
+                  </a>
                 </div>
 
+                <div class="content-details show">
+
+                  @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                  @endif
+
+                  <div class="card">
+                    <div class="card-body">
+                      <p><strong>Name:</strong> {{ $admin->name }}</p>
+                      <p><strong>Email:</strong> {{ $admin->email }}</p>
+                      <p><strong>Phone:</strong> {{ $admin->phone ?? '-' }}</p>
+                    </div>
+                  </div>
+
+                </div>
               </div>
-            </div><!-- /.contents-inner -->
-
+            </div>
           </div>
-
         </div>
       </div>
     </div>
-
   </div>
 </div>
-
 @endsection

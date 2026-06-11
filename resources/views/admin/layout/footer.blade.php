@@ -59,4 +59,83 @@
    });
  </script>
 
- 
+ <script>
+   // Universal admin AJAX handlers — wired from data-attributes on the markup.
+   (function ($) {
+     var token = document.querySelector('meta[name="csrf-token"]');
+     token = token ? token.getAttribute('content') : '';
+     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': token } });
+
+     // Status toggle (.change_status checkbox with data-table + data-id).
+     // Skip elements without data-table — those are order-status selects
+     // handled by a separate listener below.
+     $(document).on('change', '.change_status', function () {
+       var $el = $(this);
+       if (!$el.data('table')) { return; }
+       $.post('{{ url('admin/ajax/change-status') }}', {
+         table: $el.data('table'),
+         id:    $el.data('id'),
+         value: $el.val()
+       }).done(function (res) {
+         if (res.result) {
+           $el.val(res.status);
+           if (typeof toastr !== 'undefined') toastr.success(res.message);
+         } else {
+           $el.prop('checked', !$el.prop('checked'));
+           if (typeof toastr !== 'undefined') toastr.error(res.message || 'Update failed.');
+         }
+       }).fail(function () {
+         $el.prop('checked', !$el.prop('checked'));
+         if (typeof toastr !== 'undefined') toastr.error('Network error.');
+       });
+     });
+
+     // Delete record (.deleteRecord button with data-table + data-id).
+     $(document).on('click', '.deleteRecord', function () {
+       var $btn = $(this);
+       if (typeof swal === 'function') {
+         swal({
+           title: 'Delete this record?', icon: 'warning',
+           buttons: ['Cancel', 'Delete'], dangerMode: true
+         }).then(function (ok) { if (ok) doDelete($btn); });
+       } else if (window.confirm('Delete this record?')) {
+         doDelete($btn);
+       }
+     });
+
+     function doDelete($btn) {
+       $.post('{{ url('admin/ajax/delete-record') }}', {
+         table: $btn.data('table'),
+         id:    $btn.data('id')
+       }).done(function (res) {
+         if (res.result) {
+           $btn.closest('tr').fadeOut(200, function () { $(this).remove(); });
+           if (typeof toastr !== 'undefined') toastr.success(res.message);
+         } else if (typeof toastr !== 'undefined') {
+           toastr.error(res.message || 'Delete failed.');
+         }
+       }).fail(function () {
+         if (typeof toastr !== 'undefined') toastr.error('Network error.');
+       });
+     }
+
+     // Order status dropdown (used on /admin/order).
+     $(document).on('change', '.change_status_order, select.change_status[data-order_id]', function () {
+       var $sel = $(this);
+       $.post('{{ url('admin/ajax/change-order-status') }}', {
+         id:           $sel.data('id'),
+         order_id:     $sel.data('order_id'),
+         order_status: $sel.val()
+       }).done(function (res) {
+         if (res.result) {
+           if (typeof toastr !== 'undefined') toastr.success(res.message);
+         } else if (typeof toastr !== 'undefined') {
+           toastr.error(res.message || 'Update failed.');
+         }
+       }).fail(function () {
+         if (typeof toastr !== 'undefined') toastr.error('Network error.');
+       });
+     });
+   })(jQuery);
+ </script>
+
