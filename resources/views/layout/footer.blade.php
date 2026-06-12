@@ -160,9 +160,9 @@
 </script>
 <script>
     const buyer_id = {{ Auth::user()->id  ?? 0}};
-
+    const getcartUrl = "{{ route('get-cart') }}";
     function loadCart() {
-        fetch(`/get-cart?buyer_id=${buyer_id}`)
+        fetch(`${getcartUrl}?buyer_id=${buyer_id}`)
             .then(res => res.json())
             .then(data => {
                 if (data.result) {
