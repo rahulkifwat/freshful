@@ -233,7 +233,7 @@
 </script>
 <script>
 const csrfToken = '{{ csrf_token() }}';
-const addCartUrl = "{{ route('addCart') }}";
+const addCartUrl = "{{ route('add-cart') }}";
 function updateCartHttp(payload) {
     return fetch(addCartUrl, {
         method: 'POST',
