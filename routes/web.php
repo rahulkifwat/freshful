@@ -26,6 +26,14 @@ use App\Http\Controllers\HubAuthController;
 use App\Http\Controllers\HubController;
 use App\Http\Controllers\MarketingManagerAuthController;
 use App\Http\Controllers\MarketingManagerController;
+use App\Http\Controllers\OperationManagerAuthController;
+use App\Http\Controllers\OperationManagerController;
+use App\Http\Controllers\PlanningManagerAuthController;
+use App\Http\Controllers\PlanningManagerController;
+use App\Http\Controllers\PosAuthController;
+use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProductionAuthController;
+use App\Http\Controllers\ProductionController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -609,5 +617,372 @@ Route::prefix('marketing_manager')->group(function () {
         Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('marketing_manager.ajax.change_status');
         Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('marketing_manager.ajax.delete_record');
         Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('marketing_manager.ajax.change_order_status');
+    });
+});
+
+// ─── Operation Manager ────────────────────────────────────────────────────────
+Route::prefix('operation_manager')->group(function () {
+    // Guest routes
+    Route::middleware('operation_manager_redirect')->group(function () {
+        Route::get('/login',  [OperationManagerAuthController::class, 'login'])->name('operation_manager.login');
+        Route::post('/login', [OperationManagerAuthController::class, 'loginSubmit'])->name('operation_manager.login_submit');
+    });
+
+    // Authenticated routes
+    Route::middleware('operation_manager')->group(function () {
+        Route::get('/logout',    [OperationManagerAuthController::class, 'logout'])->name('operation_manager.logout');
+        Route::get('/dashboard', [OperationManagerController::class, 'dashboard'])->name('operation_manager.dashboard');
+
+        // Orders
+        Route::get('/all_orders',          [OperationManagerController::class, 'allOrders'])->name('operation_manager.all_orders');
+        Route::get('/view_order/{id}',     [OperationManagerController::class, 'viewOrder'])->name('operation_manager.view_order');
+        Route::get('/view_operation_order/{id}', [OperationManagerController::class, 'viewOperationOrder'])->name('operation_manager.view_operation_order');
+        Route::get('/scheduled_orders',    [OperationManagerController::class, 'scheduledOrders'])->name('operation_manager.scheduled_orders');
+        Route::get('/pending_orders',      [OperationManagerController::class, 'pendingOrders'])->name('operation_manager.pending_orders');
+        Route::get('/order_status',        [OperationManagerController::class, 'orderStatus'])->name('operation_manager.order_status');
+
+        // Customers
+        Route::get('/all_customers',       [OperationManagerController::class, 'allCustomers'])->name('operation_manager.all_customers');
+        Route::get('/customer_order',      [OperationManagerController::class, 'customerOrder'])->name('operation_manager.customer_order');
+
+        // Inventory
+        Route::get('/hub_inventory',       [OperationManagerController::class, 'hubInventory'])->name('operation_manager.hub_inventory');
+        Route::get('/pending_inward',      [OperationManagerController::class, 'pendingInward'])->name('operation_manager.pending_inward');
+        Route::get('/locked_inventory',    [OperationManagerController::class, 'lockedInventory'])->name('operation_manager.locked_inventory');
+        Route::get('/interhub_orders',     [OperationManagerController::class, 'interhubOrders'])->name('operation_manager.interhub_orders');
+        Route::get('/interhub_moments_view',[OperationManagerController::class, 'interhubMomentsView'])->name('operation_manager.interhub_moments_view');
+        Route::get('/inward_outward',      [OperationManagerController::class, 'inwardOutward'])->name('operation_manager.inward_outward');
+
+        // Stock Management
+        Route::get('/accept_inward_stocks',    [OperationManagerController::class, 'acceptInwardStocks'])->name('operation_manager.accept_inward_stocks');
+        Route::get('/request_outward_stocks',  [OperationManagerController::class, 'requestOutwardStocks'])->name('operation_manager.request_outward_stocks');
+        Route::post('/request_outward_stocks', [OperationManagerController::class, 'requestOutwardStocks'])->name('operation_manager.request_outward_stocks.submit');
+
+        // Danger Stock
+        Route::get('/danger_stock',            [OperationManagerController::class, 'dangerStock'])->name('operation_manager.danger_stock');
+        Route::get('/transfer_danger_stock',   [OperationManagerController::class, 'transferDangerStock'])->name('operation_manager.transfer_danger_stock');
+        Route::post('/transfer_danger_stock',  [OperationManagerController::class, 'transferDangerStock'])->name('operation_manager.transfer_danger_stock.submit');
+
+        // Wastage
+        Route::get('/sku_wastage',             [OperationManagerController::class, 'skuWastage'])->name('operation_manager.sku_wastage');
+        Route::get('/submit_wastage_report',   [OperationManagerController::class, 'submitWastageReport'])->name('operation_manager.submit_wastage_report');
+        Route::post('/submit_wastage_report',  [OperationManagerController::class, 'submitWastageReport'])->name('operation_manager.submit_wastage_report.submit');
+        Route::get('/wastage_reports',         [OperationManagerController::class, 'wastageReports'])->name('operation_manager.wastage_reports');
+        Route::get('/view_wastage_report',     [OperationManagerController::class, 'viewWastageReport'])->name('operation_manager.view_wastage_report');
+        Route::get('/view_wastage_report_hub_wise', [OperationManagerController::class, 'viewWastageReportHubWise'])->name('operation_manager.view_wastage_report_hub_wise');
+
+        // Production
+        Route::get('/products',    [OperationManagerController::class, 'products'])->name('operation_manager.products');
+        Route::get('/production',  [OperationManagerController::class, 'production'])->name('operation_manager.production');
+        Route::get('/sku_report',  [OperationManagerController::class, 'skuReport'])->name('operation_manager.sku_report');
+
+        // Delivery & Hub
+        Route::get('/delivery_boy',   [OperationManagerController::class, 'deliveryBoy'])->name('operation_manager.delivery_boy');
+        Route::get('/hub_kml_list',   [OperationManagerController::class, 'hubKmlList'])->name('operation_manager.hub_kml_list');
+
+        // Marketing
+        Route::get('/banner',         [OperationManagerController::class, 'banner'])->name('operation_manager.banner');
+        Route::get('/home_offers',    [OperationManagerController::class, 'homeOffers'])->name('operation_manager.home_offers');
+        Route::get('/promotions',     [OperationManagerController::class, 'promotions'])->name('operation_manager.promotions');
+        Route::get('/news_letters',   [OperationManagerController::class, 'newsLetters'])->name('operation_manager.news_letters');
+        Route::get('/rating_reviews', [OperationManagerController::class, 'ratingReviews'])->name('operation_manager.rating_reviews');
+
+        // Grievance
+        Route::get('/grievance',            [OperationManagerController::class, 'grievance'])->name('operation_manager.grievance');
+        Route::get('/grievance_categories', [OperationManagerController::class, 'grievanceCategories'])->name('operation_manager.grievance_categories');
+
+        // Finance / Wallet
+        Route::get('/wallet_history',         [OperationManagerController::class, 'walletHistory'])->name('operation_manager.wallet_history');
+        Route::get('/wallet_payment_history', [OperationManagerController::class, 'walletPaymentHistory'])->name('operation_manager.wallet_payment_history');
+        Route::get('/add_wallet_money',       [OperationManagerController::class, 'addWalletMoney'])->name('operation_manager.add_wallet_money');
+        Route::post('/add_wallet_money',      [OperationManagerController::class, 'addWalletMoneySubmit'])->name('operation_manager.add_wallet_money.submit');
+        Route::get('/withdraw_money',         [OperationManagerController::class, 'withdrawMoney'])->name('operation_manager.withdraw_money');
+        Route::get('/online_payment_history', [OperationManagerController::class, 'onlinePaymentHistory'])->name('operation_manager.online_payment_history');
+        Route::get('/cash_deposit',           [OperationManagerController::class, 'cashDeposit'])->name('operation_manager.cash_deposit');
+
+        // Cash Deposit Receipts
+        Route::get('/deposit_receipt',             [OperationManagerController::class, 'depositReceipt'])->name('operation_manager.deposit_receipt');
+        Route::post('/deposit_receipt',            [OperationManagerController::class, 'depositReceipt'])->name('operation_manager.deposit_receipt.submit');
+        Route::get('/view_cash_deposits_hub',      [OperationManagerController::class, 'viewCashDepositsHub'])->name('operation_manager.view_cash_deposits_hub');
+        Route::get('/view_cash_deposits_all_hub',  [OperationManagerController::class, 'viewCashDepositsAllHub'])->name('operation_manager.view_cash_deposits_all_hub');
+
+        // Reports
+        Route::get('/sales_report', [OperationManagerController::class, 'salesReport'])->name('operation_manager.sales_report');
+
+        // Time Slots
+        Route::get('/express_order_time_slot',     [OperationManagerController::class, 'expressOrderTimeSlot'])->name('operation_manager.express_order_time_slot');
+        Route::post('/express_order_time_slot',    [OperationManagerController::class, 'expressOrderTimeSlot'])->name('operation_manager.express_order_time_slot.submit');
+        Route::get('/scheduled_order_time_slot',   [OperationManagerController::class, 'scheduledOrderTimeSlot'])->name('operation_manager.scheduled_order_time_slot');
+        Route::post('/scheduled_order_time_slot',  [OperationManagerController::class, 'scheduledOrderTimeSlot'])->name('operation_manager.scheduled_order_time_slot.submit');
+
+        // Profile
+        Route::get('/profile',      [OperationManagerController::class, 'profile'])->name('operation_manager.profile');
+        Route::get('/edit_profile', [OperationManagerController::class, 'editProfile'])->name('operation_manager.edit_profile');
+        Route::post('/edit_profile',[OperationManagerController::class, 'updateProfile'])->name('operation_manager.update_profile');
+
+        // AJAX
+        Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('operation_manager.ajax.change_status');
+        Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('operation_manager.ajax.delete_record');
+        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('operation_manager.ajax.change_order_status');
+        Route::post('/ajax/inward-stock-action', [OperationManagerController::class, 'inwardStockAction'])->name('operation_manager.ajax.inward_stock_action');
+    });
+});
+
+// ─── Planning Manager ─────────────────────────────────────────────────────────
+Route::prefix('planning_manager')->group(function () {
+    // Guest routes
+    Route::middleware('planning_manager_redirect')->group(function () {
+        Route::get('/login',  [PlanningManagerAuthController::class, 'login'])->name('planning_manager.login');
+        Route::post('/login', [PlanningManagerAuthController::class, 'loginSubmit'])->name('planning_manager.login_submit');
+    });
+
+    // Authenticated routes
+    Route::middleware('planning_manager')->group(function () {
+        Route::get('/logout',    [PlanningManagerAuthController::class, 'logout'])->name('planning_manager.logout');
+        Route::get('/dashboard', [PlanningManagerController::class, 'dashboard'])->name('planning_manager.dashboard');
+
+        // Orders
+        Route::get('/all_orders',                    [PlanningManagerController::class, 'allOrders'])->name('planning_manager.all_orders');
+        Route::get('/view_order/{id}',               [PlanningManagerController::class, 'viewOrder'])->name('planning_manager.view_order');
+        Route::get('/view_operation_order/{id}',     [PlanningManagerController::class, 'viewOperationOrder'])->name('planning_manager.view_operation_order');
+        Route::get('/scheduled_orders',              [PlanningManagerController::class, 'scheduledOrders'])->name('planning_manager.scheduled_orders');
+        Route::get('/pending_orders',                [PlanningManagerController::class, 'pendingOrders'])->name('planning_manager.pending_orders');
+        Route::get('/order_status',                  [PlanningManagerController::class, 'orderStatus'])->name('planning_manager.order_status');
+
+        // Customers
+        Route::get('/all_customers',   [PlanningManagerController::class, 'allCustomers'])->name('planning_manager.all_customers');
+        Route::get('/customer_order',  [PlanningManagerController::class, 'customerOrder'])->name('planning_manager.customer_order');
+
+        // Inventory
+        Route::get('/hub_inventory',       [PlanningManagerController::class, 'hubInventory'])->name('planning_manager.hub_inventory');
+        Route::get('/pending_inward',      [PlanningManagerController::class, 'pendingInward'])->name('planning_manager.pending_inward');
+        Route::get('/locked_inventory',    [PlanningManagerController::class, 'lockedInventory'])->name('planning_manager.locked_inventory');
+        Route::get('/interhub_orders',     [PlanningManagerController::class, 'interhubOrders'])->name('planning_manager.interhub_orders');
+        Route::get('/interhub_moments_view',[PlanningManagerController::class, 'interhubMomentsView'])->name('planning_manager.interhub_moments_view');
+        Route::get('/inward_outward',      [PlanningManagerController::class, 'inwardOutward'])->name('planning_manager.inward_outward');
+        Route::get('/upload_inventory',    [PlanningManagerController::class, 'uploadInventory'])->name('planning_manager.upload_inventory');
+        Route::post('/upload_inventory',   [PlanningManagerController::class, 'uploadInventory'])->name('planning_manager.upload_inventory.submit');
+
+        // Stock Management
+        Route::get('/accept_inward_stocks',   [PlanningManagerController::class, 'acceptInwardStocks'])->name('planning_manager.accept_inward_stocks');
+        Route::get('/request_outward_stocks', [PlanningManagerController::class, 'requestOutwardStocks'])->name('planning_manager.request_outward_stocks');
+        Route::post('/request_outward_stocks',[PlanningManagerController::class, 'requestOutwardStocks'])->name('planning_manager.request_outward_stocks.submit');
+
+        // Danger Stock
+        Route::get('/danger_stock',           [PlanningManagerController::class, 'dangerStock'])->name('planning_manager.danger_stock');
+        Route::get('/transfer_danger_stock',  [PlanningManagerController::class, 'transferDangerStock'])->name('planning_manager.transfer_danger_stock');
+        Route::post('/transfer_danger_stock', [PlanningManagerController::class, 'transferDangerStock'])->name('planning_manager.transfer_danger_stock.submit');
+
+        // Wastage
+        Route::get('/sku_wastage',              [PlanningManagerController::class, 'skuWastage'])->name('planning_manager.sku_wastage');
+        Route::get('/submit_wastage_report',    [PlanningManagerController::class, 'submitWastageReport'])->name('planning_manager.submit_wastage_report');
+        Route::post('/submit_wastage_report',   [PlanningManagerController::class, 'submitWastageReport'])->name('planning_manager.submit_wastage_report.submit');
+        Route::get('/wastage_reports',          [PlanningManagerController::class, 'wastageReports'])->name('planning_manager.wastage_reports');
+        Route::get('/view_wastage_report',      [PlanningManagerController::class, 'viewWastageReport'])->name('planning_manager.view_wastage_report');
+        Route::get('/view_wastage_report_hub_wise', [PlanningManagerController::class, 'viewWastageReportHubWise'])->name('planning_manager.view_wastage_report_hub_wise');
+
+        // Production
+        Route::get('/products',   [PlanningManagerController::class, 'products'])->name('planning_manager.products');
+        Route::get('/production', [PlanningManagerController::class, 'production'])->name('planning_manager.production');
+        Route::get('/sku_report', [PlanningManagerController::class, 'skuReport'])->name('planning_manager.sku_report');
+
+        // Delivery & Hub
+        Route::get('/delivery_boy', [PlanningManagerController::class, 'deliveryBoy'])->name('planning_manager.delivery_boy');
+        Route::get('/hub_kml_list', [PlanningManagerController::class, 'hubKmlList'])->name('planning_manager.hub_kml_list');
+
+        // Marketing
+        Route::get('/banner',         [PlanningManagerController::class, 'banner'])->name('planning_manager.banner');
+        Route::get('/home_offers',    [PlanningManagerController::class, 'homeOffers'])->name('planning_manager.home_offers');
+        Route::get('/promotions',     [PlanningManagerController::class, 'promotions'])->name('planning_manager.promotions');
+        Route::get('/news_letters',   [PlanningManagerController::class, 'newsLetters'])->name('planning_manager.news_letters');
+        Route::get('/rating_reviews', [PlanningManagerController::class, 'ratingReviews'])->name('planning_manager.rating_reviews');
+        Route::get('/certificate',    [PlanningManagerController::class, 'certificate'])->name('planning_manager.certificate');
+        Route::post('/certificate',   [PlanningManagerController::class, 'certificate'])->name('planning_manager.certificate.submit');
+
+        // Grievance
+        Route::get('/grievance',            [PlanningManagerController::class, 'grievance'])->name('planning_manager.grievance');
+        Route::get('/grievance_categories', [PlanningManagerController::class, 'grievanceCategories'])->name('planning_manager.grievance_categories');
+
+        // Finance / Wallet
+        Route::get('/wallet_history',         [PlanningManagerController::class, 'walletHistory'])->name('planning_manager.wallet_history');
+        Route::get('/wallet_payment_history', [PlanningManagerController::class, 'walletPaymentHistory'])->name('planning_manager.wallet_payment_history');
+        Route::get('/add_wallet_money',       [PlanningManagerController::class, 'addWalletMoney'])->name('planning_manager.add_wallet_money');
+        Route::post('/add_wallet_money',      [PlanningManagerController::class, 'addWalletMoneySubmit'])->name('planning_manager.add_wallet_money.submit');
+        Route::get('/withdraw_money',         [PlanningManagerController::class, 'withdrawMoney'])->name('planning_manager.withdraw_money');
+        Route::get('/online_payment_history', [PlanningManagerController::class, 'onlinePaymentHistory'])->name('planning_manager.online_payment_history');
+        Route::get('/cash_deposit',           [PlanningManagerController::class, 'cashDeposit'])->name('planning_manager.cash_deposit');
+
+        // Cash Deposit Receipts
+        Route::get('/deposit_receipt',             [PlanningManagerController::class, 'depositReceipt'])->name('planning_manager.deposit_receipt');
+        Route::post('/deposit_receipt',            [PlanningManagerController::class, 'depositReceipt'])->name('planning_manager.deposit_receipt.submit');
+        Route::get('/view_cash_deposits_hub',      [PlanningManagerController::class, 'viewCashDepositsHub'])->name('planning_manager.view_cash_deposits_hub');
+        Route::get('/view_cash_deposits_all_hub',  [PlanningManagerController::class, 'viewCashDepositsAllHub'])->name('planning_manager.view_cash_deposits_all_hub');
+
+        // Reports
+        Route::get('/sales_report', [PlanningManagerController::class, 'salesReport'])->name('planning_manager.sales_report');
+
+        // Time Slots
+        Route::get('/express_order_time_slot',    [PlanningManagerController::class, 'expressOrderTimeSlot'])->name('planning_manager.express_order_time_slot');
+        Route::post('/express_order_time_slot',   [PlanningManagerController::class, 'expressOrderTimeSlot'])->name('planning_manager.express_order_time_slot.submit');
+        Route::get('/scheduled_order_time_slot',  [PlanningManagerController::class, 'scheduledOrderTimeSlot'])->name('planning_manager.scheduled_order_time_slot');
+        Route::post('/scheduled_order_time_slot', [PlanningManagerController::class, 'scheduledOrderTimeSlot'])->name('planning_manager.scheduled_order_time_slot.submit');
+
+        // Settings (unique to planning_manager)
+        Route::get('/setting',          [PlanningManagerController::class, 'setting'])->name('planning_manager.setting');
+        Route::post('/change_password', [PlanningManagerController::class, 'changePassword'])->name('planning_manager.change_password');
+
+        // Profile
+        Route::get('/profile',       [PlanningManagerController::class, 'profile'])->name('planning_manager.profile');
+        Route::get('/edit_profile',  [PlanningManagerController::class, 'editProfile'])->name('planning_manager.edit_profile');
+        Route::post('/edit_profile', [PlanningManagerController::class, 'updateProfile'])->name('planning_manager.update_profile');
+
+        // AJAX
+        Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('planning_manager.ajax.change_status');
+        Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('planning_manager.ajax.delete_record');
+        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('planning_manager.ajax.change_order_status');
+        Route::post('/ajax/inward-stock-action', [PlanningManagerController::class, 'inwardStockAction'])->name('planning_manager.ajax.inward_stock_action');
+    });
+});
+
+// ─── POS ─────────────────────────────────────────────────────────────────────
+Route::prefix('pos')->group(function () {
+    // Guest routes (login page)
+    Route::middleware('pos_redirect')->group(function () {
+        Route::get('/login',  [PosAuthController::class, 'loginPage'])->name('pos.login');
+        Route::post('/login', [PosAuthController::class, 'login'])->name('pos.login_submit');
+    });
+
+    // Authenticated routes
+    Route::middleware('pos')->group(function () {
+        Route::get('/logout', [PosAuthController::class, 'logout'])->name('pos.logout');
+
+        // Dashboard
+        Route::get('/dashboard', [PosController::class, 'dashboard'])->name('pos.dashboard');
+
+        // Order lists
+        Route::get('/new_orders',         [PosController::class, 'newOrders'])->name('pos.new_orders');
+        Route::get('/accepted_orders',    [PosController::class, 'acceptedOrders'])->name('pos.accepted_orders');
+        Route::get('/ongoing_orders',     [PosController::class, 'ongoingOrders'])->name('pos.ongoing_orders');
+        Route::get('/completed_orders',   [PosController::class, 'completedOrders'])->name('pos.completed_orders');
+        Route::get('/cancelled_orders',   [PosController::class, 'cancelledOrders'])->name('pos.cancelled_orders');
+        Route::get('/unsettled_invoices', [PosController::class, 'unsettledInvoices'])->name('pos.unsettled_invoices');
+
+        // Order detail / settle
+        Route::get('/processing_order_view/{order_id}', [PosController::class, 'processingOrderView'])->name('pos.processing_order_view');
+        Route::get('/settle_order/{order_id}',          [PosController::class, 'settleOrder'])->name('pos.settle_order');
+        Route::get('/invoice/{order_id}',               [PosController::class, 'invoice'])->name('pos.invoice');
+        Route::get('/print_invoice/{order_id}',         [PosController::class, 'printInvoice'])->name('pos.print_invoice');
+
+        // Reports
+        Route::get('/day_end_report', [PosController::class, 'dayEndReport'])->name('pos.day_end_report');
+
+        // AJAX
+        Route::post('/ajax/update_order_status', [PosController::class, 'updateOrderStatus'])->name('pos.update_order_status');
+    });
+});
+
+// ─── Production ───────────────────────────────────────────────────────────────
+Route::prefix('production')->group(function () {
+    // Guest routes
+    Route::middleware('production_redirect')->group(function () {
+        Route::get('/login',  [ProductionAuthController::class, 'login'])->name('production.login');
+        Route::post('/login', [ProductionAuthController::class, 'loginSubmit'])->name('production.login_submit');
+    });
+
+    // Authenticated routes
+    Route::middleware('production')->group(function () {
+        Route::get('/logout', [ProductionAuthController::class, 'logout'])->name('production.logout');
+
+        // Dashboard
+        Route::get('/dashboard', [ProductionController::class, 'dashboard'])->name('production.dashboard');
+
+        // Orders
+        Route::get('/all_orders',         [ProductionController::class, 'allOrders'])->name('production.all_orders');
+        Route::get('/view_order',         [ProductionController::class, 'viewOrder'])->name('production.view_order');
+        Route::get('/view_operation_order',[ProductionController::class, 'viewOperationOrder'])->name('production.view_operation_order');
+        Route::get('/scheduled_orders',   [ProductionController::class, 'scheduledOrders'])->name('production.scheduled_orders');
+        Route::get('/pending_orders',     [ProductionController::class, 'pendingOrders'])->name('production.pending_orders');
+        Route::get('/order_status',       [ProductionController::class, 'orderStatus'])->name('production.order_status');
+
+        // Customers
+        Route::get('/all_customers',  [ProductionController::class, 'allCustomers'])->name('production.all_customers');
+        Route::get('/customer_order', [ProductionController::class, 'customerOrder'])->name('production.customer_order');
+
+        // Inventory
+        Route::get('/hub_inventory',        [ProductionController::class, 'hubInventory'])->name('production.hub_inventory');
+        Route::get('/pending_inward',       [ProductionController::class, 'pendingInward'])->name('production.pending_inward');
+        Route::get('/locked_inventory',     [ProductionController::class, 'lockedInventory'])->name('production.locked_inventory');
+        Route::get('/interhub_orders',      [ProductionController::class, 'interhubOrders'])->name('production.interhub_orders');
+        Route::get('/interhub_moments_view',[ProductionController::class, 'interhubMomentsView'])->name('production.interhub_moments_view');
+        Route::get('/inward_outward',       [ProductionController::class, 'inwardOutward'])->name('production.inward_outward');
+        Route::get('/accept_inward_stocks', [ProductionController::class, 'acceptInwardStocks'])->name('production.accept_inward_stocks');
+        Route::get('/request_outward_stocks',[ProductionController::class, 'requestOutwardStocks'])->name('production.request_outward_stocks');
+
+        // Danger Stock
+        Route::get('/danger_stock',         [ProductionController::class, 'dangerStock'])->name('production.danger_stock');
+        Route::get('/transfer_danger_stock',[ProductionController::class, 'transferDangerStock'])->name('production.transfer_danger_stock');
+
+        // Wastage
+        Route::get('/sku_wastage',            [ProductionController::class, 'skuWastage'])->name('production.sku_wastage');
+        Route::get('/submit_wastage_report',  [ProductionController::class, 'submitWastageReport'])->name('production.submit_wastage_report');
+        Route::post('/submit_wastage_report', [ProductionController::class, 'submitWastageReport'])->name('production.submit_wastage_report.submit');
+        Route::get('/wastage_reports',        [ProductionController::class, 'wastageReports'])->name('production.wastage_reports');
+        Route::get('/view_wastage_report',    [ProductionController::class, 'viewWastageReport'])->name('production.view_wastage_report');
+        Route::get('/view_wastage_report_hub_wise',[ProductionController::class, 'viewWastageReportHubWise'])->name('production.view_wastage_report_hub_wise');
+
+        // Production Management
+        Route::get('/products',           [ProductionController::class, 'products'])->name('production.products');
+        Route::get('/production_records', [ProductionController::class, 'productionRecords'])->name('production.production_records');
+        Route::get('/sku_report',         [ProductionController::class, 'skuReport'])->name('production.sku_report');
+
+        // Delivery / Hub
+        Route::get('/delivery_boy', [ProductionController::class, 'deliveryBoy'])->name('production.delivery_boy');
+        Route::get('/hub_kml_list', [ProductionController::class, 'hubKmlList'])->name('production.hub_kml_list');
+
+        // Marketing
+        Route::get('/banner',         [ProductionController::class, 'banner'])->name('production.banner');
+        Route::get('/home_offers',    [ProductionController::class, 'homeOffers'])->name('production.home_offers');
+        Route::get('/promotions',     [ProductionController::class, 'promotions'])->name('production.promotions');
+        Route::get('/news_letters',   [ProductionController::class, 'newsLetters'])->name('production.news_letters');
+        Route::get('/certificate',    [ProductionController::class, 'certificate'])->name('production.certificate');
+        Route::post('/certificate',   [ProductionController::class, 'certificate'])->name('production.certificate.submit');
+        Route::get('/rating_reviews', [ProductionController::class, 'ratingReviews'])->name('production.rating_reviews');
+
+        // Customer Care
+        Route::get('/grievance',            [ProductionController::class, 'grievance'])->name('production.grievance');
+        Route::get('/grievance_categories', [ProductionController::class, 'grievanceCategories'])->name('production.grievance_categories');
+        Route::get('/add_wallet_money',     [ProductionController::class, 'addWalletMoney'])->name('production.add_wallet_money');
+        Route::post('/add_wallet_money',    [ProductionController::class, 'addWalletMoneySubmit'])->name('production.add_wallet_money.submit');
+        Route::get('/withdraw_money',       [ProductionController::class, 'withdrawMoney'])->name('production.withdraw_money');
+        Route::get('/express_order_time_slot',   [ProductionController::class, 'expressOrderTimeSlot'])->name('production.express_order_time_slot');
+        Route::post('/express_order_time_slot',  [ProductionController::class, 'expressOrderTimeSlot'])->name('production.express_order_time_slot.submit');
+        Route::get('/scheduled_order_time_slot', [ProductionController::class, 'scheduledOrderTimeSlot'])->name('production.scheduled_order_time_slot');
+        Route::post('/scheduled_order_time_slot',[ProductionController::class, 'scheduledOrderTimeSlot'])->name('production.scheduled_order_time_slot.submit');
+
+        // Finance
+        Route::get('/wallet_history',            [ProductionController::class, 'walletHistory'])->name('production.wallet_history');
+        Route::get('/wallet_payment_history',    [ProductionController::class, 'walletPaymentHistory'])->name('production.wallet_payment_history');
+        Route::get('/online_payment_history',    [ProductionController::class, 'onlinePaymentHistory'])->name('production.online_payment_history');
+        Route::get('/cash_deposit',              [ProductionController::class, 'cashDeposit'])->name('production.cash_deposit');
+        Route::get('/deposit_receipt',           [ProductionController::class, 'depositReceipt'])->name('production.deposit_receipt');
+        Route::post('/deposit_receipt',          [ProductionController::class, 'depositReceipt'])->name('production.deposit_receipt.submit');
+        Route::get('/view_cash_deposits_hub',    [ProductionController::class, 'viewCashDepositsHub'])->name('production.view_cash_deposits_hub');
+        Route::get('/view_cash_deposits_all_hub',[ProductionController::class, 'viewCashDepositsAllHub'])->name('production.view_cash_deposits_all_hub');
+
+        // Reports
+        Route::get('/sales_report', [ProductionController::class, 'salesReport'])->name('production.sales_report');
+
+        // Profile / Settings
+        Route::get('/profile',       [ProductionController::class, 'profile'])->name('production.profile');
+        Route::get('/edit_profile',  [ProductionController::class, 'editProfile'])->name('production.edit_profile');
+        Route::post('/edit_profile', [ProductionController::class, 'updateProfile'])->name('production.update_profile');
+        Route::get('/setting',       [ProductionController::class, 'setting'])->name('production.setting');
+        Route::post('/change_password',[ProductionController::class, 'changePassword'])->name('production.change_password');
+
+        // AJAX
+        Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('production.ajax.change_status');
+        Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('production.ajax.delete_record');
+        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('production.ajax.change_order_status');
+        Route::post('/ajax/inward-stock-action', [ProductionController::class, 'inwardStockAction'])->name('production.ajax.inward_stock_action');
     });
 });

@@ -20,6 +20,14 @@ use App\Http\Middleware\HubMiddleware;
 use App\Http\Middleware\HubRedirectMiddleware;
 use App\Http\Middleware\MarketingManagerMiddleware;
 use App\Http\Middleware\MarketingManagerRedirectMiddleware;
+use App\Http\Middleware\OperationManagerMiddleware;
+use App\Http\Middleware\OperationManagerRedirectMiddleware;
+use App\Http\Middleware\PlanningManagerMiddleware;
+use App\Http\Middleware\PlanningManagerRedirectMiddleware;
+use App\Http\Middleware\PosMiddleware;
+use App\Http\Middleware\PosRedirectMiddleware;
+use App\Http\Middleware\ProductionMiddleware;
+use App\Http\Middleware\ProductionRedirectMiddleware;
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,6 +54,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'hub_redirect' => HubRedirectMiddleware::class,
             'marketing_manager' => MarketingManagerMiddleware::class,
             'marketing_manager_redirect' => MarketingManagerRedirectMiddleware::class,
+            'operation_manager' => OperationManagerMiddleware::class,
+            'operation_manager_redirect' => OperationManagerRedirectMiddleware::class,
+            'planning_manager' => PlanningManagerMiddleware::class,
+            'planning_manager_redirect' => PlanningManagerRedirectMiddleware::class,
+            'pos' => PosMiddleware::class,
+            'pos_redirect' => PosRedirectMiddleware::class,
+            'production' => ProductionMiddleware::class,
+            'production_redirect' => ProductionRedirectMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

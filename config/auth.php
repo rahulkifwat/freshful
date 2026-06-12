@@ -76,6 +76,22 @@ return [
             'driver' => 'session',
             'provider' => 'marketing_managers',
         ],
+        'operation_managers' => [
+            'driver' => 'session',
+            'provider' => 'operation_managers',
+        ],
+        'planning_managers' => [
+            'driver' => 'session',
+            'provider' => 'planning_managers',
+        ],
+        'pos_users' => [
+            'driver' => 'session',
+            'provider' => 'pos_users',
+        ],
+        'productions' => [
+            'driver' => 'session',
+            'provider' => 'productions',
+        ],
     ],
 
     /*
@@ -135,6 +151,22 @@ return [
         'marketing_managers' => [
             'driver' => 'eloquent',
             'model' => App\Models\MarketingManager::class,
+        ],
+        'operation_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\OperationManager::class,
+        ],
+        'planning_managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\PlanningManager::class,
+        ],
+        'pos_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\PosUser::class,
+        ],
+        'productions' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Production::class,
         ],
         // 'users' => [
         //     'driver' => 'database',
