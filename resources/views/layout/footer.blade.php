@@ -233,9 +233,9 @@
 </script>
 <script>
 const csrfToken = '{{ csrf_token() }}';
-
+const addCartUrl = "{{ route('addCart') }}";
 function updateCartHttp(payload) {
-    return fetch('/add-cart', {
+    return fetch(addCartUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
