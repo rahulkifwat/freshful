@@ -1,0 +1,106 @@
+/* resources/css/custom-bootstrap.css */
+
+:root {
+    /* Primary */
+    --bs-primary: #f70202;
+    --bs-primary-rgb: 247, 2, 2;
+    --bs-primary-alt: #ff6b6b;
+    --bs-primary-alt-rgb: 255, 107, 107;
+
+    /* Secondary */
+    --bs-secondary: #4ecdc4;
+    --bs-secondary-rgb: 78, 205, 196;
+
+    /* Accent */
+    --bs-accent: #ffe66d;
+    --bs-accent-rgb: 255, 230, 109;
+
+    /* Text */
+    --bs-body-color: #2d3436;
+    --bs-body-color-rgb: 45, 52, 54;
+
+    --bs-body-color-light: #636e72;
+    --bs-body-color-light-rgb: 99, 110, 114;
+
+    /* Backgrounds */
+    --bs-body-bg: #f8f9fa;
+    --bs-body-bg-rgb: 248, 249, 250;
+
+    --bs-white: #ffffff;
+    --bs-white-rgb: 255, 255, 255;
+
+    /* Shadows */
+    --bs-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --bs-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --bs-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+    --bs-shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.2);
+
+    /* Border radius */
+    --bs-border-radius: 16px;
+    --bs-border-radius-sm: 12px;
+    --bs-border-radius-lg: 24px;
+
+    /* Transition */
+    --bs-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Example usage in custom CSS */
+.btn-primary {
+    background-color: rgb(var(--bs-primary-rgb));
+    border-color: rgb(var(--bs-primary-rgb));
+}
+.btn-white {
+    background-color: rgb(var(--bs-white-rgb));
+    border-color: rgb(var(--bs-white-rgb));
+}
+.btn-white:hover {
+    background-color: rgb(var(--bs-white-rgb));
+    border-color: rgb(var(--bs-white-rgb));
+}
+.btn-secondary {
+    background-color: rgb(var(--bs-secondary-rgb));
+    border-color: rgb(var(--bs-secondary-rgb));
+}
+
+.bg-accent {
+    background-color: rgb(var(--bs-accent-rgb));
+}
+.text-primary-alt {
+    color: rgb(var(--bs-primary-alt-rgb));
+}
+
+.text-dark {
+    color: rgb(var(--bs-body-color-rgb));
+}
+
+.text-light {
+    color: rgb(var(--bs-body-color-light-rgb));
+}
+
+/* Optional: Ensure buttons use the variable if they don't automatically update */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary-alt);
+    --bs-btn-hover-border-color: var(--bs-primary-alt);
+}
+
+.btn-outline-primary {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+.btn-outline-primary:hover {
+    color: var(--bs-white);
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary);
+}
+.btn-primary-alt {
+    background-color: var(--bs-primary-alt);
+    border-color: var(--bs-primary-alt);
+    color: var(--bs-white);
+}
+.btn-primary-alt:hover {
+    color: var(--bs-white);
+    border-color: var(--bs-primary-alt);
+    background-color: var(--bs-primary);
+}
