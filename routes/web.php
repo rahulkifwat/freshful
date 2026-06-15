@@ -77,6 +77,10 @@ Route::get('/why-freshful', function () {
     return view('why-freshful');
 });
 
+Route::get('/certificate', [HomeController::class, 'certificate'])->name('certificate');
+Route::get('/compare_product', [HomeController::class, 'compareProduct'])->name('compare_product');
+Route::get('/maps', [HomeController::class, 'maps'])->name('maps');
+
 Route::get('/checkout', [HomeController::class, 'checkout'])->name('checkout');
 
 Route::prefix('admin')->group(function () {

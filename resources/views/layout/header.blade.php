@@ -23,7 +23,7 @@
                     <a class="nav-link active text-white" aria-current="page" href="{{ url('/franchisee') }}">Franchise</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active text-white" aria-current="page" href="{{ url('/') }}">Certificate</a>
+                    <a class="nav-link active text-white" aria-current="page" href="{{ route('certificate') }}">Certificate</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active text-white" aria-current="page" href="{{ url('/refer_earn') }}">Refer & Earn</a>
@@ -82,9 +82,10 @@
                         <span class="d-none d-md-inline">Login</span>
                     </a>
                     @endif
-                    <a data-bs-toggle="offcanvas" href="#cardoffcanvas" role="button" aria-controls="cardoffcanvas" class="border rounded-pill px-md-4 py-md-2 d-flex align-items-center gap-2 header-btn">
-                        <i class="bi bi-cart "></i>
-                        <span class="d-none d-md-inline">Cart </span>
+                    <a data-bs-toggle="offcanvas" href="#cardoffcanvas" role="button" aria-controls="cardoffcanvas" class="border rounded-pill px-md-4 py-md-2 d-flex align-items-center gap-2 header-btn position-relative">
+                        <i class="bi bi-cart"></i>
+                        <span class="d-none d-md-inline">Cart</span>
+                        <span id="cart-badge-count" style="display:none;position:absolute;top:6px;right:6px;background:#e53935;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;align-items:center;justify-content:center;font-weight:700;"></span>
                     </a>
                 </div>
             </div>
@@ -319,9 +320,15 @@
             <!-- Footer -->
             <div class="p-3 total-bar d-flex card-footer shadow-sm justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold fs-5">Total : <span class="text-primary fs-4" id="footer-total">₹0</span></h5>
+                @auth
                 <a href="{{ url('/checkout') }}" class="btn btn-primary py-2 fw-bold">
                     Proceed To Checkout
                 </a>
+                @else
+                <button type="button" class="btn btn-primary py-2 fw-bold" onclick="openLoginFromCart()">
+                    Login to Checkout
+                </button>
+                @endauth
             </div>
         </div>
     </div>

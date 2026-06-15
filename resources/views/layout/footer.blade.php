@@ -19,7 +19,7 @@
                             <ul class="list-unstyled">
                                 <li class="mb-1"><a class="fs-7" href="{{ url('/') }}">Home</a></li>
                                 <li class="mb-1"><a class="fs-7" href="{{ url('/why-freshful') }}">Why us?</a></li>
-                                <li class="mb-1"><a class="fs-7" href="{{ url('/') }}">Certificate</a></li>
+                                <li class="mb-1"><a class="fs-7" href="{{ route('certificate') }}">Certificate</a></li>
                                 <li class="mb-1"><a class="fs-7" href="{{ url('/franchisee') }}">Franchise</a></li>
                                 <li class="mb-1"><a class="fs-7" href="{{ url('/about') }}">About us</a></li>
                             </ul>
@@ -63,6 +63,16 @@
 <!-- Scroll Top -->
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
+<!-- Toast notification container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:99999;">
+    <div id="app-toast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="app-toast-msg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <!-- Main JS File -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -70,15 +80,31 @@
 <!-- <script src="{{ url('assets/js/main.js')}}"></script> -->
 <script src="{{ url('assets/js/slider.js')}}"></script>
 <script>
-    toastr.options = {
-        "closeButton": true,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "showDuration": "300",
-        "hideDuration": "1000",
-        "timeOut": "4000",
-        "extendedTimeOut": "1000"
-    };
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "4000",
+            "extendedTimeOut": "1000"
+        };
+    }
+
+    function notify(message, type) {
+        const toastEl = document.getElementById('app-toast');
+        const toastMsg = document.getElementById('app-toast-msg');
+        if (!toastEl || !toastMsg) return;
+
+        const colors = { success: '#198754', error: '#dc3545', warning: '#ffc107', info: '#0dcaf0' };
+        toastEl.style.background = colors[type] || colors.info;
+        toastEl.style.color = (type === 'warning') ? '#000' : '#fff';
+        toastMsg.textContent = message;
+
+        const t = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3500 });
+        t.show();
+    }
 </script>
 @if(session('success'))
     <script>
@@ -159,17 +185,26 @@
     });
 </script>
 <script>
-    const buyer_id = {{ Auth::user()->id  ?? 0}};
+    const buyer_id = {{ Auth::user()->id ?? 0 }};
     const getcartUrl = "{{ route('get-cart') }}";
     function loadCart() {
-        fetch(`${getcartUrl}?buyer_id=${buyer_id}`)
+        fetch(getcartUrl, { credentials: 'same-origin' })
             .then(res => res.json())
             .then(data => {
-                if (data.result) {
+                if (data.result && data.products && data.products.length > 0) {
                     renderCart(data.products);
                 } else {
-                    document.getElementById('cart-items').innerHTML = "<p>No items in cart</p>";
+                    document.getElementById('cart-items').innerHTML = `
+                        <div class="text-center py-4">
+                            <img src="{{ asset('uploads/empty-cart.png') }}" alt="Empty cart" style="max-width:180px;opacity:0.8;">
+                            <p class="text-muted mt-2 fs-7">Your cart is empty</p>
+                        </div>`;
+                    updateCartBadge(0);
+                    updateBill(0);
                 }
+            })
+            .catch(() => {
+                document.getElementById('cart-items').innerHTML = '<p class="text-muted text-center py-3">Unable to load cart</p>';
             });
     }
 </script>
@@ -179,38 +214,53 @@
         let subtotal = 0;
 
         products.forEach((item, index) => {
-            let price = item.main_price;
+            let pid = item.cart_pid;
+            let price = parseFloat(item.main_price) || 0;
             let qty = parseInt(item.quantity);
             let total = price * qty;
+            let unit = ((item.unit_quantity ?? '') + ' ' + (item.product_unit ?? '')).trim();
 
             subtotal += total;
 
             html += `
-            <div class="d-flex align-items-center justify-content-between border-bottom mb-3 pb-3">
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center justify-content-between border-bottom mb-3 pb-3" id="cart_item_${pid}">
+                <div class="flex-grow-1 me-2">
+                    <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="bg-accent p-1 d-flex align-items-center justify-content-center"
                             style="border-radius: 5px; width: 25px;height: 25px;">
                             ${index + 1}
                         </span>
-                        <h6 class="mb-0">${item.title}</h6>
+                        <h6 class="mb-0 fs-7">${item.title}</h6>
+                        <button class="btn btn-sm p-0 ms-auto text-muted" onclick="updateQty(${pid}, 0)" title="Remove">&times;</button>
                     </div>
-                    <span class="badge bg-light text-dark border">${item.unit ?? ''}</span>
+                    <span class="badge bg-light text-dark border">${unit}</span>
                     <span class="text-danger fw-bold ms-2">₹${price}</span>
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-red qty-btn" onclick="updateQty('${item.id}', ${qty - 1})">−</button>
-                    <span>${qty}</span>
-                    <button class="btn btn-red qty-btn" onclick="updateQty('${item.id}', ${qty + 1})">+</button>
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="updateQty(${pid}, ${qty - 1})">−</button>
+                    <span class="px-2">${qty}</span>
+                    <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="updateQty(${pid}, ${qty + 1})">+</button>
                 </div>
             </div>
             `;
         });
 
-        document.getElementById('cart-items').innerHTML = html;
+        if (products.length === 0) {
+            html = '<div class="text-center py-4"><p class="text-muted">Your cart is empty</p></div>';
+        }
 
+        document.getElementById('cart-items').innerHTML = html;
+        updateCartBadge(products.length);
         updateBill(subtotal);
+    }
+
+    function updateCartBadge(count) {
+        const badge = document.getElementById('cart-badge-count');
+        if (badge) {
+            badge.textContent = count > 0 ? count : '';
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
     }
 </script>
 <script>
@@ -248,53 +298,46 @@ function updateCartHttp(payload) {
 
 function updateQty(product_id, quantity) {
     if (quantity < 0) return;
-
-    if (!buyer_id) {
-        toastr.warning('Please login to update cart items');
-        return;
-    }
-
     updateCartHttp({ product_id, buyer_id, quantity })
         .then(data => {
             if (data.result) {
+                updateCartBadge(data.cart_count);
                 loadCart();
             } else {
-                toastr.error(data.message || 'Unable to update quantity');
+                notify(data.message || 'Unable to update quantity', 'error');
             }
         })
-        .catch(err => {
-            console.error('Update quantity error:', err);
-            toastr.error('Network error while updating cart');
-        });
+        .catch(() => notify('Network error while updating cart', 'error'));
+}
+
+function openLoginFromCart() {
+    const cartEl = document.getElementById('cardoffcanvas');
+    const loginEl = document.getElementById('loginoffcanvas');
+    if (!cartEl || !loginEl) return;
+
+    const cartOffcanvas = bootstrap.Offcanvas.getInstance(cartEl);
+    if (cartOffcanvas) {
+        cartEl.addEventListener('hidden.bs.offcanvas', function handler() {
+            cartEl.removeEventListener('hidden.bs.offcanvas', handler);
+            bootstrap.Offcanvas.getOrCreateInstance(loginEl).show();
+        }, { once: true });
+        cartOffcanvas.hide();
+    } else {
+        bootstrap.Offcanvas.getOrCreateInstance(loginEl).show();
+    }
 }
 
 function addToCart(product_id, quantity = 1) {
-    if (!buyer_id) {
-        var loginCanvas = document.getElementById('loginoffcanvas');
-        if (loginCanvas) {
-            new bootstrap.Offcanvas(loginCanvas).show();
-        } else {
-            toastr.warning('Please login to add items to cart');
-        }
-        return;
-    }
-
     updateCartHttp({ product_id, buyer_id, quantity })
         .then(data => {
             if (data.result) {
-                console.log('Cart Updated:', data);
-                if (typeof updateCartBadge === 'function') {
-                    updateCartBadge(data.cart_count);
-                }
+                updateCartBadge(data.cart_count);
                 loadCart();
-                toastr.success(data.message || 'Added to cart');
+                notify(data.message || 'Added to cart', 'success');
             } else {
-                toastr.error(data.message || 'Failed to add cart item');
+                notify(data.message || 'Failed to add to cart', 'error');
             }
         })
-        .catch(err => {
-            console.error('Add to cart error:', err);
-            toastr.error('Network error while adding to cart');
-        });
+        .catch(() => notify('Network error while adding to cart', 'error'));
 }
 </script>

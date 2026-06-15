@@ -160,58 +160,55 @@ class HomeController extends Controller
         return view('product_detail', compact('product', 'categories', 'moreProduct'));
     }
 
+    private function cartWhereClause($query)
+    {
+        if (Auth::check()) {
+            return $query->where('t1.buyer_id', Auth::id());
+        }
+        return $query->where('t1.session_id', session()->getId());
+    }
+
+    private function cartCount(): int
+    {
+        if (Auth::check()) {
+            return Cart::where('buyer_id', Auth::id())->count();
+        }
+        return Cart::where('session_id', session()->getId())->count();
+    }
+
     public function cart(Request $request)
     {
         try {
-            $request->validate([
-                'buyer_id' => 'required|integer'
-            ]);
-
-            $buyer_id = $request->buyer_id;
             $baseUrl = url('/uploads/images/products');
 
-            $products = DB::table('cart as t1')
+            $query = DB::table('cart as t1')
                 ->join('products as t2', 't2.id', '=', 't1.product_id')
                 ->join('items as t3', 't3.id', '=', 't2.item_id')
-                ->where('t1.buyer_id', $buyer_id)
                 ->select(
+                    't1.id as cart_id',
                     't1.quantity',
+                    DB::raw('t1.product_id as cart_pid'),
                     't3.item as title',
                     't2.*',
                     DB::raw("CONCAT('$baseUrl/', t3.image) as image")
-                )
-                ->get();
+                );
+
+            $products = $this->cartWhereClause($query)->get();
 
             if ($products->isEmpty()) {
-                return response()->json([
-                    'result' => false,
-                    'message' => 'No product found'
-                ]);
+                return response()->json(['result' => false, 'message' => 'Cart is empty', 'products' => []]);
             }
 
             $products = $products->map(function ($item) {
                 $MRP = $item->MRP ?? 0;
                 $main_price = $item->main_price ?? 0;
-
-                if ($MRP > 0) {
-                    $item->percent_off = round(($main_price * 100) / $MRP);
-                } else {
-                    $item->percent_off = 0;
-                }
-
+                $item->percent_off = $MRP > 0 ? round((($MRP - $main_price) * 100) / $MRP) : 0;
                 return $item;
             });
 
-            return response()->json([
-                'result' => true,
-                'message' => 'success',
-                'products' => $products
-            ]);
+            return response()->json(['result' => true, 'message' => 'success', 'products' => $products]);
         } catch (\Exception $e) {
-            return response()->json([
-                'result' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['result' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -219,98 +216,58 @@ class HomeController extends Controller
     {
         try {
             $request->validate([
-                'product_id' => 'required',
-                'buyer_id'   => 'required|integer',
-                'quantity'   => 'required|integer|min:0',
+                'product_id' => 'required|numeric',
+                'quantity'   => 'required|numeric|min:0',
             ]);
 
-            $product_id = $request->product_id;
-            $quantity   = $request->quantity;
-            
-            if(!Auth::check()){
-                return response()->json([
-                    'result' => false,
-                    'message' =>'login first'
-                    ], 500);
-                    }
-                    
-            $buyer_id = Auth::user()->id;
-            $inserted = false;
-            $updated  = false;
-            $deleted  = false;
+            $product_id = (int) $request->product_id;
+            $quantity   = (int) $request->quantity;
+
+            $isGuest  = !Auth::check();
+            $buyerId  = $isGuest ? null : Auth::id();
+            $sessId   = $isGuest ? session()->getId() : null;
+
+            $cartWhere = function ($q) use ($isGuest, $buyerId, $sessId, $product_id) {
+                $q->where('product_id', $product_id);
+                return $isGuest ? $q->where('session_id', $sessId) : $q->where('buyer_id', $buyerId);
+            };
 
             DB::beginTransaction();
 
+            $action = 'none';
+
             if ($quantity == 0) {
-                $deletedRows = Cart::where('product_id', $product_id)
-                    ->where('buyer_id', $buyer_id)
-                    ->delete();
-
-                if ($deletedRows) {
-                    $deleted = true;
-                }
+                $deleted = Cart::where($cartWhere)->delete();
+                if ($deleted) $action = 'deleted';
             } else {
-                $product = product::where('id', $product_id)->first();
-                $price = ($product && $product->main_price) ? floatval($product->main_price) : 0;
-                $total_price = $price * floatval($quantity);
+                $product    = product::find($product_id);
+                $price      = ($product && floatval($product->main_price) > 0)
+                                ? floatval($product->main_price)
+                                : ($product ? floatval($product->MRP) : 0);
+                $total_price = $price * $quantity;
 
-                $cart = Cart::where('product_id', $product_id)
-                    ->where('buyer_id', $buyer_id)
-                    ->first();
+                $cart = Cart::where($cartWhere)->first();
 
                 if ($cart) {
-                    $cart->update([
-                        'quantity'    => $quantity,
-                        'total_price' => $total_price,
-                    ]);
-                    $updated = true;
+                    $cart->update(['quantity' => $quantity, 'total_price' => $total_price]);
+                    $action = 'updated';
                 } else {
-                    Cart::create([
-                        'product_id'  => $product_id,
-                        'buyer_id'    => $buyer_id,
-                        'quantity'    => $quantity,
-                        'total_price' => $total_price,
-                    ]);
-                    $inserted = true;
+                    $data = ['product_id' => $product_id, 'quantity' => $quantity, 'total_price' => $total_price];
+                    $isGuest ? $data['session_id'] = $sessId : $data['buyer_id'] = $buyerId;
+                    Cart::create($data);
+                    $action = 'inserted';
                 }
             }
 
-            $cart_count = Cart::where('buyer_id', $buyer_id)->count();
-
+            $cart_count = $this->cartCount();
             DB::commit();
 
-            if ($inserted) {
-                return response()->json([
-                    'result' => true,
-                    'message' => 'Added successfully',
-                    'cart_count' => $cart_count
-                ]);
-            }
+            $messages = ['inserted' => 'Added successfully', 'updated' => 'Updated successfully', 'deleted' => 'Removed from cart', 'none' => 'No change'];
+            return response()->json(['result' => true, 'message' => $messages[$action], 'cart_count' => $cart_count]);
 
-            if ($updated) {
-                return response()->json([
-                    'result' => true,
-                    'message' => 'Updated successfully',
-                    'cart_count' => $cart_count
-                ]);
-            }
-
-            if ($deleted) {
-                return response()->json([
-                    'result' => true,
-                    'message' => 'Deleted successfully',
-                    'cart_count' => $cart_count
-                ]);
-            }
-
-            throw new \Exception("Something went wrong");
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return response()->json([
-                'result' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['result' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -488,6 +445,40 @@ class HomeController extends Controller
         return view('checkout', compact('buyer', 'addresses', 'cart_items', 'cart_total', 'delivery_charge', 'hub_id'));
     }
 
+    public function certificate()
+    {
+        return view('certificate');
+    }
+
+    public function compareProduct(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = explode(',', $ids);
+        }
+        $ids = array_filter(array_map('intval', $ids));
+
+        $products = [];
+        if (!empty($ids)) {
+            $products = DB::table('products as p')
+                ->join('items as i', 'i.id', '=', 'p.item_id')
+                ->whereIn('p.id', $ids)
+                ->select('p.*', 'i.item')
+                ->get();
+        }
+
+        return view('compare_product', compact('products'));
+    }
+
+    public function maps()
+    {
+        $hubs = DB::table('hubs')
+            ->select('id', 'hub as hub_name', 'hub_lat as lat', 'hub_lng as lng')
+            ->get();
+
+        return view('maps', compact('hubs'));
+    }
+
     public function addOrder(Request $request)
     {
         if (!Auth::check()) {
@@ -546,7 +537,7 @@ class HomeController extends Controller
                     'schedule_time' => $request->schedule_time,
                     'hub_id' => $request->hub_id,
                     'total_amount' => $total_amount,
-                    'status' => 'Pending',
+                    'order_status' => 'Order Pending',
                     'date_added' => now(),
                     'created_at' => now(),
                     'updated_at' => now(),
