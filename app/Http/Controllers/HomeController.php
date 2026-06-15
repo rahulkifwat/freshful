@@ -281,16 +281,22 @@ class HomeController extends Controller
 
         $buyer = Buyer::find($user_id);
 
-        // Orders with count
-        $orders = DB::table('orders as o')
-            ->join(DB::raw('
-                (SELECT order_id, COUNT(*) as order_count 
-                 FROM orders 
-                 GROUP BY order_id) as t
-            '), 'o.order_id', '=', 't.order_id')
-            ->where('o.buyer_id', $user_id)
-            ->orderBy('o.id', 'desc')
-            ->select('o.*', 't.order_count')
+        // One row per order_id (orders table is flat: one row per product per order)
+        $orders = DB::table('orders')
+            ->where('buyer_id', $user_id)
+            ->select(
+                'order_id',
+                DB::raw('MAX(id) as id'),
+                DB::raw('MAX(date_added) as date_added'),
+                DB::raw('MAX(order_status) as order_status'),
+                DB::raw('MAX(delivery_type) as delivery_type'),
+                DB::raw('MAX(schedule_time) as schedule_time'),
+                DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(delivery_charge) as delivery_charge'),
+                DB::raw('COUNT(*) as order_count')
+            )
+            ->groupBy('order_id')
+            ->orderByDesc('id')
             ->get();
 
         // Addresses
@@ -298,6 +304,119 @@ class HomeController extends Controller
 
         return view('myaccount', compact('buyer', 'orders', 'addresses'));
     }
+    public function trackOrder($order_id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('home')->with('error', 'Please login first');
+        }
+
+        $user_id = Auth::id();
+
+        $order_items = DB::table('orders as t1')
+            ->join('products as t2', 't2.id', '=', 't1.product_id')
+            ->join('items as t3', 't3.id', '=', 't2.item_id')
+            ->where('t1.order_id', $order_id)
+            ->where('t1.buyer_id', $user_id)
+            ->select('t1.*', 't2.main_price', 't2.product_unit', 't2.unit_quantity', 't2.product_image', 't3.item as item_name')
+            ->get();
+
+        if ($order_items->isEmpty()) {
+            return redirect()->route('myaccount')->with('error', 'Order not found');
+        }
+
+        $product_ids = $order_items->pluck('product_id');
+        $reviews = DB::table('reviews')
+            ->where('buyer_id', $user_id)
+            ->whereIn('product_id', $product_ids)
+            ->get()
+            ->keyBy('product_id');
+
+        return view('track_order', compact('order_items', 'order_id', 'reviews'));
+    }
+
+    public function cancelOrderPage($order_id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('home')->with('error', 'Please login first');
+        }
+
+        $user_id = Auth::id();
+        $order = DB::table('orders')->where('order_id', $order_id)->where('buyer_id', $user_id)->first();
+
+        if (!$order || $order->order_status === 'Order Cancel') {
+            return redirect()->route('myaccount')->with('error', 'Order not found or already cancelled');
+        }
+
+        return view('cancel_order', compact('order_id'));
+    }
+
+    public function cancelOrder(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['result' => false, 'message' => 'Please login first']);
+        }
+
+        $user_id = Auth::id();
+        $order_id = $request->order_id;
+        $reason   = $request->reason_for_order_cancel;
+
+        if (!$reason) {
+            return response()->json(['result' => false, 'message' => 'Please select a reason']);
+        }
+
+        $exists = DB::table('orders')->where('order_id', $order_id)->where('buyer_id', $user_id)->exists();
+        if (!$exists) {
+            return response()->json(['result' => false, 'message' => 'Order not found']);
+        }
+
+        DB::table('orders')
+            ->where('order_id', $order_id)
+            ->where('buyer_id', $user_id)
+            ->update(['order_status' => 'Order Cancel']);
+
+        return response()->json(['result' => true, 'message' => 'Order cancelled successfully']);
+    }
+
+    public function addReview(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['result' => false, 'message' => 'Please login first']);
+        }
+
+        $user_id    = Auth::id();
+        $product_id = $request->product_id;
+        $rating     = $request->rating;
+        $feedback   = $request->feedback;
+
+        if (!$product_id) {
+            return response()->json(['result' => false, 'message' => 'Please define product id']);
+        }
+
+        $existing = DB::table('reviews')
+            ->where('buyer_id', $user_id)
+            ->where('product_id', $product_id)
+            ->first();
+
+        if ($existing) {
+            DB::table('reviews')->where('id', $existing->id)->update([
+                'rating'   => $rating,
+                'feedback' => $feedback,
+            ]);
+            return response()->json(['result' => true, 'message' => 'Rating Updated Successfully']);
+        }
+
+        DB::table('reviews')->insert([
+            'buyer_id'   => $user_id,
+            'product_id' => $product_id,
+            'rating'     => $rating,
+            'feedback'   => $feedback,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['result' => true, 'message' => 'Rating Added Successfully']);
+    }
+
     public function storeAddress(Request $request)
     {
         $request->validate([

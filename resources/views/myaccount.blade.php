@@ -104,50 +104,71 @@
 
                             <div class="tab-pane fade shadow rounded-6 p-4 active show" id="orders" role="tabpanel"
                                 aria-labelledby="order-history">
-                                <div class="table-responsive bg-white   rounded-6">
-                                    <table class="table mb-0 table-center table-nowrap">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col" class="border-bottom fw-medium">Order no.</th>
-                                                <th scope="col" class="border-bottom fw-medium">Date</th>
-                                                <th scope="col" class="border-bottom fw-medium">Status</th>
-                                                <th scope="col" class="border-bottom fw-medium">Total</th>
-                                                <th scope="col" class="border-bottom fw-medium">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($orders as $order)
-                                                <tr>
-                                                    <th>{{ $order->order_id }}</th>
-                                                    <td>{{ date('d M Y', strtotime($order->date_added)) }}</td>
+                                @php
+                                    $pending_statuses  = ['Order Pending','Order Placed','Order Processed','Order Shipped','Order Delivered','Order Dispatched'];
+                                    $ongoing_statuses  = ['Order Placed','Order Processed','Order Shipped','Order Dispatched'];
+                                    $delivered_statuses= ['Order Delivered'];
+                                    $status_colors = [
+                                        'Order Pending'    => 'background:#858585;color:#fff',
+                                        'Order Cancel'     => 'background:#e52121;color:#fff',
+                                        'Order Placed'     => 'background:#e0389b;color:#fff',
+                                        'Order Processed'  => 'background:#fa8d12;color:#fff',
+                                        'Order Shipped'    => 'background:#099cc0;color:#fff',
+                                        'Order Delivered'  => 'background:#17cf1c;color:#fff',
+                                        'Order Dispatched' => 'background:#f3db1b;color:#000',
+                                    ];
+                                @endphp
 
-                                                    <td>
-                                                        <span
-                                                            class="
-                                                    {{ $order->status == 'delivered' ? 'text-success' : '' }}
-                                                    {{ $order->status == 'pending' ? 'text-warning' : '' }}
-                                                    {{ $order->status == 'cancelled' ? 'text-danger' : '' }}
-                                                ">
-                                                            {{ ucfirst($order->order_status) }}
-                                                        </span>
-                                                    </td>
-
-                                                    <td>
-                                                        ₹ {{ $order->total_amount }}
-                                                        <span class="text-muted">for {{ $order->order_count }} items</span>
-                                                    </td>
-
-                                                    <td>
-                                                        <a href="{{ url('/order/' . $order->order_id) }}"
-                                                            class="text-primary">
-                                                            View
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                @forelse($orders as $order)
+                                <div class="border rounded mb-3 bg-white overflow-hidden">
+                                    <div class="p-3">
+                                        <div class="row align-items-start">
+                                            <div class="col-md-8">
+                                                <p class="mb-1 fw-semibold">Order ID: <span class="text-danger">{{ $order->order_id }}</span></p>
+                                                <p class="mb-1 small text-muted">Placed: {{ date('d M Y (h:i A)', strtotime($order->date_added)) }} &bull; {{ $order->order_count }} item(s)</p>
+                                                <p class="mb-1 small text-muted">
+                                                    Delivery:
+                                                    @if($order->delivery_type === 'Express')
+                                                        <strong>Express</strong>
+                                                    @else
+                                                        <strong>{{ $order->schedule_time }}</strong>
+                                                    @endif
+                                                </p>
+                                                <p class="mb-0">
+                                                    STATUS:
+                                                    <span class="px-2 py-1 rounded small fw-semibold"
+                                                          style="{{ $status_colors[$order->order_status] ?? 'background:#858585;color:#fff' }}">
+                                                        {{ $order->order_status }}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-4 mt-3 mt-md-0">
+                                                <ul class="list-unstyled mb-0 small" style="border-left:3px solid #eee;padding-left:12px;">
+                                                    <li class="mb-2 {{ in_array($order->order_status, $pending_statuses) ? 'text-danger fw-bold' : 'text-muted' }}">
+                                                        <span class="me-1">●</span> Order Pending
+                                                    </li>
+                                                    <li class="mb-2 {{ in_array($order->order_status, $ongoing_statuses) ? 'text-warning fw-bold' : 'text-muted' }}">
+                                                        <span class="me-1">●</span> Order Ongoing
+                                                    </li>
+                                                    <li class="{{ in_array($order->order_status, $delivered_statuses) ? 'text-success fw-bold' : 'text-muted' }}">
+                                                        <span class="me-1">●</span> Completed
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="border-top d-flex">
+                                        <a href="{{ route('track-order', $order->order_id) }}"
+                                           class="btn btn-primary flex-grow-1 rounded-0">View Details</a>
+                                        @if($order->order_status !== 'Order Cancel')
+                                        <a href="{{ route('cancel-order', $order->order_id) }}"
+                                           class="btn btn-danger rounded-0">Cancel Order</a>
+                                        @endif
+                                    </div>
                                 </div>
+                                @empty
+                                <p class="text-muted text-center py-4">No orders yet.</p>
+                                @endforelse
                             </div><!--end teb pane-->
 
                             <div class="tab-pane fade shadow rounded-6 p-4" id="down" role="tabpanel"

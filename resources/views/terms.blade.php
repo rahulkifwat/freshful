@@ -98,7 +98,7 @@
 
                     <h4><u>PRIVACY</u></h4>
 
-                    <p>Freshious believes strongly in protecting user privacy and providing you with notice of use of your data. Please refer to Freshious privacy policy, incorporated by reference&nbsp;<a href="https://freshful.in/privacy-policy" target="_blank">Privacy Policy</a>. The privacy policy can also be accessed on the Platform.</p>
+                    <p>Freshious believes strongly in protecting user privacy and providing you with notice of use of your data. Please refer to Freshious privacy policy, incorporated by reference&nbsp;<a href="{{ route('privacy-policy') }}" target="_blank">Privacy Policy</a>. The privacy policy can also be accessed on the Platform.</p>
 
                     <h4><u>AGREEMENT TO BE BOUND</u></h4>
 

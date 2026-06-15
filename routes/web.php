@@ -240,6 +240,10 @@ Route::prefix('/user')->group(function () {
     Route::post('/login', [AuthController::class, 'userLogin'])->name('user.login');
     Route::get('/logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('/myaccount', [HomeController::class, 'myAccount'])->name('myaccount');
+    Route::get('/order/{order_id}', [HomeController::class, 'trackOrder'])->name('track-order');
+    Route::get('/cancel-order/{order_id}', [HomeController::class, 'cancelOrderPage'])->name('cancel-order');
+    Route::post('/ajax/cancel-order', [HomeController::class, 'cancelOrder'])->name('cancel-order.ajax');
+    Route::post('/ajax/add-review', [HomeController::class, 'addReview'])->name('add-review');
     Route::post('/storeAddress', [HomeController::class, 'storeAddress'])->name('storeAddress');
     Route::get('/deleteAddress/{id}', [HomeController::class, 'deleteAddress'])->name('deleteAddress');
     Route::post('updateAccount', [HomeController::class, 'updateAccount'])->name('updateAccount');
