@@ -9,6 +9,7 @@ use App\Models\Buyer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -34,8 +35,10 @@ class AuthController extends Controller
                 ]);
             }
 
+            $guestSessionId = session()->getId();
             session()->forget('otp');
             Auth::guard('buyers')->login($user);
+            $this->mergeGuestCart($guestSessionId, $user->id);
             return redirect()->route('home')->with('success', 'Login successful');
 
         } elseif ($request->filled('password')) {
@@ -53,7 +56,9 @@ class AuthController extends Controller
                         $user->password = Hash::make($request->password);
                         $user->save();
                     }
+                    $guestSessionId = session()->getId();
                     Auth::guard('buyers')->login($user);
+                    $this->mergeGuestCart($guestSessionId, $user->id);
                     return redirect()->route('home')->with('success', 'Login successful');
                 }
             }
@@ -157,5 +162,28 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('admin.login');
+    }
+
+    private function mergeGuestCart(string $guestSessionId, int $buyerId): void
+    {
+        $guestItems = DB::table('cart')->where('session_id', $guestSessionId)->get();
+
+        foreach ($guestItems as $item) {
+            $existing = DB::table('cart')
+                ->where('buyer_id', $buyerId)
+                ->where('product_id', $item->product_id)
+                ->first();
+
+            if ($existing) {
+                DB::table('cart')
+                    ->where('id', $existing->id)
+                    ->update(['quantity' => $existing->quantity + $item->quantity]);
+                DB::table('cart')->where('id', $item->id)->delete();
+            } else {
+                DB::table('cart')
+                    ->where('id', $item->id)
+                    ->update(['buyer_id' => $buyerId, 'session_id' => null]);
+            }
+        }
     }
 }
