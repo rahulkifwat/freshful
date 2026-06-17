@@ -9,5 +9,6 @@ use Illuminate\Auth\Authenticatable;
 class Buyer extends Model implements AuthenticatableContract
 {
     use Authenticatable;
-    //
+
+    protected $guarded = ['id'];
 }

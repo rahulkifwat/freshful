@@ -253,6 +253,8 @@ Route::post('/add-order', [HomeController::class, 'addOrder'])->name('add-order'
 Route::post('/send-otp', [AuthController::class, 'sendOtp'])->name('send-otp');
 Route::get('/get-cart', [HomeController::class, 'cart'])->name('get-cart');
 Route::post('/add-cart', [HomeController::class, 'addCart'])->name('add-cart');
+Route::get('/ajax/search', [HomeController::class, 'searchProducts'])->name('search-products');
+Route::post('/ajax/check-hub', [HomeController::class, 'checkHub'])->name('check-hub');
 
 Route::prefix('account_manager')->group(function () {
 

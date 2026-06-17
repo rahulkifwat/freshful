@@ -15,20 +15,30 @@ class AuthController extends Controller
 {
     public function userLogin(Request $request){
         $phone = $request->phone;
-        // dd($request->all());
-        if($request->filled('otp')){
-            if($request->otp == session('otp')){
-                $user = Buyer::where('phone', $phone)->first();
-                if($user){
-                    Auth::guard('buyers')->login($user);
-                    return redirect()->route('home')->with('success', 'Login successful');
-                }
-            }elseif($request->otp != session('otp')){
-                return redirect()->back()->with('error', 'Invalid OTP')->with('openLoginform', true);
-            }else{
-                return redirect()->back()->with('error', 'Something went wrong')->with('openLoginform', true);
+
+        if ($request->filled('otp')) {
+            if ($request->otp != session('otp')) {
+                return redirect()->back()->with('error', 'Invalid OTP. Please try again.')->with('openLoginform', true);
             }
-        }elseif($request->filled('password')){
+
+            // OTP is correct — find or auto-register the buyer (mirrors PHP behavior)
+            $user = Buyer::where('phone', $phone)->first();
+            if (!$user) {
+                $user = Buyer::create([
+                    'phone'        => $phone,
+                    'status'       => 'active',
+                    'phone_verify' => 0,
+                    'name'         => '',
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+            }
+
+            session()->forget('otp');
+            Auth::guard('buyers')->login($user);
+            return redirect()->route('home')->with('success', 'Login successful');
+
+        } elseif ($request->filled('password')) {
             $user = Buyer::where('phone', $phone)->first();
             if ($user) {
                 $stored   = (string) $user->password;
@@ -39,7 +49,7 @@ class AuthController extends Controller
                     : hash_equals($stored, (string) $request->password);
 
                 if ($passwordOk) {
-                    if (! $isBcrypt) {
+                    if (!$isBcrypt) {
                         $user->password = Hash::make($request->password);
                         $user->save();
                     }
@@ -49,46 +59,49 @@ class AuthController extends Controller
             }
             return redirect()->back()->with('error', 'Invalid phone or password')->with('openLoginform', true);
         }
-        return redirect()->back()->with('error', 'Something went wrong')->with('openLoginform', true);
 
+        return redirect()->back()->with('error', 'Something went wrong')->with('openLoginform', true);
     }
 
-    public function sendOtp(Request $request){
+    public function sendOtp(Request $request)
+    {
         $phone = $request->phone;
 
-        $user = Buyer::where('phone', $phone)->first();
-        if(!$user){
-            return response()->json(['message' => 'User not found'], 404);
+        if (!$phone || strlen($phone) < 10) {
+            return response()->json(['status' => 'error', 'message' => 'Please enter a valid 10-digit mobile number']);
         }
+
         $otp = rand(100000, 999999);
         $message_body = "Dear Customer, Your One Time Password for registration is $otp, use this code to validate your login. Pls Do Not Share this OTP with anyone.Freshful";
-        $url = "http://bhashsms.com/api/sendmsg.php?" . http_build_query([
+
+        // Store OTP in session before the SMS attempt so login works even if SMS call throws
+        session(['otp' => $otp, 'phone' => $phone]);
+
+        try {
+            // Legacy PHP sends via cURL POST — not GET with query params
+            $res  = Http::asForm()->post('http://bhashsms.com/api/sendmsg.php', [
                 'user'     => 'Fastic',
                 'pass'     => '123456',
                 'sender'   => 'Frfull',
                 'phone'    => $phone,
                 'text'     => $message_body,
                 'priority' => 'ndnd',
-                'stype'    => 'normal'
+                'stype'    => 'normal',
             ]);
-            // $res = Http::get($url);
-            try {
-                $res = Http::get($url);
+            $body = trim($res->body());
 
-                $body = $res->body();
-                if (str_contains(trim($body), 'S.')) {
-                    session(['otp' => $otp,
-                            'phone' => $phone]);
-
-                    return response()->json(['message' => 'OTP sent successfully'], 200);
-                } else {
-                    return response()->json(['message' => 'OTP not sent provider problem'], 500);
-                }
-            } catch (\Exception $e) {
-                return response()->json(['message' => 'OTP sending failed : ' . $e->getMessage()], 500);
+            // bhashsms returns "S.<msgid>" on success, "E <code> …" on failure
+            if (str_starts_with($body, 'S.') || str_starts_with($body, 'S ')) {
+                return response()->json(['status' => 'success', 'message' => 'OTP sent to your mobile number']);
             }
 
-        return response()->json(['message' => 'OTP sent successfully'], 200);
+            \Log::warning('bhashsms OTP failed', ['phone' => $phone, 'response' => $body]);
+            return response()->json(['status' => 'error', 'message' => 'Failed to send OTP: ' . $body]);
+
+        } catch (\Exception $e) {
+            \Log::error('bhashsms exception', ['phone' => $phone, 'error' => $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => 'SMS gateway error. Please try again.']);
+        }
     }
 
     public function logout(){

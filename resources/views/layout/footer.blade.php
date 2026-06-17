@@ -171,15 +171,15 @@
                 })
             })
             .then(response => response.json())
-            .then(data => {         
-                if(data.status === "success"){
-                    toastr.success(data.message);
-                }else{
-                    toastr.error(data.message);
+            .then(data => {
+                if (data.status === "success") {
+                    notify(data.message, 'success');
+                } else {
+                    notify(data.message || 'Failed to send OTP', 'error');
                 }
             })
-            .catch(error=>{
-                toastr.error("Something went wrong");
+            .catch(error => {
+                notify("Something went wrong", 'error');
             });
 
     });
@@ -340,4 +340,138 @@ function addToCart(product_id, quantity = 1) {
         })
         .catch(() => notify('Network error while adding to cart', 'error'));
 }
+</script>
+<script>
+// Location search — Google Places Autocomplete + hub verification
+function initLocationSearch() {
+    var input = document.getElementById('locationSearchInput');
+    if (!input || typeof google === 'undefined') return;
+
+    var autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+
+    autocomplete.addListener('place_changed', function () {
+        var place = autocomplete.getPlace();
+        if (!place.geometry) return;
+
+        var lat  = place.geometry.location.lat();
+        var lng  = place.geometry.location.lng();
+        var addr = place.formatted_address;
+        var city = '';
+
+        (place.address_components || []).forEach(function (c) {
+            if (c.types.indexOf('locality') === 0) city = c.short_name;
+        });
+
+        checkHubLocation(lat, lng, addr, city);
+    });
+}
+
+function useMyLocation() {
+    var status = document.getElementById('location-status');
+    if (!navigator.geolocation) { if (status) status.textContent = 'Geolocation not supported.'; return; }
+    if (status) status.textContent = 'Detecting your location…';
+
+    navigator.geolocation.getCurrentPosition(function (pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+
+        if (typeof google === 'undefined') { checkHubLocation(lat, lng, '', ''); return; }
+
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, gstatus) {
+            var addr = '', city = '';
+            if (gstatus === 'OK' && results[0]) {
+                addr = results[0].formatted_address;
+                var inp = document.getElementById('locationSearchInput');
+                if (inp) inp.value = addr;
+                (results[0].address_components || []).forEach(function (c) {
+                    if (c.types.indexOf('locality') === 0) city = c.short_name;
+                });
+            }
+            checkHubLocation(lat, lng, addr, city);
+        });
+    }, function () {
+        if (status) status.textContent = 'Unable to get your location. Please enable location access.';
+    });
+}
+
+function checkHubLocation(lat, lng, address, city) {
+    var status = document.getElementById('location-status');
+    if (status) status.innerHTML = '<span class="text-muted">Checking service availability…</span>';
+
+    fetch('{{ route("check-hub") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ lat: lat, lng: lng, address: address, city: city }),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(function (res) {
+        if (res.result) {
+            if (status) status.innerHTML = '<span class="text-success fw-semibold">✓ ' + res.message + '</span>';
+            setTimeout(function () { location.reload(); }, 800);
+        } else {
+            if (status) status.innerHTML = '<span class="text-danger">' + res.message + '</span>';
+        }
+    })
+    .catch(function () {
+        if (status) status.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+    });
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOZz0ZH-6fFQg8vixFsEtvrq006HXoZwA&callback=initLocationSearch&libraries=places" async defer></script>
+
+<script>
+(function () {
+    const searchInput = document.getElementById('search_product');
+    const dropdown    = document.getElementById('search-results-dropdown');
+    if (!searchInput || !dropdown) return;
+
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        const q = this.value.trim();
+        if (q.length < 2) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
+
+        debounceTimer = setTimeout(function () {
+            fetch('{{ route("search-products") }}?query=' + encodeURIComponent(q), { credentials: 'same-origin' })
+                .then(r => r.json())
+                .then(items => {
+                    if (!items.length) {
+                        dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">No results found</div>';
+                        dropdown.style.display = 'block';
+                        return;
+                    }
+                    dropdown.innerHTML = items.map(item => `
+                        <a href="${item.detail_url}" class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none text-dark"
+                           style="border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f8f8f8'" onmouseout="this.style.background=''">
+                            <img src="${item.image_url}" alt="${item.product_name}"
+                                 style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+                            <div>
+                                <div class="fw-semibold fs-7">${item.product_name}</div>
+                                <div class="text-danger small">₹${item.main_price}</div>
+                            </div>
+                        </a>`).join('');
+                    dropdown.style.display = 'block';
+                })
+                .catch(() => { dropdown.style.display = 'none'; });
+        }, 300);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Keyboard: Enter navigates to first result
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            const first = dropdown.querySelector('a');
+            if (first) { e.preventDefault(); window.location.href = first.href; }
+        }
+    });
+})();
 </script>

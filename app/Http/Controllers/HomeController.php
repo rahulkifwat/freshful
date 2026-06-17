@@ -564,6 +564,77 @@ class HomeController extends Controller
         return view('checkout', compact('buyer', 'addresses', 'cart_items', 'cart_total', 'delivery_charge', 'hub_id'));
     }
 
+    public function checkHub(Request $request)
+    {
+        $lat     = (float) $request->lat;
+        $lng     = (float) $request->lng;
+        $address = $request->address ?? '';
+        $city    = $request->city    ?? '';
+
+        $hub = DB::selectOne("
+            SELECT *,
+            111.111 * DEGREES(ACOS(LEAST(1.0,
+                COS(RADIANS(hub_lat)) * COS(RADIANS(?)) * COS(RADIANS(hub_lng - ?)) +
+                SIN(RADIANS(hub_lat)) * SIN(RADIANS(?))
+            ))) AS distance_in_km
+            FROM hubs
+            WHERE status = 'active'
+            HAVING distance_in_km < 100.0
+            ORDER BY distance_in_km ASC
+            LIMIT 1
+        ", [$lat, $lng, $lat]);
+
+        if ($hub) {
+            $expire = time() + 60 * 60 * 24 * 365;
+            setcookie('hub_id',  $hub->id, $expire, '/');
+            setcookie('lat',     $lat,     $expire, '/');
+            setcookie('lng',     $lng,     $expire, '/');
+            setcookie('address', $address, $expire, '/');
+            setcookie('city',    $city,    $expire, '/');
+            session(['hub_session_id' => $hub->id]);
+
+            return response()->json(['result' => true, 'message' => 'Location set successfully', 'hub_id' => $hub->id]);
+        }
+
+        return response()->json(['result' => false, 'message' => "Sorry, we don't serve your chosen location currently. But we wish to, soon!"]);
+    }
+
+    public function searchProducts(Request $request)
+    {
+        $q = trim($request->input('query', $request->input('q', '')));
+
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $baseUrl = rtrim(config('app.url'), '/');
+
+        $results = DB::table('products as p')
+            ->join('items as i', 'i.id', '=', 'p.item_id')
+            ->leftJoin('category as c', 'c.id', '=', 'p.category_id')
+            ->where('p.status', 'active')
+            ->where(function ($q2) use ($q) {
+                $q2->where('i.item', 'like', "%$q%")
+                   ->orWhere('c.name', 'like', "%$q%");
+            })
+            ->select(
+                'p.id',
+                'i.item as product_name',
+                'p.product_image',
+                'p.main_price'
+            )
+            ->orderBy('i.item')
+            ->limit(10)
+            ->get()
+            ->map(function ($row) use ($baseUrl) {
+                $row->image_url = $baseUrl . '/uploads/images/products/' . $row->product_image;
+                $row->detail_url = url('/product_detail?id=' . $row->id);
+                return $row;
+            });
+
+        return response()->json($results);
+    }
+
     public function certificate()
     {
         return view('certificate');

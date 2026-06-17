@@ -61,15 +61,22 @@
             </div>
             <div class="col-sm-6 col-6 col-md-3 col-lg-4 d-none d-sm-block rder-lg-3 order-3">
 
-                <div class="input-group rounded-pill overflow-hidden border py-1 mx-auto">
-                    <span class="input-group-text bg-white border-0">
-                        <i class="bi bi-search text-primary-alt"></i>
-                    </span>
-                    <input
-                        type="search"
-                        class="form-control border-0 outline-0 bg-white"
-                        placeholder="Search..."
-                        aria-label="Search">
+                <div class="position-relative">
+                    <div class="input-group rounded-pill overflow-hidden border py-1 mx-auto">
+                        <span class="input-group-text bg-white border-0">
+                            <i class="bi bi-search text-primary-alt"></i>
+                        </span>
+                        <input
+                            type="search"
+                            id="search_product"
+                            class="form-control border-0 outline-0 bg-white"
+                            placeholder="Search products..."
+                            aria-label="Search"
+                            autocomplete="off">
+                    </div>
+                    <div id="search-results-dropdown"
+                         style="display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:360px;overflow-y:auto;margin-top:4px;">
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6 col-6 col-md-3 col-lg-3 rder-lg-4 order-4">
@@ -101,15 +108,16 @@
                         <i class="bi bi-search text-primary-alt"></i>
                     </span>
                     <input
-                        type="search"
+                        type="text"
+                        id="locationSearchInput"
                         class="form-control border-0 outline-0 bg-white"
                         placeholder="Enter address here..."
-                        aria-label="Search">
+                        autocomplete="off">
                 </div>
+                <div id="location-status" class="mt-2 small text-center" style="min-height:20px;"></div>
                 <div class="d-flex align-items-start justify-content-center gap-2 mt-3">
-
                     <i class="bi bi-crosshair fs-7" style="color:#0066ee"></i>
-                    <p class="fs-7 fw-bold  m-0 text-capitalize " style="color:#0066ee">Use my current location</p>
+                    <p class="fs-7 fw-bold m-0 text-capitalize" style="color:#0066ee;cursor:pointer;" onclick="useMyLocation()">Use my current location</p>
                 </div>
             </div>
         </card>
