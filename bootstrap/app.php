@@ -28,11 +28,20 @@ use App\Http\Middleware\PosMiddleware;
 use App\Http\Middleware\PosRedirectMiddleware;
 use App\Http\Middleware\ProductionMiddleware;
 use App\Http\Middleware\ProductionRedirectMiddleware;
+use App\Http\Middleware\DriverJwtMiddleware;
+use App\Http\Middleware\AdminApiMiddleware;
+use App\Http\Middleware\BuyerApiMiddleware;
+use App\Exceptions\ApiException;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -62,8 +71,31 @@ return Application::configure(basePath: dirname(__DIR__))
             'pos_redirect' => PosRedirectMiddleware::class,
             'production' => ProductionMiddleware::class,
             'production_redirect' => ProductionRedirectMiddleware::class,
+            'driver.jwt' => DriverJwtMiddleware::class,
+            'admin.api' => AdminApiMiddleware::class,
+            'buyer.api' => BuyerApiMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // API errors keep the legacy shape and HTTP 200 the mobile apps expect.
+        $exceptions->render(function (ApiException $e) {
+            return response()->json(['result' => false, 'message' => $e->getMessage()]);
+        });
+        // Legacy db_* helpers swallowed SQL errors into result=false; do the same for
+        // unexpected API errors (still logged by the default reporter).
+        $exceptions->render(function (Throwable $e, Request $request) {
+            // HttpResponseException already carries its response (e.g. the rate-limit message).
+            if (! $request->is('api/*') || $e instanceof HttpExceptionInterface || $e instanceof ValidationException
+                || $e instanceof HttpResponseException) {
+                return null;
+            }
+
+            $json = ['result' => false, 'message' => 'something went wrong'];
+            if (config('app.debug')) {
+                $json['error'] = $e->getMessage();
+            }
+
+            return response()->json($json);
+        });
+        $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());
     })->create();

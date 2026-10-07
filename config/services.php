@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    // Driver app JWT — must match JWT_SECRET in the legacy functions/functions.php
+    // while both APIs are live, so tokens work on either side.
+    'driver_jwt' => [
+        'secret' => env('DRIVER_JWT_SECRET'),
+        'ttl' => (int) env('DRIVER_JWT_TTL', 7 * 24 * 60 * 60),
+    ],
+
+    // OTP SMS gateway used by /api/login.
+    'bhashsms' => [
+        'url' => env('BHASHSMS_URL', 'http://bhashsms.com/api/sendmsg.php'),
+        'user' => env('BHASHSMS_USER'),
+        'pass' => env('BHASHSMS_PASS'),
+        'sender' => env('BHASHSMS_SENDER', 'Frfull'),
+    ],
+
 ];
