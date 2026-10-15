@@ -42,6 +42,9 @@ return [
         'ttl' => (int) env('DRIVER_JWT_TTL', 7 * 24 * 60 * 60),
     ],
 
+    // Base URL of the legacy site's uploads folder (driver documents uploaded via the old api/).
+    'legacy_uploads_url' => env('LEGACY_UPLOADS_URL', 'https://freshful.in/uploads'),
+
     // OTP SMS gateway used by /api/login.
     'bhashsms' => [
         'url' => env('BHASHSMS_URL', 'http://bhashsms.com/api/sendmsg.php'),

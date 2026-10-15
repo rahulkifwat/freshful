@@ -82,6 +82,9 @@ Route::prefix('driver')->group(function () use ($any) {
             Route::match($any, 'driver-verify', [DriverAdminController::class, 'verify']);
             Route::match($any, 'driver-approval', [DriverAdminController::class, 'approval']);
             Route::match($any, 'toggle-driver-status', [DriverAdminController::class, 'toggleStatus']);
+            Route::get('assignable-orders', [DriverAdminController::class, 'assignableOrders']);
+            Route::get('eligible-drivers', [DriverAdminController::class, 'eligibleDrivers']);
+            Route::post('assign-order', [DriverAdminController::class, 'assignOrder']);
         });
 
         Route::match($any, 'users', [DriverAdminController::class, 'users']);

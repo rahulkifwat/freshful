@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Driver;
 
 use App\Exceptions\ApiException;
+use App\Services\DriverManagementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -85,44 +86,65 @@ class AdminController extends DriverController
     }
 
     /** POST /api/driver/admin/driver-approval — regid, approve (true/false), rejection_reason(o) */
-    public function approval(Request $request): JsonResponse
+    public function approval(Request $request, DriverManagementService $drivers): JsonResponse
     {
-        $regid = $this->requireFilled($request, 'regid');
-        $adminId = $request->user()->id;
+        $regid = (int) $this->requireFilled($request, 'regid');
+        $adminId = (int) $request->user()->id;
         if (! $request->exists('approve')) {
             throw new ApiException('approve (true/false) is required');
         }
 
-        if ($this->verificationStatus($regid) !== 'pending_admin_approval') {
-            throw new ApiException('Driver is not pending approval');
-        }
-
-        $now = $this->now();
-
+        // Same rules as the admin panel (only pending -> approved/rejected, no double approval).
         if (! filter_var($request->input('approve'), FILTER_VALIDATE_BOOLEAN)) {
-            DB::table('driver_registration')->where('id', $regid)->update([
-                'verification_status' => 'rejected',
-                'rejection_reason'    => (string) $request->input('rejection_reason', ''),
-                'approved_by'         => $adminId,
-                'approved_at'         => $now,
-            ]);
+            $drivers->reject($regid, $adminId, (string) $request->input('rejection_reason', ''));
 
             return $this->respond(['result' => true, 'message' => 'Driver rejected']);
         }
 
-        DB::transaction(function () use ($regid, $adminId, $now) {
-            DB::table('driver_registration')->where('id', $regid)
-                ->update(['verification_status' => 'approved', 'approved_by' => $adminId, 'approved_at' => $now]);
-
-            if (! DB::table('driver_wallet')->where('regid', $regid)->exists()) {
-                DB::table('driver_wallet')->insert([
-                    'regid' => $regid, 'balance' => 0, 'currency' => 'INR', 'status' => 'active',
-                    'created_at' => $now, 'updated_at' => $now,
-                ]);
-            }
-        });
+        $drivers->approve($regid, $adminId);
 
         return $this->respond(['result' => true, 'message' => 'Driver approved successfully']);
+    }
+
+    /** /api/driver/admin/assignable-orders?filter=unassigned|assigned|all&search=&page= */
+    public function assignableOrders(Request $request, DriverManagementService $drivers): JsonResponse
+    {
+        $filter = in_array($request->input('filter'), ['unassigned', 'assigned', 'all'], true) ? $request->input('filter') : 'unassigned';
+        $page = $drivers->assignableOrdersQuery($filter, $request->input('search'))->paginate(20);
+
+        return $this->respond([
+            'result'       => true,
+            'message'      => 'success',
+            'orders'       => $this->rows($page->items()),
+            'count'        => $page->total(),
+            'current_page' => $page->currentPage(),
+            'last_page'    => $page->lastPage(),
+        ]);
+    }
+
+    /** /api/driver/admin/eligible-drivers?search= — approved, non-suspended drivers */
+    public function eligibleDrivers(Request $request, DriverManagementService $drivers): JsonResponse
+    {
+        $rows = $this->rows($drivers->eligibleDriversQuery($request->input('search'))->limit(50)->get());
+
+        return $this->respond(['result' => true, 'message' => 'success', 'drivers' => $rows, 'count' => count($rows)]);
+    }
+
+    /** POST /api/driver/admin/assign-order — order_id, regid, expected_rider_id (0 when unassigned) */
+    public function assignOrder(Request $request, DriverManagementService $drivers): JsonResponse
+    {
+        $orderId = (string) $this->requireFilled($request, 'order_id');
+        $regid = (int) $this->requireFilled($request, 'regid');
+        if (! $request->exists('expected_rider_id') || ! is_numeric($request->input('expected_rider_id'))) {
+            throw new ApiException('expected_rider_id is required (the current rider_id, 0 when unassigned)');
+        }
+
+        $result = $drivers->assign($orderId, $regid, (int) $request->input('expected_rider_id'));
+
+        return $this->respond([
+            'result'  => true,
+            'message' => $result['reassigned'] ? 'Driver changed' : 'Driver assigned',
+        ] + $result);
     }
 
     /** POST /api/driver/admin/toggle-driver-status — regid; flips Activate <-> Deactivate */

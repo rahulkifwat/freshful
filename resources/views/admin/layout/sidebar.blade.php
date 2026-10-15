@@ -103,6 +103,16 @@
        </li>
        <li class="nav-item dropdown">
          <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+           <i class="fa fa-truck"></i> <span class="menu-title">Driver Management</span>
+         </a>
+         <div class="dropdown-menu">
+           <a class="nav-link" href="{{ route('admin.drivers.index') }}">Driver List</a>
+           <a class="nav-link" href="{{ route('admin.drivers.pending') }}">Pending Driver Approvals</a>
+           <a class="nav-link" href="{{ route('admin.drivers.assignment') }}">Order Assignment</a>
+         </div>
+       </li>
+       <li class="nav-item dropdown">
+         <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
            <i class="icon icon-basic-webpage-multiple"></i><span class="menu-title">Master</span>
          </a>
          <div class="dropdown-menu">

@@ -46,11 +46,11 @@ class StaffController extends Controller
             'list_url' => 'planning_managers', 'add_url' => 'add_planning_manager', 'view_url' => 'view_planning_manager',
         ],
         'production_user' => [
-            'table' => 'production_user', 'label' => 'Production User',
+            'table' => 'production', 'label' => 'Production User',
             'list_url' => 'production_user', 'add_url' => 'add_production_user', 'view_url' => 'view_production_user',
         ],
         'pos_users' => [
-            'table' => 'pos_users', 'label' => 'POS User',
+            'table' => 'pos_user', 'label' => 'POS User',
             'list_url' => 'pos_users', 'add_url' => 'add_pos_user', 'view_url' => 'view_pos_user',
         ],
         'hub_users' => [

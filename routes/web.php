@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminAjaxController;
 use App\Http\Controllers\ContentController;
+use App\Http\Controllers\DriverManagementController;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MarketingController;
@@ -111,6 +112,16 @@ Route::prefix('admin')->group(function () {
         Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('admin.ajax.change_status');
         Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('admin.ajax.delete_record');
         Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('admin.ajax.change_order_status');
+
+        // Driver Management: driver list / approvals / order assignment (rules in DriverManagementService)
+        Route::get('/drivers',                 [DriverManagementController::class, 'index'])->name('admin.drivers.index');
+        Route::get('/drivers/pending',         [DriverManagementController::class, 'pending'])->name('admin.drivers.pending');
+        Route::get('/view_driver',             [DriverManagementController::class, 'show'])->name('admin.drivers.show');
+        Route::post('/drivers/approve',        [DriverManagementController::class, 'approve'])->name('admin.drivers.approve');
+        Route::post('/drivers/reject',         [DriverManagementController::class, 'reject'])->name('admin.drivers.reject');
+        Route::get('/order_assignment',        [DriverManagementController::class, 'assignment'])->name('admin.drivers.assignment');
+        Route::get('/order_assignment/drivers', [DriverManagementController::class, 'eligibleDrivers'])->name('admin.drivers.eligible');
+        Route::post('/order_assignment/assign', [DriverManagementController::class, 'assign'])->name('admin.drivers.assign');
 
         // Generic CRUD for every staff/manager role. The legacy URL patterns
         // (foo_managers / add_foo_manager / view_foo_manager) all funnel into
