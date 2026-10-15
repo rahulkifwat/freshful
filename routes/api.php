@@ -105,6 +105,10 @@ Route::prefix('driver')->group(function () use ($any) {
         Route::post('driver/vehical', [DriverProfileController::class, 'saveVehicle']);
         Route::match($any, 'driver/personal-information', [DriverProfileController::class, 'personalInformation']);
         Route::match($any, 'driver/verification', [DriverProfileController::class, 'submitVerification']);
+        Route::get('driver/working-status', [DriverProfileController::class, 'workingStatus']);
+        Route::post('driver/working-status', [DriverProfileController::class, 'saveWorkingStatus']);
+        Route::get('driver/current-location', [DriverProfileController::class, 'currentLocation']);
+        Route::post('driver/current-location', [DriverProfileController::class, 'saveCurrentLocation']);
 
         Route::match($any, 'orders/driver-orders', [DriverOrderController::class, 'index']);
         Route::match($any, 'orders/order-details', [DriverOrderController::class, 'show']);

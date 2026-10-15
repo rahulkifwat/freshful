@@ -134,7 +134,7 @@
         <div id="driverState" class="text-center text-muted py-3"></div>
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0" id="driverTable" style="display:none">
-            <thead><tr><th></th><th>Driver</th><th>Phone</th><th>Vehicle</th><th>Open orders</th></tr></thead>
+            <thead><tr><th></th><th>Driver</th><th>Duty</th><th>Phone</th><th>Vehicle</th><th>Open orders</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -182,6 +182,7 @@
             return '<tr class="js-driver-row' + (isCurrent ? ' table-secondary' : '') + '" data-id="' + d.id + '" data-name="' + esc(d.name) + '" style="cursor:' + (isCurrent ? 'not-allowed' : 'pointer') + '">'
               + '<td><input type="radio" name="driver_pick" value="' + d.id + '"' + (isCurrent ? ' disabled' : '') + '></td>'
               + '<td>' + esc(d.name) + (isCurrent ? ' <span class="badge badge-secondary">current</span>' : '') + '</td>'
+              + '<td>' + (d.working_status === 'on_duty' ? '<span class="badge badge-primary">On duty</span>' : '<span class="badge badge-light border">Off duty</span>') + '</td>'
               + '<td>' + esc(d.phone || '—') + '</td>'
               + '<td>' + esc([d.vehicle_type, d.vehicle_number].filter(Boolean).join(' · ') || '—') + '</td>'
               + '<td>' + esc(d.open_orders) + '</td></tr>';

@@ -16,7 +16,8 @@ class WalletController extends DriverController
     public function balance(Request $request): JsonResponse
     {
         $wallet = DB::table('driver_wallet')->where('regid', $this->driverId($request))->first(['balance', 'currency', 'status']);
-        if (! $wallet) {
+        if (! $wallet) 
+        {
             throw new ApiException('Wallet not found');
         }
 

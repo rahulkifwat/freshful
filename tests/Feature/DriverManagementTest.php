@@ -46,6 +46,9 @@ beforeEach(function () {
         }
         $t->date('dob')->nullable();
         $t->text('address')->nullable();
+        // added by migration 2026_10_15_000002 (skipped there because this table is created here)
+        $t->string('working_status', 20)->default('off_duty');
+        $t->dateTime('working_status_at')->nullable();
         $t->timestamps();
     });
     Schema::create('driver_vehicles', function (Blueprint $t) {
@@ -139,7 +142,7 @@ beforeEach(function () {
     $this->buyerId = $buyer;
 });
 
-function makeDriver(string $verification, string $status = 'Activate', array $extra = []): int
+function makeDriver(string $verification, string $status = 'active', array $extra = []): int
 {
     // Names/emails use the row id (ids restart for every test).
     $id = DB::table('driver_registration')->insertGetId([
@@ -214,7 +217,7 @@ test('a logged-in buyer session or driver token is not an admin', function () {
 test('driver list shows drivers and filters by status and search', function () {
     $pending = makeDriver('pending_admin_approval');
     $approved = makeDriver('approved');
-    $suspended = makeDriver('approved', 'Deactivate');
+    $suspended = makeDriver('approved', 'deactive');
     $rejected = makeDriver('rejected');
 
     $this->actingAs($this->admin, 'admin')->get('/admin/drivers')
@@ -348,7 +351,7 @@ test('the driver picker only offers approved, non-suspended drivers', function (
     $ok = makeDriver('approved');
     $pending = makeDriver('pending_admin_approval');
     $rejected = makeDriver('rejected');
-    $suspended = makeDriver('approved', 'Deactivate');
+    $suspended = makeDriver('approved', 'deactive');
     makeOrder('ORD-W', 'Order Placed', $ok);
 
     $res = $this->actingAs($this->admin, 'admin')->getJson('/admin/order_assignment/drivers')->assertOk()->assertJson(['result' => true]);
@@ -376,7 +379,7 @@ test('unapproved, rejected, suspended and unknown drivers cannot be assigned', f
         makeDriver('pending_admin_approval')    => 'Only approved drivers can be assigned orders',
         makeDriver('incomplete')                => 'Only approved drivers can be assigned orders',
         makeDriver('rejected')                  => 'Only approved drivers can be assigned orders',
-        makeDriver('approved', 'Deactivate')    => 'This driver is suspended and cannot be assigned orders',
+        makeDriver('approved', 'deactive')    => 'This driver is suspended and cannot be assigned orders',
         999                                      => 'Driver not found',
     ];
 
@@ -440,7 +443,7 @@ test('an order with a mix of eligible and dispatched rows is not assignable', fu
 
 test('the admin token API exposes the same assignment rules', function () {
     $ok = makeDriver('approved');
-    $suspended = makeDriver('approved', 'Deactivate');
+    $suspended = makeDriver('approved', 'deactive');
     makeOrder('ORD1');
     $token = $this->admin->createToken('t', ['admin'])->plainTextToken;
     $api = fn () => $this->withHeader('Authorization', 'Bearer '.$token);
@@ -452,4 +455,118 @@ test('the admin token API exposes the same assignment rules', function () {
     $api()->postJson('/api/driver/admin/assign-order', ['order_id' => 'ORD1', 'regid' => $ok, 'expected_rider_id' => 0])->assertJson(['result' => true]);
 
     expect(riderIds('ORD1'))->toBe([$ok]);
+});
+
+// ---- Account status (active / deactive) ----------------------------------------
+
+test('toggle-driver-status only writes active or deactive and takes the driver off duty', function () {
+    $id = makeDriver('approved');
+    DB::table('driver_profile')->where('regid', $id)->update(['working_status' => 'on_duty']);
+    $legacy = makeDriver('approved', 'Deactivate'); // old value still in some rows until migrated
+    $token = $this->admin->createToken('t', ['admin'])->plainTextToken;
+    $toggle = fn ($regid) => $this->withHeader('Authorization', 'Bearer '.$token)->postJson('/api/driver/admin/toggle-driver-status', ['regid' => $regid]);
+
+    $toggle($id)->assertJson(['result' => true, 'status' => 'deactive']);
+    expect(DB::table('driver_registration')->where('id', $id)->value('status'))->toBe('deactive')
+        ->and(DB::table('driver_profile')->where('regid', $id)->value('working_status'))->toBe('off_duty');
+
+    $toggle($id)->assertJson(['result' => true, 'status' => 'active']);
+    $toggle($legacy)->assertJson(['result' => true, 'status' => 'active']);
+    $toggle(999)->assertJson(['result' => false, 'message' => 'Driver not found']);
+
+    expect(DB::table('driver_registration')->pluck('status')->unique()->values()->all())->toBe(['active']);
+});
+
+test('the old Deactivate value still counts as deactivated', function () {
+    $legacy = makeDriver('approved', 'Deactivate');
+    makeOrder('ORD1');
+
+    assignAs($this, 'ORD1', $legacy)->assertJson(['result' => false, 'message' => 'This driver is suspended and cannot be assigned orders']);
+    $this->actingAs($this->admin, 'admin')->get('/admin/drivers?status=suspended')->assertSee("driver$legacy@test.com");
+});
+
+// ---- Working status (on duty / off duty) ----------------------------------------
+
+function driverApi($test, int $regid)
+{
+    return $test->withHeader('Authorization', 'Bearer '.DriverJwt::encode(['id' => $regid, 'phone' => '1', 'role' => 'driver']));
+}
+
+test('driver can read and change working status', function () {
+    $id = makeDriver('approved');
+
+    driverApi($this, $id)->getJson('/api/driver/driver/working-status')->assertJson(['result' => true, 'working_status' => 'off_duty']);
+    driverApi($this, $id)->postJson('/api/driver/driver/working-status', ['working_status' => 'On Duty'])
+        ->assertJson(['result' => true, 'working_status' => 'on_duty', 'message' => 'You are now on duty']);
+    $row = DB::table('driver_profile')->where('regid', $id)->first();
+    expect($row->working_status)->toBe('on_duty')->and($row->working_status_at)->not->toBeNull();
+
+    driverApi($this, $id)->postJson('/api/driver/driver/working-status', ['working_status' => 'off_duty'])->assertJson(['result' => true, 'working_status' => 'off_duty']);
+    driverApi($this, $id)->postJson('/api/driver/driver/working-status', ['working_status' => 'busy'])
+        ->assertJson(['result' => false, 'message' => 'working_status must be on_duty or off_duty']);
+    $this->flushHeaders()->postJson('/api/driver/driver/working-status', ['working_status' => 'on_duty'])->assertJson(['result' => false, 'message' => 'No token provided']);
+});
+
+test('only approved, active drivers can go on duty; anyone can go off duty', function () {
+    $pending = makeDriver('pending_admin_approval');
+    $deactive = makeDriver('approved', 'deactive');
+
+    driverApi($this, $pending)->postJson('/api/driver/driver/working-status', ['working_status' => 'on_duty'])
+        ->assertJson(['result' => false, 'message' => 'You can go on duty after your account is approved']);
+    driverApi($this, $deactive)->postJson('/api/driver/driver/working-status', ['working_status' => 'on_duty'])
+        ->assertJson(['result' => false, 'message' => 'Your account is deactivated. Please contact support.']);
+    driverApi($this, $deactive)->postJson('/api/driver/driver/working-status', ['working_status' => 'off_duty'])->assertJson(['result' => true]);
+
+    expect(DB::table('driver_profile')->whereIn('regid', [$pending, $deactive])->pluck('working_status')->unique()->values()->all())->toBe(['off_duty']);
+});
+
+test('working status creates the profile row if the driver has none yet', function () {
+    $id = makeDriver('approved');
+    DB::table('driver_profile')->where('regid', $id)->delete();
+
+    driverApi($this, $id)->postJson('/api/driver/driver/working-status', ['working_status' => 'on_duty'])->assertJson(['result' => true]);
+    expect(DB::table('driver_profile')->where('regid', $id)->value('working_status'))->toBe('on_duty');
+});
+
+test('assign modal lists on-duty drivers first with their duty status', function () {
+    $off = makeDriver('approved');
+    $on = makeDriver('approved');
+    DB::table('driver_profile')->where('regid', $on)->update(['working_status' => 'on_duty']);
+
+    $res = $this->actingAs($this->admin, 'admin')->getJson('/admin/order_assignment/drivers')->assertOk();
+    expect(collect($res->json('drivers'))->map(fn ($d) => [$d['id'], $d['working_status']])->all())
+        ->toBe([[$on, 'on_duty'], [$off, 'off_duty']]);
+});
+
+// ---- Current location ------------------------------------------------------------
+
+test('driver saves current location; one row per driver, updated in place', function () {
+    $id = makeDriver('approved');
+
+    driverApi($this, $id)->getJson('/api/driver/driver/current-location')->assertJson(['result' => true, 'location' => null]);
+    driverApi($this, $id)->postJson('/api/driver/driver/current-location', ['address' => 'MG Road, Indore', 'lat' => '22.7196', 'lng' => '75.8577'])
+        ->assertJson(['result' => true, 'message' => 'Location updated']);
+    driverApi($this, $id)->postJson('/api/driver/driver/current-location', ['address' => 'Vijay Nagar', 'lat' => 22.7533, 'lng' => 75.8937])
+        ->assertJson(['result' => true]);
+
+    expect(DB::table('driver_locations')->where('regid', $id)->count())->toBe(1);
+    $row = DB::table('driver_locations')->where('regid', $id)->first();
+    expect($row->address)->toBe('Vijay Nagar')->and((float) $row->lat)->toBe(22.7533)->and((float) $row->lng)->toBe(75.8937);
+
+    driverApi($this, $id)->getJson('/api/driver/driver/current-location')->assertJson(['location' => ['address' => 'Vijay Nagar']]);
+
+    $this->actingAs($this->admin, 'admin')->get('/admin/view_driver?id='.$id)
+        ->assertSee('Vijay Nagar')->assertSee('google.com/maps?q=22.7533', false);
+});
+
+test('current location is validated and needs a driver token', function () {
+    $id = makeDriver('approved');
+
+    driverApi($this, $id)->postJson('/api/driver/driver/current-location', ['address' => 'x'])->assertJson(['result' => false, 'message' => 'lat and lng are required']);
+    driverApi($this, $id)->postJson('/api/driver/driver/current-location', ['lat' => 'abc', 'lng' => 75])->assertJson(['result' => false]);
+    driverApi($this, $id)->postJson('/api/driver/driver/current-location', ['lat' => 95, 'lng' => 75])
+        ->assertJson(['result' => false, 'message' => 'lat must be between -90 and 90, lng between -180 and 180']);
+    $this->flushHeaders()->postJson('/api/driver/driver/current-location', ['lat' => 22, 'lng' => 75])->assertJson(['result' => false, 'message' => 'No token provided']);
+
+    expect(DB::table('driver_locations')->count())->toBe(0);
 });

@@ -39,7 +39,7 @@
                       <div class="mr-auto mb-2">
                         <h5 class="mb-1">{{ $name }}</h5>
                         <div>{{ $driver->phone ?: '—' }} · {{ $driver->email ?: '—' }}</div>
-                        <div class="mt-1">@include('admin.drivers._status', ['verification' => $driver->verification_status, 'suspended' => $suspended])</div>
+                        <div class="mt-1">@include('admin.drivers._status', ['verification' => $driver->verification_status, 'suspended' => $suspended, 'working' => ($profile->working_status ?? null) ?: 'off_duty'])</div>
                       </div>
                       @if($driver->verification_status === 'pending_admin_approval')
                         <div class="mb-2">
@@ -63,6 +63,16 @@
                           @if($driver->verification_status === 'rejected')
                             <tr><th>Rejection reason</th><td>{{ $driver->rejection_reason ?: '—' }}</td></tr>
                           @endif
+                          <tr><th>Working status</th><td>{{ (($profile->working_status ?? 'off_duty') === 'on_duty') ? 'On duty' : 'Off duty' }}{{ ($profile->working_status_at ?? null) ? ' (since '.$fmt($profile->working_status_at).')' : '' }}</td></tr>
+                          <tr><th>Current location</th><td>
+                            @if($location)
+                              {{ $location->address ?: 'No address' }}<br>
+                              <a href="https://www.google.com/maps?q={{ $location->lat }},{{ $location->lng }}" target="_blank" rel="noopener">{{ $location->lat }}, {{ $location->lng }}</a>
+                              <br><small class="text-muted">Updated {{ $fmt($location->updated_at) }}</small>
+                            @else
+                              —
+                            @endif
+                          </td></tr>
                           <tr><th>Hub</th><td>{{ $hub->hub ?? '—' }}</td></tr>
                           <tr><th>Open assigned orders</th><td>{{ $active_orders }}</td></tr>
                           <tr><th>Wallet</th><td>{{ $wallet ? $wallet->currency.' '.$wallet->balance : 'Not created (created on approval)' }}</td></tr>

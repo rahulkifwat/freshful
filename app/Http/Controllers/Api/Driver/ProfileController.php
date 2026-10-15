@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Driver;
 
 use App\Exceptions\ApiException;
+use App\Services\DriverManagementService;
 use App\Support\DriverJwt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,10 @@ class ProfileController extends DriverController
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
     private const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+    private const ON_DUTY = 'on_duty';
+
+    private const OFF_DUTY = 'off_duty';
 
     /**
      * /api/driver/driver/validate-token — was api/driver/driver/validate-token.php
@@ -255,6 +260,94 @@ class ProfileController extends DriverController
             ->update(['verification_status' => 'pending_admin_approval', 'verified_at' => $this->now()]);
 
         return $this->respond(['result' => true, 'message' => 'Verification submitted successfully. Pending admin approval.']);
+    }
+
+    /** GET /api/driver/driver/working-status */
+    public function workingStatus(Request $request): JsonResponse
+    {
+        $profile = DB::table('driver_profile')->where('regid', $this->driverId($request))->first(['working_status', 'working_status_at']);
+
+        return $this->respond([
+            'result'            => true,
+            'message'           => 'success',
+            'working_status'    => $profile->working_status ?? self::OFF_DUTY,
+            'working_status_at' => $profile->working_status_at ?? null,
+        ]);
+    }
+
+    /**
+     * POST /api/driver/driver/working-status — working_status: on_duty | off_duty
+     * Going on duty needs an approved, active account.
+     */
+    public function saveWorkingStatus(Request $request): JsonResponse
+    {
+        $regid = $this->driverId($request);
+        // Accept "on_duty", "on duty", "On-Duty" etc.
+        $status = str_replace([' ', '-'], '_', strtolower(trim((string) $request->input('working_status', ''))));
+        if (! in_array($status, [self::ON_DUTY, self::OFF_DUTY], true)) {
+            throw new ApiException('working_status must be on_duty or off_duty');
+        }
+
+        $driver = DB::table('driver_registration')->where('id', $regid)->first(['verification_status', 'status']);
+        if (! $driver) {
+            throw new ApiException('Driver not found');
+        }
+        if ($status === self::ON_DUTY) {
+            if ($driver->verification_status !== DriverManagementService::APPROVED) {
+                throw new ApiException('You can go on duty after your account is approved');
+            }
+            if (app(DriverManagementService::class)->isSuspended($driver->status)) {
+                throw new ApiException('Your account is deactivated. Please contact support.');
+            }
+        }
+
+        $values = ['working_status' => $status, 'working_status_at' => $this->now()];
+        if (DB::table('driver_profile')->where('regid', $regid)->exists()) {
+            DB::table('driver_profile')->where('regid', $regid)->update($values);
+        } else {
+            DB::table('driver_profile')->insert($values + ['regid' => $regid]);
+        }
+
+        return $this->respond([
+            'result'            => true,
+            'message'           => $status === self::ON_DUTY ? 'You are now on duty' : 'You are now off duty',
+            'working_status'    => $status,
+            'working_status_at' => $values['working_status_at'],
+        ]);
+    }
+
+    /** GET /api/driver/driver/current-location — the driver's last saved location */
+    public function currentLocation(Request $request): JsonResponse
+    {
+        $location = DB::table('driver_locations')->where('regid', $this->driverId($request))->first(['address', 'lat', 'lng', 'updated_at']);
+
+        return $this->respond(['result' => true, 'message' => 'success', 'location' => $location ? (array) $location : null]);
+    }
+
+    /** POST /api/driver/driver/current-location — address, lat, lng (one row per driver, updated in place) */
+    public function saveCurrentLocation(Request $request): JsonResponse
+    {
+        $regid = $this->driverId($request);
+        $lat = $request->input('lat');
+        $lng = $request->input('lng');
+
+        if (! is_numeric($lat) || ! is_numeric($lng)) {
+            throw new ApiException('lat and lng are required');
+        }
+        $lat = (float) $lat;
+        $lng = (float) $lng;
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            throw new ApiException('lat must be between -90 and 90, lng between -180 and 180');
+        }
+        $address = mb_substr(trim((string) $request->input('address', '')), 0, 500);
+
+        $now = $this->now();
+        $values = ['address' => $address, 'lat' => round($lat, 7), 'lng' => round($lng, 7), 'updated_at' => $now];
+
+        // regid is unique, so concurrent first saves can't create two rows.
+        DB::table('driver_locations')->upsert([$values + ['regid' => $regid, 'created_at' => $now]], ['regid'], ['address', 'lat', 'lng', 'updated_at']);
+
+        return $this->respond(['result' => true, 'message' => 'Location updated', 'location' => $values]);
     }
 
     /** Legacy setHub(): nearest active hub by the lat/lng headers (km), 0 when none. */

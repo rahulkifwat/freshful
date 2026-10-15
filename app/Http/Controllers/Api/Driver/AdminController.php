@@ -147,21 +147,10 @@ class AdminController extends DriverController
         ] + $result);
     }
 
-    /** POST /api/driver/admin/toggle-driver-status — regid; flips Activate <-> Deactivate */
-    public function toggleStatus(Request $request): JsonResponse
+    /** POST /api/driver/admin/toggle-driver-status — regid; flips status between 'active' and 'deactive' */
+    public function toggleStatus(Request $request, DriverManagementService $drivers): JsonResponse
     {
-        $regid = $this->requireFilled($request, 'regid');
-
-        $driver = DB::table('driver_registration')->where('id', $regid)->first(['status']);
-        if (! $driver) {
-            throw new ApiException('Driver not found');
-        }
-
-        $current = strtolower((string) $driver->status);
-        $next = in_array($current, ['deactivate', '0'], true) ? 'Activate'
-            : (in_array($current, ['activate', 'active', '1'], true) ? 'Deactivate' : 'Activate');
-
-        DB::table('driver_registration')->where('id', $regid)->update(['status' => $next]);
+        $next = $drivers->toggleAccountStatus((int) $this->requireFilled($request, 'regid'));
 
         return $this->respond(['result' => true, 'message' => 'Driver status updated to '.$next, 'status' => $next]);
     }

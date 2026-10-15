@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-  $tabs = [null => 'All', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected', 'suspended' => 'Suspended', 'incomplete' => 'Incomplete'];
+  $tabs = [null => 'All', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected', 'suspended' => 'Deactive', 'incomplete' => 'Incomplete'];
   $isPendingPage = request()->routeIs('admin.drivers.pending');
 @endphp
 <div class="dashboard-contents">
@@ -91,7 +91,7 @@
                               @endif
                             </td>
                             <td>{{ $d->profile_created_at ? \Illuminate\Support\Carbon::parse($d->profile_created_at)->format('d M Y') : '—' }}</td>
-                            <td>@include('admin.drivers._status', ['verification' => $d->verification_status, 'suspended' => $d->suspended])</td>
+                            <td>@include('admin.drivers._status', ['verification' => $d->verification_status, 'suspended' => $d->suspended, 'working' => $d->working_status ?: 'off_duty'])</td>
                             <td>
                               <a href="{{ route('admin.drivers.show', ['id' => $d->id]) }}" class="btn btn-outline-primary btn-sm mb-1">View</a>
                               @if($d->verification_status === 'pending_admin_approval')

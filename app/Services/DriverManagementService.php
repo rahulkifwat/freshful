@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Conventions in the existing data:
  * - driver_registration.verification_status: incomplete -> pending_admin_approval -> approved | rejected
- * - driver_registration.status: 'Activate' / 'active' = active, 'Deactivate' = suspended
+ * - driver_registration.status: 'active' | 'deactive' (admin-controlled account status)
+ * - driver_profile.working_status: 'on_duty' | 'off_duty' (set by the driver app)
  * - orders.rider_id holds driver_registration.id (0 = unassigned); one orders row per
  *   product, all rows of an order share order_id and are assigned together.
  */
@@ -26,7 +27,12 @@ class DriverManagementService
     /** Order statuses in which a driver can be assigned or changed (assignment locks once dispatched). */
     public const ASSIGNABLE_ORDER_STATUSES = ['Order Placed', 'Order Processed'];
 
-    private const SUSPENDED_STATUSES = ['deactivate', '0'];
+    public const ACTIVE = 'active';
+    public const DEACTIVE = 'deactive';
+
+    // Only 'deactive' is written now; the old values are still read as deactivated so
+    // nobody counts as active if the code is deployed before the status migration runs.
+    private const SUSPENDED_STATUSES = ['deactive', 'deactivate', '0'];
 
     private const TZ = 'Asia/Kolkata';
 
@@ -45,7 +51,7 @@ class DriverManagementService
                 'd.id', 'd.email', 'd.phone', 'd.emp_no', 'd.status', 'd.verification_status',
                 'd.verified_at', 'd.approved_at', 'd.rejection_reason',
                 DB::raw("COALESCE(NULLIF(p.name, ''), NULLIF(d.name, '')) as name"),
-                'p.profile_photo', 'p.created_at as profile_created_at',
+                'p.profile_photo', 'p.created_at as profile_created_at', 'p.working_status',
                 'v.vehicle_type', 'v.vehicle_number'
             )
             ->orderByDesc('d.id');
@@ -89,6 +95,7 @@ class DriverManagementService
             'bank'      => $first('driver_bank_details'),
             'documents' => $first('driver_identity_documents'),
             'wallet'    => $first('driver_wallet'),
+            'location'  => DB::table('driver_locations')->where('regid', $regid)->first(),
             // delivery_boy.regid is a varchar; compare as string.
             'hub'       => DB::table('delivery_boy as b')->leftJoin('hubs as h', 'h.id', '=', 'b.hub_id')
                 ->where('b.regid', (string) $regid)->orderByDesc('b.id')->first(['b.hub_id', 'h.hub', 'b.employee_id']),
@@ -157,6 +164,25 @@ class DriverManagementService
         });
     }
 
+    /** Flip the admin-controlled account status between 'active' and 'deactive'; returns the new value. */
+    public function toggleAccountStatus(int $regid): string
+    {
+        $current = DB::table('driver_registration')->where('id', $regid)->value('status');
+        if ($current === null && ! DB::table('driver_registration')->where('id', $regid)->exists()) {
+            throw new ApiException('Driver not found');
+        }
+
+        $next = $this->isSuspended($current) ? self::ACTIVE : self::DEACTIVE;
+        $update = ['status' => $next];
+        // A deactivated driver is taken off duty too.
+        if ($next === self::DEACTIVE) {
+            DB::table('driver_profile')->where('regid', $regid)->update(['working_status' => 'off_duty', 'working_status_at' => $this->now()]);
+        }
+        DB::table('driver_registration')->where('id', $regid)->update($update);
+
+        return $next;
+    }
+
     // ---- Assignment --------------------------------------------------------
 
     /**
@@ -175,7 +201,10 @@ class DriverManagementService
             ->leftJoinSub($workload, 'w', 'w.rider_id', '=', 'd.id')
             ->addSelect(DB::raw('COALESCE(w.open_orders, 0) as open_orders'));
 
-        return $this->whereNotSuspended($query, 'd.status');
+        return $this->whereNotSuspended($query, 'd.status')
+            ->reorder()
+            ->orderByRaw("CASE WHEN p.working_status = 'on_duty' THEN 0 ELSE 1 END")
+            ->orderByDesc('d.id');
     }
 
     /**

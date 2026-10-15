@@ -90,6 +90,7 @@ class DriverManagementController extends Controller
                 'vehicle_type'   => $d->vehicle_type,
                 'vehicle_number' => $d->vehicle_number,
                 'status'         => $d->status,
+                'working_status' => $d->working_status ?: 'off_duty',
                 'open_orders'    => (int) $d->open_orders,
             ]);
 
