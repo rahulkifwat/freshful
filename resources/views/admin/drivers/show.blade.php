@@ -1,6 +1,7 @@
 @extends('admin.layout.master')
 
 @section('content')
+@include('admin.drivers._layout_fix')
 @php
   $name = ($profile->name ?? null) ?: ($driver->name ?: $driver->email);
   $fmt = fn ($v) => $v ? \Illuminate\Support\Carbon::parse($v)->format('d M Y, h:i a') : '—';
@@ -57,7 +58,13 @@
                         <table class="table table-sm mb-0">
                           <tr><th>Driver ID</th><td>{{ $driver->id }}</td></tr>
                           <tr><th>Employee no.</th><td>{{ $driver->emp_no ?: '—' }}{{ ($hub->employee_id ?? null) ? ' ('.$hub->employee_id.')' : '' }}</td></tr>
-                          <tr><th>Account status</th><td>{{ $driver->status ?: '—' }}</td></tr>
+                          <tr><th>Account status</th><td>
+                            <label class="switch mb-0" title="{{ $suspended ? 'Deactive: click to activate' : 'Active: click to deactivate' }}">
+                                <input type="checkbox" class="status_enable js-driver-status" data-id="{{ $driver->id }}" data-name="{{ $name }}" {{ $suspended ? '' : 'checked' }}>
+                                <span class="slider round"></span>
+                              </label>
+                            <span class="ml-2">{{ $suspended ? 'Deactive' : 'Active' }}</span>
+                          </td></tr>
                           <tr><th>Submitted for approval</th><td>{{ $fmt($driver->verified_at) }}</td></tr>
                           <tr><th>{{ $driver->verification_status === 'rejected' ? 'Rejected' : 'Approved' }} at</th><td>{{ $fmt($driver->approved_at) }}{{ $driver->approved_by ? ' (admin #'.$driver->approved_by.')' : '' }}</td></tr>
                           @if($driver->verification_status === 'rejected')

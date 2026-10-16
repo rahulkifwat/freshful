@@ -570,3 +570,24 @@ test('current location is validated and needs a driver token', function () {
 
     expect(DB::table('driver_locations')->count())->toBe(0);
 });
+
+test('admin panel Active switch toggles account status', function () {
+    $id = makeDriver('approved');
+    DB::table('driver_profile')->where('regid', $id)->update(['working_status' => 'on_duty']);
+
+    $this->post('/admin/drivers/toggle-status', ['id' => $id])->assertRedirect(route('admin.login'));
+    expect(DB::table('driver_registration')->where('id', $id)->value('status'))->toBe('active');
+
+    $this->actingAs($this->admin, 'admin')->get('/admin/drivers')->assertSee('js-driver-status', false);
+
+    $this->actingAs($this->admin, 'admin')->postJson('/admin/drivers/toggle-status', ['id' => $id])
+        ->assertJson(['result' => true, 'status' => 'deactive', 'message' => 'Driver deactivated']);
+    expect(DB::table('driver_registration')->where('id', $id)->value('status'))->toBe('deactive')
+        ->and(DB::table('driver_profile')->where('regid', $id)->value('working_status'))->toBe('off_duty');
+
+    $this->actingAs($this->admin, 'admin')->postJson('/admin/drivers/toggle-status', ['id' => $id])
+        ->assertJson(['result' => true, 'status' => 'active', 'message' => 'Driver activated']);
+    $this->actingAs($this->admin, 'admin')->postJson('/admin/drivers/toggle-status', ['id' => 999])
+        ->assertJson(['result' => false, 'message' => 'Driver not found']);
+    $this->actingAs($this->admin, 'admin')->postJson('/admin/drivers/toggle-status', [])->assertStatus(422);
+});

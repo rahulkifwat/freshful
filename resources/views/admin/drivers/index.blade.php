@@ -1,6 +1,7 @@
 @extends('admin.layout.master')
 
 @section('content')
+@include('admin.drivers._layout_fix')
 @php
   $tabs = [null => 'All', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected', 'suspended' => 'Deactive', 'incomplete' => 'Incomplete'];
   $isPendingPage = request()->routeIs('admin.drivers.pending');
@@ -65,6 +66,7 @@
                           <th>Vehicle</th>
                           <th>Profile created</th>
                           <th>Status</th>
+                          <th>Active</th>
                           <th style="min-width: 190px">Actions</th>
                         </tr>
                       </thead>
@@ -93,6 +95,12 @@
                             <td>{{ $d->profile_created_at ? \Illuminate\Support\Carbon::parse($d->profile_created_at)->format('d M Y') : '—' }}</td>
                             <td>@include('admin.drivers._status', ['verification' => $d->verification_status, 'suspended' => $d->suspended, 'working' => $d->working_status ?: 'off_duty'])</td>
                             <td>
+                              <label class="switch mb-0" title="{{ $d->suspended ? 'Deactive: click to activate' : 'Active: click to deactivate' }}">
+                                <input type="checkbox" class="status_enable js-driver-status" data-id="{{ $d->id }}" data-name="{{ $d->name ?: $d->email }}" {{ $d->suspended ? '' : 'checked' }}>
+                                <span class="slider round"></span>
+                              </label>
+                            </td>
+                            <td>
                               <a href="{{ route('admin.drivers.show', ['id' => $d->id]) }}" class="btn btn-outline-primary btn-sm mb-1">View</a>
                               @if($d->verification_status === 'pending_admin_approval')
                                 <button type="button" class="btn btn-success btn-sm mb-1 js-driver-action js-driver-approve"
@@ -104,7 +112,7 @@
                           </tr>
                         @empty
                           <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
+                            <td colspan="10" class="text-center text-muted py-4">
                               {{ request('search') ? 'No drivers match your search.' : ($isPendingPage ? 'No drivers are waiting for approval.' : 'No drivers found.') }}
                             </td>
                           </tr>

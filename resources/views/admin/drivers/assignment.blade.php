@@ -1,6 +1,7 @@
 @extends('admin.layout.master')
 
 @section('content')
+@include('admin.drivers._layout_fix')
 @php
   $tabs = ['unassigned' => 'Unassigned', 'assigned' => 'Assigned', 'all' => 'All assignable'];
 @endphp

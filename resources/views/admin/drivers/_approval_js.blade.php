@@ -1,4 +1,4 @@
-{{-- Approve / Reject buttons: .js-driver-approve / .js-driver-reject with data-id and data-name. --}}
+{{-- Approve / Reject buttons (.js-driver-approve / .js-driver-reject) and the Active switch (.js-driver-status), all with data-id + data-name. --}}
 @push('scripts')
 <script>
   (function ($) {
@@ -58,6 +58,38 @@
         // null = cancelled; '' = confirmed without a reason
         if (reason !== null) { send($btn, '{{ route('admin.drivers.reject') }}', { id: $btn.data('id'), reason: reason }); }
       });
+    });
+
+    // Active / Deactive switch. Deactivating asks first (it also sets the driver off duty).
+    $(document).on('change', '.js-driver-status', function () {
+      var $sw = $(this);
+      var activating = $sw.prop('checked');
+      $sw.prop('checked', !activating); // keep the old position until the server confirms
+
+      function go() {
+        $sw.prop('disabled', true);
+        $.post('{{ route('admin.drivers.toggle_status') }}', { id: $sw.data('id') }).done(function (res) {
+          if (res.result) {
+            notify('success', res.message);
+            setTimeout(function () { location.reload(); }, 600);
+          } else {
+            notify('error', res.message || 'Update failed.');
+            $sw.prop('disabled', false);
+          }
+        }).fail(function (xhr) {
+          notify('error', errorMessage(xhr));
+          $sw.prop('disabled', false);
+        });
+      }
+
+      if (activating) { go(); return; }
+      swal({
+        title: 'Deactivate ' + $sw.data('name') + '?',
+        text: 'They will be set off duty and can no longer receive orders until activated again.',
+        icon: 'warning',
+        buttons: ['Cancel', 'Deactivate'],
+        dangerMode: true
+      }).then(function (ok) { if (ok) { go(); } });
     });
   })(jQuery);
 </script>

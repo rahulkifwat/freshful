@@ -67,6 +67,20 @@ class DriverManagementController extends Controller
         return response()->json(['result' => true, 'message' => 'Driver rejected']);
     }
 
+    /** Flip the driver's account status active <-> deactive (deactivating also sets them off duty). */
+    public function toggleStatus(Request $request): JsonResponse
+    {
+        $data = $request->validate(['id' => 'required|integer|min:1']);
+        $this->adminId();
+        $status = $this->drivers->toggleAccountStatus((int) $data['id']);
+
+        return response()->json([
+            'result'  => true,
+            'message' => $status === DriverManagementService::ACTIVE ? 'Driver activated' : 'Driver deactivated',
+            'status'  => $status,
+        ]);
+    }
+
     public function assignment(Request $request)
     {
         $filter = in_array($request->query('filter'), ['unassigned', 'assigned', 'all'], true) ? $request->query('filter') : 'unassigned';

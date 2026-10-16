@@ -119,6 +119,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/view_driver',             [DriverManagementController::class, 'show'])->name('admin.drivers.show');
         Route::post('/drivers/approve',        [DriverManagementController::class, 'approve'])->name('admin.drivers.approve');
         Route::post('/drivers/reject',         [DriverManagementController::class, 'reject'])->name('admin.drivers.reject');
+        Route::post('/drivers/toggle-status',  [DriverManagementController::class, 'toggleStatus'])->name('admin.drivers.toggle_status');
         Route::get('/order_assignment',        [DriverManagementController::class, 'assignment'])->name('admin.drivers.assignment');
         Route::get('/order_assignment/drivers', [DriverManagementController::class, 'eligibleDrivers'])->name('admin.drivers.eligible');
         Route::post('/order_assignment/assign', [DriverManagementController::class, 'assign'])->name('admin.drivers.assign');
