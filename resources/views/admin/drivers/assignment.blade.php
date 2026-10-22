@@ -70,7 +70,7 @@
                               <br><small class="text-muted">{{ $o->items }} item(s) · ₹{{ $o->total_amount }}</small>
                             </td>
                             <td>{{ $o->buyer_name ?: '—' }}<br><small class="text-muted">{{ $o->buyer_phone ?: $o->address_phone }}</small></td>
-                            <td>
+                            <td class="dm-wrap">
                               {{ $o->address_name }}{{ $o->address_name ? ', ' : '' }}{{ collect([$o->street_name, $o->locality, $o->landmark, $o->city])->filter()->implode(', ') ?: '—' }}
                               @if($o->address_phone)<br><small class="text-muted">{{ $o->address_phone }}</small>@endif
                               @if($o->hub_name)<br><small class="text-muted">Hub: {{ $o->hub_name }}</small>@endif
@@ -121,6 +121,10 @@
   </div>
 </div>
 
+@endsection
+
+@push('scripts')
+{{-- Rendered outside .content-wrapper (a CSS table) so the open modal can't become an extra layout column. --}}
 {{-- Assign driver modal --}}
 <div class="modal fade" id="assignModal" tabindex="-1" role="dialog" aria-labelledby="assignModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
@@ -147,9 +151,6 @@
     </div>
   </div>
 </div>
-@endsection
-
-@push('scripts')
 <script>
   (function ($) {
     var current = { order: null, rider: 0, riderName: '' };
