@@ -111,6 +111,85 @@ class OrderController extends DriverController
         return $this->respond(['result' => true, 'message' => 'success', 'orders' => $orders, 'count' => count($orders)]);
     }
 
+    /**
+     * /api/driver/orders/assigned-orders?filter=all|pending|in_progress
+     * Unfinished orders assigned to the logged-in driver, one entry per order (orders are stored one
+     * row per product), oldest first so the driver works through them in order.
+     * pending = not picked up yet (Placed/Processed); in_progress = Dispatched/Shipped.
+     */
+    public function assigned(Request $request): JsonResponse
+    {
+        $groups = [
+            'pending'     => ['Order Placed', 'Order Processed'],
+            'in_progress' => ['Order Dispatched', 'Order Shipped'],
+        ];
+        $filter = $request->input('filter', 'all');
+        if (! in_array($filter, ['all', 'pending', 'in_progress'], true)) {
+            throw new ApiException('Invalid filter. Allowed: all, pending, in_progress');
+        }
+        $statuses = $groups[$filter] ?? array_merge($groups['pending'], $groups['in_progress']);
+
+        $rows = $this->ordersWithDetails()
+            ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
+            ->addSelect('p.product_name', 'p.product_image', 'p.product_unit')
+            ->where('o.rider_id', $this->driverId($request))
+            ->whereIn('o.order_status', $statuses)
+            ->orderBy('o.date_added')
+            ->orderBy('o.id')
+            ->get();
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $order = &$orders[$row->order_id];
+            $order ??= [
+                'order_id'          => $row->order_id,
+                'order_status'      => $row->order_status,
+                'stage'             => in_array($row->order_status, $groups['pending'], true) ? 'pending' : 'in_progress',
+                'total_amount'      => $row->total_amount,
+                'amount_to_collect' => $row->amount_to_collect,
+                'payment_type'      => $row->payment_type,
+                'payment_status'    => $row->payment_status,
+                'delivery_type'     => $row->delivery_type,
+                'schedule_date'     => $row->schedule_date,
+                'schedule_time'     => $row->schedule_time,
+                'date_added'        => $row->date_added,
+                'buyer'             => ['name' => $row->buyer_name, 'phone' => $row->buyer_phone],
+                'address'           => [
+                    'name'        => $row->address_name,
+                    'phone'       => $row->address_phone,
+                    'street_name' => $row->street_name,
+                    'locality'    => $row->locality,
+                    'landmark'    => $row->landmark,
+                    'city'        => $row->city,
+                    'user_lat'    => $row->user_lat,
+                    'user_lng'    => $row->user_lng,
+                ],
+                'hub'               => ['hub' => $row->hub_name, 'hub_lat' => $row->hub_lat, 'hub_lng' => $row->hub_lng],
+                'items'             => [],
+            ];
+            $order['items'][] = [
+                'product_id'    => $row->product_id,
+                'product_name'  => $row->product_name,
+                'product_image' => $this->uploadsUrl('images/products', $row->product_image),
+                'product_unit'  => $row->product_unit,
+                'quantity'      => $row->quantity,
+            ];
+            unset($order);
+        }
+        $orders = array_values($orders);
+
+        return $this->respond([
+            'result'  => true,
+            'message' => $orders ? 'success' : 'No assigned orders',
+            'orders'  => $orders,
+            'count'   => count($orders),
+            'summary' => [
+                'pending'     => count(array_filter($orders, fn ($o) => $o['stage'] === 'pending')),
+                'in_progress' => count(array_filter($orders, fn ($o) => $o['stage'] === 'in_progress')),
+            ],
+        ]);
+    }
+
     private function ordersWithDetails()
     {
         return DB::table('orders as o')

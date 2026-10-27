@@ -591,3 +591,58 @@ test('admin panel Active switch toggles account status', function () {
         ->assertJson(['result' => false, 'message' => 'Driver not found']);
     $this->actingAs($this->admin, 'admin')->postJson('/admin/drivers/toggle-status', [])->assertStatus(422);
 });
+
+// ---- Driver app: assigned orders ------------------------------------------------
+
+test('driver sees only their own unfinished assigned orders, one entry per order', function () {
+    // Columns the driver order endpoints read that the shared test schema doesn't create.
+    Schema::create('products', function (Blueprint $t) {
+        $t->increments('id');
+        $t->string('product_name')->nullable();
+        $t->string('product_image')->nullable();
+        $t->string('product_unit')->nullable();
+    });
+    Schema::table('buyer_address', function (Blueprint $t) {
+        $t->string('user_lat')->nullable();
+        $t->string('user_lng')->nullable();
+    });
+    Schema::table('hubs', function (Blueprint $t) {
+        $t->string('hub_lat')->nullable();
+        $t->string('hub_lng')->nullable();
+    });
+    DB::table('products')->insert([['id' => 1, 'product_name' => 'Chicken Curry Cut', 'product_image' => 'c.png', 'product_unit' => '500 g'], ['id' => 2, 'product_name' => 'Eggs', 'product_image' => null, 'product_unit' => '6 pcs']]);
+
+    $me = makeDriver('approved');
+    $other = makeDriver('approved');
+    makeOrder('ORD-A', 'Order Placed', $me, 2);        // pending, 2 items
+    makeOrder('ORD-B', 'Order Dispatched', $me, 1);    // in progress
+    makeOrder('ORD-C', 'Order Delivered', $me, 1);     // finished: hidden
+    makeOrder('ORD-D', 'Order Cancel', $me, 1);        // cancelled: hidden
+    makeOrder('ORD-E', 'Order Placed', $other, 1);     // someone else's
+    makeOrder('ORD-F', 'Order Placed', 0, 1);          // unassigned
+
+    $res = driverApi($this, $me)->getJson('/api/driver/orders/assigned-orders')->assertOk()
+        ->assertJson(['result' => true, 'count' => 2, 'summary' => ['pending' => 1, 'in_progress' => 1]]);
+
+    expect(collect($res->json('orders'))->pluck('order_id')->all())->toBe(['ORD-A', 'ORD-B'])
+        ->and($res->json('orders.0.stage'))->toBe('pending')
+        ->and($res->json('orders.0.items'))->toHaveCount(2)
+        ->and($res->json('orders.0.items.0.product_name'))->toBe('Chicken Curry Cut')
+        ->and($res->json('orders.0.items.0.product_image'))->toEndWith('/uploads/images/products/c.png')
+        ->and($res->json('orders.0.buyer.name'))->toBe('Asha Buyer')
+        ->and($res->json('orders.0.address.street_name'))->toBe('MG Road')
+        ->and($res->json('orders.1.stage'))->toBe('in_progress');
+
+    driverApi($this, $me)->getJson('/api/driver/orders/assigned-orders?filter=pending')
+        ->assertJson(['count' => 1, 'orders' => [['order_id' => 'ORD-A']]]);
+    driverApi($this, $me)->getJson('/api/driver/orders/assigned-orders?filter=in_progress')
+        ->assertJson(['count' => 1, 'orders' => [['order_id' => 'ORD-B']]]);
+    driverApi($this, $me)->getJson('/api/driver/orders/assigned-orders?filter=bogus')
+        ->assertJson(['result' => false, 'message' => 'Invalid filter. Allowed: all, pending, in_progress']);
+
+    $none = makeDriver('approved');
+    driverApi($this, $none)->getJson('/api/driver/orders/assigned-orders')
+        ->assertJson(['result' => true, 'count' => 0, 'orders' => [], 'message' => 'No assigned orders']);
+
+    $this->flushHeaders()->getJson('/api/driver/orders/assigned-orders')->assertJson(['result' => false, 'message' => 'No token provided']);
+});
