@@ -45,8 +45,7 @@ class OrderController extends DriverController
     /** /api/driver/orders/order-details?order_id= */
     public function show(Request $request): JsonResponse
     {
-        $orderId = $this->requireFilled($request, 'order_id');
-
+        $orderId = $this->requireFilled($request, '');
         $order = $this->ordersWithDetails()
             ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
             ->addSelect('p.product_name', 'p.product_image', 'p.product_unit', 'p.main_price', 'p.MRP')
@@ -187,6 +186,66 @@ class OrderController extends DriverController
                 'pending'     => count(array_filter($orders, fn ($o) => $o['stage'] === 'pending')),
                 'in_progress' => count(array_filter($orders, fn ($o) => $o['stage'] === 'in_progress')),
             ],
+        ]);
+    }
+
+    /**
+     * POST /api/driver/orders/deliver — order_id
+     * The assigned driver marks the order delivered (every product row of the order).
+     * Allowed from any open status (the app delivers straight from "Order Placed").
+     * payment_status is not changed: nothing in the system updates it today.
+     */
+    public function deliver(Request $request): JsonResponse
+    {
+        $orderId = trim((string) $this->requireFilled($request, 'order_id'));
+        $driverId = (int) $this->driverId($request);
+        $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
+
+        $result = DB::transaction(function () use ($orderId, $driverId, $deliverable) {
+            $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
+                ->get(['order_status', 'rider_id', 'total_amount', 'amount_to_collect', 'payment_type']);
+
+            if ($rows->isEmpty()) {
+                throw new ApiException('Order not found');
+            }
+            if ($rows->contains(fn ($r) => (int) $r->rider_id !== $driverId)) {
+                throw new ApiException('This order is not assigned to you');
+            }
+
+            $statuses = $rows->pluck('order_status')->unique();
+            if ($statuses->every(fn ($s) => $s === 'Order Delivered')) {
+                throw new ApiException('Order is already delivered');
+            }
+            if ($statuses->contains('Order Cancel')) {
+                throw new ApiException('This order was cancelled');
+            }
+            if ($statuses->diff($deliverable)->isNotEmpty()) {
+                throw new ApiException('Order cannot be delivered in status "'.$statuses->implode(', ').'"');
+            }
+
+            $now = $this->now();
+            // Status is part of the WHERE, so a double tap can't deliver twice.
+            $updated = DB::table('orders')
+                ->where('order_id', $orderId)
+                ->where('rider_id', $driverId)
+                ->whereIn('order_status', $deliverable)
+                ->update(['order_status' => 'Order Delivered', 'delivery_complete_time' => $now, 'updated_at' => $now]);
+
+            if ($updated !== $rows->count()) {
+                throw new ApiException('Order was just changed. Please refresh and try again.');
+            }
+
+            return ['first' => $rows->first(), 'delivered_at' => $now];
+        });
+
+        return $this->respond([
+            'result'            => true,
+            'message'           => 'Order delivered successfully',
+            'order_id'          => $orderId,
+            'order_status'      => 'Order Delivered',
+            'delivered_at'      => $result['delivered_at'],
+            'payment_type'      => $result['first']->payment_type,
+            'amount_to_collect' => $result['first']->amount_to_collect,
         ]);
     }
 

@@ -646,3 +646,40 @@ test('driver sees only their own unfinished assigned orders, one entry per order
 
     $this->flushHeaders()->getJson('/api/driver/orders/assigned-orders')->assertJson(['result' => false, 'message' => 'No token provided']);
 });
+
+// ---- Driver app: mark order delivered --------------------------------------------
+
+test('assigned driver can mark an order delivered, once', function () {
+    Schema::table('orders', function (Blueprint $t) {
+        $t->string('delivery_complete_time')->nullable();
+        $t->dateTime('updated_at')->nullable();
+    });
+    $me = makeDriver('approved');
+    $other = makeDriver('approved');
+    makeOrder('ORD-PLACED', 'Order Placed', $me, 3);
+    makeOrder('ORD-DISPATCHED', 'Order Dispatched', $me, 1);
+    makeOrder('ORD-OTHER', 'Order Placed', $other, 1);
+    makeOrder('ORD-CANCEL', 'Order Cancel', $me, 1);
+    makeOrder('ORD-PENDING', 'Order Pending', $me, 1);
+    $deliver = fn ($order) => driverApi($this, $me)->postJson('/api/driver/orders/deliver', ['order_id' => $order]);
+
+    $deliver('ORD-PLACED')->assertJson(['result' => true, 'message' => 'Order delivered successfully', 'order_status' => 'Order Delivered']);
+    $rows = DB::table('orders')->where('order_id', 'ORD-PLACED')->get();
+    expect($rows->pluck('order_status')->unique()->all())->toBe(['Order Delivered'])
+        ->and($rows->whereNull('delivery_complete_time')->count())->toBe(0)
+        ->and($rows->pluck('payment_status')->unique()->all())->toBe(['Pending']); // payment untouched
+
+    $deliver('ORD-PLACED')->assertJson(['result' => false, 'message' => 'Order is already delivered']);
+    $deliver('ORD-DISPATCHED')->assertJson(['result' => true]);
+
+    $deliver('ORD-OTHER')->assertJson(['result' => false, 'message' => 'This order is not assigned to you']);
+    $deliver('ORD-CANCEL')->assertJson(['result' => false, 'message' => 'This order was cancelled']);
+    $deliver('ORD-PENDING')->assertJson(['result' => false, 'message' => 'Order cannot be delivered in status "Order Pending"']);
+    $deliver('NOPE')->assertJson(['result' => false, 'message' => 'Order not found']);
+    driverApi($this, $me)->postJson('/api/driver/orders/deliver', [])->assertJson(['result' => false, 'message' => 'order_id is required']);
+
+    expect(DB::table('orders')->where('order_id', 'ORD-OTHER')->value('order_status'))->toBe('Order Placed')
+        ->and(DB::table('orders')->where('order_id', 'ORD-PENDING')->value('order_status'))->toBe('Order Pending');
+
+    $this->flushHeaders()->postJson('/api/driver/orders/deliver', ['order_id' => 'ORD-DISPATCHED'])->assertJson(['result' => false, 'message' => 'No token provided']);
+});

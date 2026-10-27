@@ -114,6 +114,7 @@ Route::prefix('driver')->group(function () use ($any) {
         Route::match($any, 'orders/order-details', [DriverOrderController::class, 'show']);
         Route::match($any, 'orders/orders-by-status', [DriverOrderController::class, 'byStatus']);
         Route::get('orders/assigned-orders', [DriverOrderController::class, 'assigned']);
+        Route::post('orders/deliver', [DriverOrderController::class, 'deliver']);
 
         Route::get('wallet/balance', [WalletController::class, 'balance']);
         Route::get('wallet/transactions', [WalletController::class, 'transactions']);
