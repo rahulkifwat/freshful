@@ -1,0 +1,13 @@
+app/Http/Controllers/CountryConsole/CountryConsoleController.php
+app/Http/Middleware/CountryConsoleAuth.php
+app/Services/CountryConsole/CountryStock.php
+app/Services/CountryConsole/CountryScope.php
+app/Services/CountryConsole/CountryAnalytics.php
+app/Services/CountryConsole/CountryOps.php
+app/Services/CountryConsole/CountryTargets.php
+config/country_console.php
+database/migrations/2026_10_22_500000_create_country_targets_table.php
+resources/views/country_console/app.blade.php
+resources/views/country_console/assets/cc.js
+resources/views/country_console/assets/cc.css
+routes/country_console.php

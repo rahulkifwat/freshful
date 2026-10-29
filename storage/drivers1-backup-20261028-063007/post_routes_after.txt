@@ -1,0 +1,313 @@
+POST account_manager/ajax/change-order-status account_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST account_manager/ajax/change-status account_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST account_manager/ajax/delete-record account_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST account_manager/login account_manager.loginSubmit App\Http\Controllers\AccountManagerAuthController@loginSubmit
+POST add-cart add-cart App\Http\Controllers\HomeController@addCart
+POST add-order add-order App\Http\Controllers\HomeController@addOrder
+POST admin/add_category_form admin.main_category_store App\Http\Controllers\CatalogController@mainCategoryStore
+POST admin/ajax/change-order-status admin.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST admin/ajax/change-status admin.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST admin/ajax/delete-record admin.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST admin/app_banner_form admin.app_banner_store App\Http\Controllers\MarketingController@app_banner_store
+POST admin/banner_form admin.banner_store App\Http\Controllers\MarketingController@banner_store
+POST admin/category_form admin.sub_category_store App\Http\Controllers\CatalogController@subCategoryStore
+POST admin/certificate_form admin.certificate_store App\Http\Controllers\ContentController@certificate_store
+POST admin/city_form admin.city_store App\Http\Controllers\AdminController@city_store
+POST admin/console/api/ad/enquiries/{type}/{id}/ticket adc.ad.enquiry.ticket App\Http\Controllers\AdminConsole\AdminConsoleController@enquiryTicket
+POST admin/console/api/ad/hubs/save adc.ad.hub.save App\Http\Controllers\AdminConsole\AdminConsoleController@hubSave
+POST admin/console/api/ad/hubs/{id}/toggle adc.ad.hub.toggle App\Http\Controllers\AdminConsole\AdminConsoleController@hubToggle
+POST admin/console/api/ad/live/dispatch/act adc.ad.dispatch.act App\Http\Controllers\AdminConsole\AdminConsoleController@boardAct
+POST admin/console/api/ad/products/bulk-status adc.ad.product.bulk App\Http\Controllers\AdminConsole\AdminConsoleController@productBulk
+POST admin/console/api/ad/products/excel adc.ad.product.excel App\Http\Controllers\AdminConsole\AdminConsoleController@productExcel
+POST admin/console/api/ad/products/save adc.ad.product.save App\Http\Controllers\AdminConsole\AdminConsoleController@productSave
+POST admin/console/api/ad/products/{id}/delete adc.ad.product.delete App\Http\Controllers\AdminConsole\AdminConsoleController@productDelete
+POST admin/console/api/ad/products/{id}/toggle adc.ad.product.toggle App\Http\Controllers\AdminConsole\AdminConsoleController@productToggle
+POST admin/console/api/ad/profile adc.ad.profile.save App\Http\Controllers\AdminConsole\AdminConsoleController@profileSave
+POST admin/console/api/ad/profile/password adc.ad.profile.password App\Http\Controllers\AdminConsole\AdminConsoleController@password
+POST admin/console/api/ad/push adc.ad.push.send App\Http\Controllers\AdminConsole\AdminConsoleController@pushSend
+POST admin/console/api/ad/r/{res}/save adc.ad.record.save App\Http\Controllers\AdminConsole\AdminConsoleController@recordSave
+POST admin/console/api/ad/r/{res}/{id}/delete adc.ad.record.delete App\Http\Controllers\AdminConsole\AdminConsoleController@recordDelete
+POST admin/console/api/ad/r/{res}/{id}/toggle adc.ad.record.toggle App\Http\Controllers\AdminConsole\AdminConsoleController@recordToggle
+POST admin/console/api/ad/refunds/pay adc.ad.refund.pay App\Http\Controllers\AdminConsole\AdminConsoleController@refundPay
+POST admin/console/api/ad/refunds/reject adc.ad.refund.reject App\Http\Controllers\AdminConsole\AdminConsoleController@refundReject
+POST admin/console/api/ad/reviews/{id} adc.ad.review.save App\Http\Controllers\AdminConsole\AdminConsoleController@reviewSave
+POST admin/console/api/ad/roles/save adc.ad.role.save App\Http\Controllers\AdminConsole\AdminConsoleController@roleSave
+POST admin/console/api/ad/staff/{type}/save adc.ad.staff.save App\Http\Controllers\AdminConsole\AdminConsoleController@staffSave
+POST admin/console/api/ad/staff/{type}/{id}/toggle adc.ad.staff.toggle App\Http\Controllers\AdminConsole\AdminConsoleController@staffToggle
+POST admin/console/api/ad/tickets adc.ad.ticket.create App\Http\Controllers\AdminConsole\AdminConsoleController@ticketCreate
+POST admin/console/api/ad/tickets/{id}/reply adc.ad.ticket.reply App\Http\Controllers\AdminConsole\AdminConsoleController@ticketReply
+POST admin/console/api/ad/tickets/{id}/settle adc.ad.ticket.settle App\Http\Controllers\AdminConsole\AdminConsoleController@ticketSettle
+POST admin/console/api/ad/tickets/{id}/update adc.ad.ticket.update App\Http\Controllers\AdminConsole\AdminConsoleController@ticketUpdate
+POST admin/console/api/ad/upload adc.ad.upload App\Http\Controllers\AdminConsole\AdminConsoleController@upload
+POST admin/console/api/order/{id}/cancel adc.order.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@orderCancel
+POST admin/console/api/order/{id}/move adc.order.move App\Http\Controllers\CountryConsole\CountryConsoleController@orderMove
+POST admin/console/api/riders adc.rider.save App\Http\Controllers\CountryConsole\CountryConsoleController@riderSave
+POST admin/console/api/riders/{id}/move adc.rider.move App\Http\Controllers\CountryConsole\CountryConsoleController@riderMove
+POST admin/console/api/riders/{id}/toggle adc.rider.toggle App\Http\Controllers\CountryConsole\CountryConsoleController@riderToggle
+POST admin/console/api/stock/accept adc.accept App\Http\Controllers\CountryConsole\CountryConsoleController@acceptInward
+POST admin/console/api/stock/count adc.count App\Http\Controllers\CountryConsole\CountryConsoleController@count
+POST admin/console/api/stock/danger/plan adc.danger.plan App\Http\Controllers\CountryConsole\CountryConsoleController@dangerPlan
+POST admin/console/api/targets adc.target.save App\Http\Controllers\CountryConsole\CountryConsoleController@targetSave
+POST admin/console/api/targets/{id}/delete adc.target.delete App\Http\Controllers\CountryConsole\CountryConsoleController@targetDelete
+POST admin/console/api/transfers adc.transfer.create App\Http\Controllers\CountryConsole\CountryConsoleController@transferCreate
+POST admin/console/api/transfers/send adc.transfer.send App\Http\Controllers\CountryConsole\CountryConsoleController@transferSend
+POST admin/console/api/transfers/{id}/cancel adc.transfer.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@transferCancel
+POST admin/console/api/transfers/{id}/decline adc.transfer.decline App\Http\Controllers\CountryConsole\CountryConsoleController@transferDecline
+POST admin/console/api/transfers/{id}/dispatch adc.transfer.dispatch App\Http\Controllers\CountryConsole\CountryConsoleController@transferDispatch
+POST admin/console/api/transfers/{id}/receive adc.transfer.receive App\Http\Controllers\CountryConsole\CountryConsoleController@transferReceive
+POST admin/console/api/wastage adc.writeoff App\Http\Controllers\CountryConsole\CountryConsoleController@writeOff
+POST admin/coupon_form admin.coupon_store App\Http\Controllers\MarketingController@coupon_store
+POST admin/delivery_price_form admin.delivery_price_store App\Http\Controllers\ContentController@delivery_price_store
+POST admin/drivers/approve admin.drivers.approve App\Http\Controllers\DriverManagementController@approve
+POST admin/drivers/reject admin.drivers.reject App\Http\Controllers\DriverManagementController@reject
+POST admin/drivers/toggle-status admin.drivers.toggle_status App\Http\Controllers\DriverManagementController@toggleStatus
+POST admin/edit_profile admin.update_profile App\Http\Controllers\AdminController@update_profile
+POST admin/home_offer_form admin.home_offer_store App\Http\Controllers\MarketingController@home_offer_store
+POST admin/hub_form admin.hub_store App\Http\Controllers\AdminController@hub_store
+POST admin/item_form admin.item_store App\Http\Controllers\CatalogController@itemStore
+POST admin/login admin.loginSubmit App\Http\Controllers\AuthController@AdminLogin
+POST admin/order_assignment/assign admin.drivers.assign App\Http\Controllers\DriverManagementController@assign
+POST admin/policies admin.policies_update App\Http\Controllers\ContentController@policies_update
+POST admin/privacy_policy admin.privacy_policy_update App\Http\Controllers\ContentController@privacy_policy_update
+POST admin/product_filter admin.product_filter_store App\Http\Controllers\CatalogController@productFilterStore
+POST admin/product_form admin.product_store App\Http\Controllers\ProductController@store
+POST admin/product_tag admin.product_tag_store App\Http\Controllers\CatalogController@productTagStore
+POST admin/product_unit admin.product_unit_store App\Http\Controllers\CatalogController@productUnitStore
+POST admin/promotion_form admin.promotion_store App\Http\Controllers\MarketingController@promotion_store
+POST admin/push admin.push_send App\Http\Controllers\ContentController@push_send
+POST admin/staff/account_managers/store admin.account_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/account_managers/update admin.account_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/area_managers/store admin.area_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/area_managers/update admin.area_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/country_managers/store admin.country_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/country_managers/update admin.country_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/customer_care_managers/store admin.customer_care_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/customer_care_managers/update admin.customer_care_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/hr_managers/store admin.hr_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/hr_managers/update admin.hr_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/hub_users/store admin.hub_users.store App\Http\Controllers\StaffController@store
+POST admin/staff/hub_users/update admin.hub_users.update App\Http\Controllers\StaffController@update
+POST admin/staff/marketing_managers/store admin.marketing_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/marketing_managers/update admin.marketing_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/operation_managers/store admin.operation_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/operation_managers/update admin.operation_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/planning_managers/store admin.planning_managers.store App\Http\Controllers\StaffController@store
+POST admin/staff/planning_managers/update admin.planning_managers.update App\Http\Controllers\StaffController@update
+POST admin/staff/pos_users/store admin.pos_users.store App\Http\Controllers\StaffController@store
+POST admin/staff/pos_users/update admin.pos_users.update App\Http\Controllers\StaffController@update
+POST admin/staff/production_user/store admin.production_user.store App\Http\Controllers\StaffController@store
+POST admin/staff/production_user/update admin.production_user.update App\Http\Controllers\StaffController@update
+POST ajax/check-hub check-hub App\Http\Controllers\HomeController@checkHub
+GET|POST|HEAD api/add_address  App\Http\Controllers\Api\Buyer\AddressController@store
+GET|POST|HEAD api/add_cart  App\Http\Controllers\Api\Buyer\CartController@store
+GET|POST|HEAD api/add_order  App\Http\Controllers\Api\Buyer\OrderController@store
+POST api/admin/login  App\Http\Controllers\Api\Admin\AuthController@login
+POST api/admin/logout  App\Http\Controllers\Api\Admin\AuthController@logout
+GET|POST|HEAD api/cart  App\Http\Controllers\Api\Buyer\CartController@index
+GET|POST|HEAD api/category  App\Http\Controllers\Api\Buyer\CatalogController@categories
+GET|POST|HEAD api/delete_address  App\Http\Controllers\Api\Buyer\AddressController@destroy
+POST api/driver/admin/assign-order  App\Http\Controllers\Api\Driver\AdminController@assignOrder
+GET|POST|HEAD api/driver/admin/driver-approval  App\Http\Controllers\Api\Driver\AdminController@approval
+GET|POST|HEAD api/driver/admin/driver-verify  App\Http\Controllers\Api\Driver\AdminController@verify
+GET|POST|HEAD api/driver/admin/pending-drivers  App\Http\Controllers\Api\Driver\AdminController@pending
+GET|POST|HEAD api/driver/admin/toggle-driver-status  App\Http\Controllers\Api\Driver\AdminController@toggleStatus
+GET|POST|HEAD api/driver/auth/login  App\Http\Controllers\Api\Driver\AuthController@login
+GET|POST|HEAD api/driver/auth/register  App\Http\Controllers\Api\Driver\AuthController@register
+POST api/driver/driver/bank-details  App\Http\Controllers\Api\Driver\ProfileController@saveBankDetails
+POST api/driver/driver/current-location  App\Http\Controllers\Api\Driver\ProfileController@saveCurrentLocation
+POST api/driver/driver/documents  App\Http\Controllers\Api\Driver\ProfileController@saveDocuments
+GET|POST|HEAD api/driver/driver/personal-information  App\Http\Controllers\Api\Driver\ProfileController@personalInformation
+GET|POST|HEAD api/driver/driver/validate-token  App\Http\Controllers\Api\Driver\ProfileController@validateToken
+POST api/driver/driver/vehical  App\Http\Controllers\Api\Driver\ProfileController@saveVehicle
+GET|POST|HEAD api/driver/driver/verification  App\Http\Controllers\Api\Driver\ProfileController@submitVerification
+POST api/driver/driver/working-status  App\Http\Controllers\Api\Driver\ProfileController@saveWorkingStatus
+POST api/driver/orders/deliver  App\Http\Controllers\Api\Driver\OrderController@deliver
+GET|POST|HEAD api/driver/orders/driver-orders  App\Http\Controllers\Api\Driver\OrderController@index
+GET|POST|HEAD api/driver/orders/order-details  App\Http\Controllers\Api\Driver\OrderController@show
+GET|POST|HEAD api/driver/orders/orders-by-status  App\Http\Controllers\Api\Driver\OrderController@byStatus
+GET|POST|HEAD api/driver/users  App\Http\Controllers\Api\Driver\AdminController@users
+GET|POST|HEAD api/driver/wallet/create  App\Http\Controllers\Api\Driver\WalletController@credit
+GET|POST|HEAD api/driver/wallet/credit  App\Http\Controllers\Api\Driver\WalletController@credit
+GET|POST|HEAD api/driver/wallet/debit  App\Http\Controllers\Api\Driver\WalletController@debit
+GET|POST|HEAD api/empty_cart  App\Http\Controllers\Api\Buyer\CartController@destroy
+GET|POST|HEAD api/get_address  App\Http\Controllers\Api\Buyer\AddressController@index
+GET|POST|HEAD api/get_app_banner_images  App\Http\Controllers\Api\Buyer\CatalogController@appBanners
+GET|POST|HEAD api/get_banner_images  App\Http\Controllers\Api\Buyer\CatalogController@banners
+GET|POST|HEAD api/get_cities  App\Http\Controllers\Api\Buyer\CatalogController@cities
+GET|POST|HEAD api/get_my_orders  App\Http\Controllers\Api\Buyer\OrderController@index
+GET|POST|HEAD api/get_nearest_hub  App\Http\Controllers\Api\Buyer\CatalogController@nearestHub
+GET|POST|HEAD api/get_order_details  App\Http\Controllers\Api\Buyer\OrderController@show
+GET|POST|HEAD api/get_products_by_category  App\Http\Controllers\Api\Buyer\CatalogController@productsByCategory
+GET|POST|HEAD api/get_products_by_tag  App\Http\Controllers\Api\Buyer\CatalogController@productsByTag
+GET|POST|HEAD api/get_profile  App\Http\Controllers\Api\Buyer\ProfileController@show
+GET|POST|HEAD api/home_products  App\Http\Controllers\Api\Buyer\CatalogController@homeProducts
+GET|POST|HEAD api/login  App\Http\Controllers\Api\Buyer\AuthController@login
+POST api/logout  App\Http\Controllers\Api\Buyer\AuthController@logout
+GET|POST|HEAD api/otp  App\Http\Controllers\Api\Buyer\AuthController@otp
+GET|POST|HEAD api/product_tags  App\Http\Controllers\Api\Buyer\CatalogController@tags
+GET|POST|HEAD api/search_products  App\Http\Controllers\Api\Buyer\CatalogController@search
+GET|POST|HEAD api/update_address  App\Http\Controllers\Api\Buyer\AddressController@update
+GET|POST|HEAD api/update_profile  App\Http\Controllers\Api\Buyer\ProfileController@update
+POST area_manager/ajax/change-order-status area_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST area_manager/ajax/change-status area_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST area_manager/ajax/delete-record area_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST area_manager/console/api/order/{id}/cancel cca.order.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@orderCancel
+POST area_manager/console/api/order/{id}/move cca.order.move App\Http\Controllers\CountryConsole\CountryConsoleController@orderMove
+POST area_manager/console/api/riders cca.rider.save App\Http\Controllers\CountryConsole\CountryConsoleController@riderSave
+POST area_manager/console/api/riders/{id}/move cca.rider.move App\Http\Controllers\CountryConsole\CountryConsoleController@riderMove
+POST area_manager/console/api/riders/{id}/toggle cca.rider.toggle App\Http\Controllers\CountryConsole\CountryConsoleController@riderToggle
+POST area_manager/console/api/stock/accept cca.accept App\Http\Controllers\CountryConsole\CountryConsoleController@acceptInward
+POST area_manager/console/api/stock/count cca.count App\Http\Controllers\CountryConsole\CountryConsoleController@count
+POST area_manager/console/api/stock/danger/plan cca.danger.plan App\Http\Controllers\CountryConsole\CountryConsoleController@dangerPlan
+POST area_manager/console/api/targets cca.target.save App\Http\Controllers\CountryConsole\CountryConsoleController@targetSave
+POST area_manager/console/api/targets/{id}/delete cca.target.delete App\Http\Controllers\CountryConsole\CountryConsoleController@targetDelete
+POST area_manager/console/api/transfers cca.transfer.create App\Http\Controllers\CountryConsole\CountryConsoleController@transferCreate
+POST area_manager/console/api/transfers/send cca.transfer.send App\Http\Controllers\CountryConsole\CountryConsoleController@transferSend
+POST area_manager/console/api/transfers/{id}/cancel cca.transfer.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@transferCancel
+POST area_manager/console/api/transfers/{id}/decline cca.transfer.decline App\Http\Controllers\CountryConsole\CountryConsoleController@transferDecline
+POST area_manager/console/api/transfers/{id}/dispatch cca.transfer.dispatch App\Http\Controllers\CountryConsole\CountryConsoleController@transferDispatch
+POST area_manager/console/api/transfers/{id}/receive cca.transfer.receive App\Http\Controllers\CountryConsole\CountryConsoleController@transferReceive
+POST area_manager/console/api/wastage cca.writeoff App\Http\Controllers\CountryConsole\CountryConsoleController@writeOff
+POST area_manager/edit_profile area_manager.update_profile App\Http\Controllers\AreaManagerController@updateProfile
+POST area_manager/login area_manager.loginSubmit App\Http\Controllers\AreaManagerAuthController@loginSubmit
+POST country_manager/ajax/change-order-status country_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST country_manager/ajax/change-status country_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST country_manager/ajax/delete-record country_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST country_manager/console/api/order/{id}/cancel ccc.order.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@orderCancel
+POST country_manager/console/api/order/{id}/move ccc.order.move App\Http\Controllers\CountryConsole\CountryConsoleController@orderMove
+POST country_manager/console/api/riders ccc.rider.save App\Http\Controllers\CountryConsole\CountryConsoleController@riderSave
+POST country_manager/console/api/riders/{id}/move ccc.rider.move App\Http\Controllers\CountryConsole\CountryConsoleController@riderMove
+POST country_manager/console/api/riders/{id}/toggle ccc.rider.toggle App\Http\Controllers\CountryConsole\CountryConsoleController@riderToggle
+POST country_manager/console/api/stock/accept ccc.accept App\Http\Controllers\CountryConsole\CountryConsoleController@acceptInward
+POST country_manager/console/api/stock/count ccc.count App\Http\Controllers\CountryConsole\CountryConsoleController@count
+POST country_manager/console/api/stock/danger/plan ccc.danger.plan App\Http\Controllers\CountryConsole\CountryConsoleController@dangerPlan
+POST country_manager/console/api/targets ccc.target.save App\Http\Controllers\CountryConsole\CountryConsoleController@targetSave
+POST country_manager/console/api/targets/{id}/delete ccc.target.delete App\Http\Controllers\CountryConsole\CountryConsoleController@targetDelete
+POST country_manager/console/api/transfers ccc.transfer.create App\Http\Controllers\CountryConsole\CountryConsoleController@transferCreate
+POST country_manager/console/api/transfers/send ccc.transfer.send App\Http\Controllers\CountryConsole\CountryConsoleController@transferSend
+POST country_manager/console/api/transfers/{id}/cancel ccc.transfer.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@transferCancel
+POST country_manager/console/api/transfers/{id}/decline ccc.transfer.decline App\Http\Controllers\CountryConsole\CountryConsoleController@transferDecline
+POST country_manager/console/api/transfers/{id}/dispatch ccc.transfer.dispatch App\Http\Controllers\CountryConsole\CountryConsoleController@transferDispatch
+POST country_manager/console/api/transfers/{id}/receive ccc.transfer.receive App\Http\Controllers\CountryConsole\CountryConsoleController@transferReceive
+POST country_manager/console/api/wastage ccc.writeoff App\Http\Controllers\CountryConsole\CountryConsoleController@writeOff
+POST country_manager/edit_profile country_manager.update_profile App\Http\Controllers\CountryManagerController@updateProfile
+POST country_manager/login country_manager.loginSubmit App\Http\Controllers\CountryManagerAuthController@loginSubmit
+POST customer_care_manager/ajax/change-order-status customer_care_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST customer_care_manager/ajax/change-status customer_care_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST customer_care_manager/ajax/delete-record customer_care_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST customer_care_manager/edit_profile customer_care_manager.update_profile App\Http\Controllers\CustomerCareManagerController@updateProfile
+POST customer_care_manager/grievance_categories customer_care_manager.grievance_category.store App\Http\Controllers\CustomerCareManagerController@grievanceCategoryStore
+POST customer_care_manager/login customer_care_manager.login.submit App\Http\Controllers\CustomerCareManagerAuthController@loginSubmit
+POST hr_manager/add_wallet_money hr_manager.add_wallet_money.submit App\Http\Controllers\HrManagerController@addWalletMoneySubmit
+POST hr_manager/ajax/change-order-status hr_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST hr_manager/ajax/change-status hr_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST hr_manager/ajax/delete-record hr_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST hr_manager/edit_profile hr_manager.update_profile App\Http\Controllers\HrManagerController@updateProfile
+POST hr_manager/grievance_categories hr_manager.grievance_category.store App\Http\Controllers\HrManagerController@grievanceCategoryStore
+POST hr_manager/login hr_manager.login.submit App\Http\Controllers\HrManagerAuthController@loginSubmit
+POST hub/ajax/change-order-status hub.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST hub/ajax/change-status hub.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST hub/ajax/delete-record hub.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST hub/console/api/cash hubc.cash.add App\Http\Controllers\HubConsole\HubConsoleController@cashAdd
+POST hub/console/api/cash/{id}/void hubc.cash.void App\Http\Controllers\HubConsole\HubConsoleController@cashVoid
+POST hub/console/api/count hubc.count App\Http\Controllers\HubConsole\HubConsoleController@count
+POST hub/console/api/danger/plan hubc.danger.plan App\Http\Controllers\HubConsole\HubConsoleController@dangerPlan
+POST hub/console/api/danger/write-off hubc.writeoff App\Http\Controllers\HubConsole\HubConsoleController@writeOff
+POST hub/console/api/inward hubc.inward App\Http\Controllers\HubConsole\HubConsoleController@inward
+POST hub/console/api/inward-many hubc.inward.many App\Http\Controllers\HubConsole\HubConsoleController@inwardMany
+POST hub/console/api/riders hubc.rider.save App\Http\Controllers\HubConsole\HubConsoleController@riderSave
+POST hub/console/api/riders/{id}/toggle hubc.rider.toggle App\Http\Controllers\HubConsole\HubConsoleController@riderToggle
+POST hub/console/api/transfers/request hubc.transfer.request App\Http\Controllers\HubConsole\HubConsoleController@transferRequest
+POST hub/console/api/transfers/send hubc.transfer.send App\Http\Controllers\HubConsole\HubConsoleController@transferSend
+POST hub/console/api/transfers/{id}/cancel hubc.transfer.cancel App\Http\Controllers\HubConsole\HubConsoleController@transferCancel
+POST hub/console/api/transfers/{id}/decline hubc.transfer.decline App\Http\Controllers\HubConsole\HubConsoleController@transferDecline
+POST hub/console/api/transfers/{id}/fulfil hubc.transfer.fulfil App\Http\Controllers\HubConsole\HubConsoleController@transferFulfil
+POST hub/console/api/transfers/{id}/receive hubc.transfer.receive App\Http\Controllers\HubConsole\HubConsoleController@transferReceive
+POST hub/edit_profile hub.update_profile App\Http\Controllers\HubController@updateProfile
+POST hub/login hub.login.submit App\Http\Controllers\HubAuthController@loginSubmit
+POST marketing_manager/add_wallet_money marketing_manager.add_wallet_money.submit App\Http\Controllers\MarketingManagerController@addWalletMoneySubmit
+POST marketing_manager/ajax/change-order-status marketing_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST marketing_manager/ajax/change-status marketing_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST marketing_manager/ajax/delete-record marketing_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST marketing_manager/category marketing_manager.category.store App\Http\Controllers\MarketingManagerController@categoryStore
+POST marketing_manager/edit_profile marketing_manager.update_profile App\Http\Controllers\MarketingManagerController@updateProfile
+POST marketing_manager/login marketing_manager.login.submit App\Http\Controllers\MarketingManagerAuthController@loginSubmit
+POST operation_manager/add_wallet_money operation_manager.add_wallet_money.submit App\Http\Controllers\OperationManagerController@addWalletMoneySubmit
+POST operation_manager/ajax/change-order-status operation_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST operation_manager/ajax/change-status operation_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST operation_manager/ajax/delete-record operation_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST operation_manager/ajax/inward-stock-action operation_manager.ajax.inward_stock_action App\Http\Controllers\OperationManagerController@inwardStockAction
+POST operation_manager/console/api/order/{id}/cancel cco.order.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@orderCancel
+POST operation_manager/console/api/order/{id}/move cco.order.move App\Http\Controllers\CountryConsole\CountryConsoleController@orderMove
+POST operation_manager/console/api/riders cco.rider.save App\Http\Controllers\CountryConsole\CountryConsoleController@riderSave
+POST operation_manager/console/api/riders/{id}/move cco.rider.move App\Http\Controllers\CountryConsole\CountryConsoleController@riderMove
+POST operation_manager/console/api/riders/{id}/toggle cco.rider.toggle App\Http\Controllers\CountryConsole\CountryConsoleController@riderToggle
+POST operation_manager/console/api/stock/accept cco.accept App\Http\Controllers\CountryConsole\CountryConsoleController@acceptInward
+POST operation_manager/console/api/stock/count cco.count App\Http\Controllers\CountryConsole\CountryConsoleController@count
+POST operation_manager/console/api/stock/danger/plan cco.danger.plan App\Http\Controllers\CountryConsole\CountryConsoleController@dangerPlan
+POST operation_manager/console/api/targets cco.target.save App\Http\Controllers\CountryConsole\CountryConsoleController@targetSave
+POST operation_manager/console/api/targets/{id}/delete cco.target.delete App\Http\Controllers\CountryConsole\CountryConsoleController@targetDelete
+POST operation_manager/console/api/transfers cco.transfer.create App\Http\Controllers\CountryConsole\CountryConsoleController@transferCreate
+POST operation_manager/console/api/transfers/send cco.transfer.send App\Http\Controllers\CountryConsole\CountryConsoleController@transferSend
+POST operation_manager/console/api/transfers/{id}/cancel cco.transfer.cancel App\Http\Controllers\CountryConsole\CountryConsoleController@transferCancel
+POST operation_manager/console/api/transfers/{id}/decline cco.transfer.decline App\Http\Controllers\CountryConsole\CountryConsoleController@transferDecline
+POST operation_manager/console/api/transfers/{id}/dispatch cco.transfer.dispatch App\Http\Controllers\CountryConsole\CountryConsoleController@transferDispatch
+POST operation_manager/console/api/transfers/{id}/receive cco.transfer.receive App\Http\Controllers\CountryConsole\CountryConsoleController@transferReceive
+POST operation_manager/console/api/wastage cco.writeoff App\Http\Controllers\CountryConsole\CountryConsoleController@writeOff
+POST operation_manager/deposit_receipt operation_manager.deposit_receipt.submit App\Http\Controllers\OperationManagerController@depositReceipt
+POST operation_manager/edit_profile operation_manager.update_profile App\Http\Controllers\OperationManagerController@updateProfile
+POST operation_manager/express_order_time_slot operation_manager.express_order_time_slot.submit App\Http\Controllers\OperationManagerController@expressOrderTimeSlot
+POST operation_manager/login operation_manager.login_submit App\Http\Controllers\OperationManagerAuthController@loginSubmit
+POST operation_manager/request_outward_stocks operation_manager.request_outward_stocks.submit App\Http\Controllers\OperationManagerController@requestOutwardStocks
+POST operation_manager/scheduled_order_time_slot operation_manager.scheduled_order_time_slot.submit App\Http\Controllers\OperationManagerController@scheduledOrderTimeSlot
+POST operation_manager/submit_wastage_report operation_manager.submit_wastage_report.submit App\Http\Controllers\OperationManagerController@submitWastageReport
+POST operation_manager/transfer_danger_stock operation_manager.transfer_danger_stock.submit App\Http\Controllers\OperationManagerController@transferDangerStock
+POST planning_manager/add_wallet_money planning_manager.add_wallet_money.submit App\Http\Controllers\PlanningManagerController@addWalletMoneySubmit
+POST planning_manager/ajax/change-order-status planning_manager.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST planning_manager/ajax/change-status planning_manager.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST planning_manager/ajax/delete-record planning_manager.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST planning_manager/ajax/inward-stock-action planning_manager.ajax.inward_stock_action App\Http\Controllers\PlanningManagerController@inwardStockAction
+POST planning_manager/certificate planning_manager.certificate.submit App\Http\Controllers\PlanningManagerController@certificate
+POST planning_manager/change_password planning_manager.change_password App\Http\Controllers\PlanningManagerController@changePassword
+POST planning_manager/deposit_receipt planning_manager.deposit_receipt.submit App\Http\Controllers\PlanningManagerController@depositReceipt
+POST planning_manager/edit_profile planning_manager.update_profile App\Http\Controllers\PlanningManagerController@updateProfile
+POST planning_manager/express_order_time_slot planning_manager.express_order_time_slot.submit App\Http\Controllers\PlanningManagerController@expressOrderTimeSlot
+POST planning_manager/login planning_manager.login_submit App\Http\Controllers\PlanningManagerAuthController@loginSubmit
+POST planning_manager/request_outward_stocks planning_manager.request_outward_stocks.submit App\Http\Controllers\PlanningManagerController@requestOutwardStocks
+POST planning_manager/scheduled_order_time_slot planning_manager.scheduled_order_time_slot.submit App\Http\Controllers\PlanningManagerController@scheduledOrderTimeSlot
+POST planning_manager/submit_wastage_report planning_manager.submit_wastage_report.submit App\Http\Controllers\PlanningManagerController@submitWastageReport
+POST planning_manager/transfer_danger_stock planning_manager.transfer_danger_stock.submit App\Http\Controllers\PlanningManagerController@transferDangerStock
+POST planning_manager/upload_inventory planning_manager.upload_inventory.submit App\Http\Controllers\PlanningManagerController@uploadInventory
+POST pos/ajax/update_order_status pos.update_order_status App\Http\Controllers\PosController@updateOrderStatus
+POST pos/console/login posc.login.submit App\Http\Controllers\PosConsole\PosConsoleAuthController@login
+POST pos/console/order/{orderId}/action posc.action App\Http\Controllers\PosConsole\PosConsoleController@action
+POST pos/console/order/{orderId}/relocate posc.relocate App\Http\Controllers\PosConsole\PosConsoleController@relocate
+POST pos/console/order/{orderId}/rider posc.reassign App\Http\Controllers\PosConsole\PosConsoleController@reassign
+POST pos/console/order/{orderId}/weigh posc.weigh App\Http\Controllers\PosConsole\PosConsoleController@weigh
+POST pos/console/report/close posc.report.close App\Http\Controllers\PosConsole\PosConsoleController@closeDay
+POST pos/console/rider/{riderId}/status posc.rider.status App\Http\Controllers\PosConsole\PosConsoleController@riderStatus
+POST pos/console/settle posc.settle App\Http\Controllers\PosConsole\PosConsoleController@settle
+POST pos/console/stale/close posc.stale.close App\Http\Controllers\PosConsole\PosConsoleController@closeStale
+POST pos/login pos.login_submit App\Http\Controllers\PosAuthController@login
+POST production/add_wallet_money production.add_wallet_money.submit App\Http\Controllers\ProductionController@addWalletMoneySubmit
+POST production/ajax/change-order-status production.ajax.change_order_status App\Http\Controllers\AdminAjaxController@changeOrderStatus
+POST production/ajax/change-status production.ajax.change_status App\Http\Controllers\AdminAjaxController@changeStatus
+POST production/ajax/delete-record production.ajax.delete_record App\Http\Controllers\AdminAjaxController@deleteRecord
+POST production/ajax/inward-stock-action production.ajax.inward_stock_action App\Http\Controllers\ProductionController@inwardStockAction
+POST production/certificate production.certificate.submit App\Http\Controllers\ProductionController@certificate
+POST production/change_password production.change_password App\Http\Controllers\ProductionController@changePassword
+POST production/deposit_receipt production.deposit_receipt.submit App\Http\Controllers\ProductionController@depositReceipt
+POST production/edit_profile production.update_profile App\Http\Controllers\ProductionController@updateProfile
+POST production/express_order_time_slot production.express_order_time_slot.submit App\Http\Controllers\ProductionController@expressOrderTimeSlot
+POST production/login production.login_submit App\Http\Controllers\ProductionAuthController@loginSubmit
+POST production/scheduled_order_time_slot production.scheduled_order_time_slot.submit App\Http\Controllers\ProductionController@scheduledOrderTimeSlot
+POST production/submit_wastage_report production.submit_wastage_report.submit App\Http\Controllers\ProductionController@submitWastageReport
+POST send-otp send-otp App\Http\Controllers\AuthController@sendOtp
+POST user/ajax/add-review add-review App\Http\Controllers\HomeController@addReview
+POST user/ajax/cancel-order cancel-order.ajax App\Http\Controllers\HomeController@cancelOrder
+POST user/complete-registration user.complete-registration App\Http\Controllers\AuthController@completeRegistration
+POST user/login user.login App\Http\Controllers\AuthController@userLogin
+POST user/storeAddress storeAddress App\Http\Controllers\HomeController@storeAddress
+POST user/updateAccount updateAccount App\Http\Controllers\HomeController@updateAccount
+POST user/wallet/topup/order user.wallet.topup.order App\Http\Controllers\WalletController@createTopupOrder
+POST user/wallet/topup/verify user.wallet.topup.verify App\Http\Controllers\WalletController@verifyTopup

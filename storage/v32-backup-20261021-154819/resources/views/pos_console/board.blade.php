@@ -1,0 +1,107 @@
+@php
+  $I = \App\Support\AdminNew\Icons::class;
+  $hubName = $hub ? ($hub->hub . ($hub->city ? ' · ' . $hub->city : '')) : ('Hub #' . ($actor['hub_id'] ?? '?'));
+  $initials = '';
+  foreach (array_slice(array_values(array_filter(preg_split('/\s+/', trim((string) ($actor['name'] ?? ''))))), 0, 2) as $w) { $initials .= mb_strtoupper(mb_substr($w, 0, 1)); }
+@endphp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Freshful POS · {{ $hubName }}</title>
+<link rel="icon" href="{{ url('img/Fevi.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>{!! file_get_contents(resource_path('views/pos_console/assets/pos.css')) !!}</style>
+<script>try { var t = localStorage.getItem('ff-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+</head>
+<body>
+<header class="pc-top">
+  <div class="pc-brand">
+    <div class="pc-logo" aria-hidden="true">F</div>
+    <div><b>Freshful POS</b><small>{{ $hubName }}</small></div>
+  </div>
+  <span class="pc-live" id="pcLive" title="Connection to the server"><i></i><span id="pcLiveText">Connecting…</span></span>
+  <label class="pc-search" for="pcSearch">
+    {!! $I::svg('search', 15) !!}
+    <input id="pcSearch" type="search" placeholder="Order number or customer phone" autocomplete="off" aria-label="Search orders">
+    <kbd>/</kbd>
+  </label>
+  <div class="pc-results" id="pcResults" hidden></div>
+  <div class="pc-top-r">
+    <button type="button" class="pc-ibtn" id="pcSound" title="New-order sound (on/off)" aria-label="New-order sound">{!! $I::svg('bell', 18) !!}</button>
+    <a class="pc-ibtn" href="{{ route('posc.report') }}" title="Day-end report" aria-label="Day-end report">{!! $I::svg('chart', 18) !!}</a>
+    <button type="button" class="pc-ibtn" id="pcTheme" title="Light / dark" aria-label="Light or dark">
+      <span class="pc-moon">{!! $I::svg('moon', 17) !!}</span><span class="pc-sun">{!! $I::svg('sun', 17) !!}</span>
+    </button>
+    <div class="pc-user">
+      <span class="pc-avatar" aria-hidden="true">{{ $initials !== '' ? $initials : 'P' }}</span>
+      <div><b>{{ $actor['name'] ?? 'Staff' }}</b><small>{{ $actor['role'] ?? '' }}</small></div>
+    </div>
+    <a class="pc-ibtn" href="{{ route('posc.logout') }}" title="Log out" aria-label="Log out">{!! $I::svg('logout', 17) !!}</a>
+  </div>
+</header>
+
+<main class="pc-page">
+  <div class="pc-banner is-bad" id="pcOffline" hidden>
+    <span class="sp">Connection lost. New orders will not appear until it is back. Retrying…</span>
+    <button type="button" id="pcRetry">Retry now</button>
+  </div>
+  <div class="pc-alert" id="pcAlert" hidden>
+    {!! $I::svg('bell', 20) !!}
+    <span class="sp" id="pcAlertText">New order</span>
+    <button type="button" id="pcAlertOpen" class="w">Open</button>
+    <button type="button" id="pcAlertSnooze">Silence 2 min</button>
+  </div>
+
+  <section class="pc-kpis" id="pcKpis" aria-label="Today at this hub"></section>
+
+  <nav class="pc-tabs" aria-label="Views">
+    <button type="button" class="pc-tab is-on" data-tab="board">Live board <span class="n" id="tnBoard">0</span></button>
+    <button type="button" class="pc-tab" data-tab="riders">Riders &amp; cash <span class="n" id="tnRiders">0</span></button>
+    <button type="button" class="pc-tab" data-tab="later">Scheduled later <span class="n" id="tnLater">0</span></button>
+    <button type="button" class="pc-tab" data-tab="done">Done today <span class="n" id="tnDone">0</span></button>
+    <button type="button" class="pc-tab" data-tab="history">History</button>
+    <button type="button" class="pc-tab" data-tab="stale" id="tabStale" hidden>Old open <span class="n" id="tnStale">0</span></button>
+    <span class="sp"></span>
+    <button type="button" class="pc-btn sm" id="pcNotify" hidden>Allow desktop alerts</button>
+  </nav>
+
+  <section id="pcView" aria-live="polite"></section>
+</main>
+
+<div class="pc-toasts" id="pcToasts" aria-live="assertive"></div>
+
+<div class="pc-gate" id="pcGate" hidden>
+  <div class="pc-gate-box">
+    <div class="ic">{!! $I::svg('bell', 30) !!}</div>
+    <h3>Start the POS</h3>
+    <p>Tap below to switch on the new-order sound. Browsers only allow sound after a tap.</p>
+    <button type="button" class="pc-btn pri lg block" id="pcGateGo">Start with sound</button>
+    <button type="button" class="pc-btn block" id="pcGateMute" style="margin-top:8px">Start without sound</button>
+  </div>
+</div>
+
+<script>
+window.POSC = {!! json_encode([
+  'feed'   => route('posc.feed'),
+  'search' => route('posc.search'),
+  'staleClose' => route('posc.stale.close'),
+  'settle' => route('posc.settle'),
+  'history' => route('posc.history'),
+  'hubs'   => route('posc.hubs'),
+  'report' => route('posc.report'),
+  'order'  => url('pos/console/order'),
+  'login'  => route('posc.login'),
+  'csrf'   => csrf_token(),
+  'hub'    => $hubName,
+  'labels' => $stages,
+], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
+</script>
+<script>{!! file_get_contents(resource_path('views/pos_console/assets/pos.js')) !!}</script>
+</body>
+</html>

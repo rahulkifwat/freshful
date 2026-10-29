@@ -12,6 +12,7 @@ use App\Models\Cart;
 use App\Models\Buyer;
 use App\Models\BuyersAddress;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -24,15 +25,47 @@ class HomeController extends Controller
     public function index()
     {
         $banners = bannerImage::where('status', '=', 'active')->get();
-        $categories = category::where('status', '=', 'active')->orderBy('ranking', 'asc')->get();
-        $bestSellers = product::where('status', '=', 'active')->where('tag', 'like', 'Best Sellers')->orderBy('ranking', 'desc')->limit(10)->get();
+        $categories = category::where('status', '=', 'active')
+            ->orderBy('ranking', 'asc')
+            ->get()
+            ->filter(fn ($category) => filled($category->name))
+            ->unique(fn ($category) => \Illuminate\Support\Str::lower(trim((string) $category->name)))
+            ->values();
+        $bestSellers = product::with('category')->where('status', '=', 'active')->where('tag', 'like', 'Best Sellers')->orderBy('ranking', 'desc')->limit(10)->get();
         // dd($bestSellers);
-        $meatAndSeafoods = product::where('status', '=', 'active')->where('tag', 'like', 'Meat & Seafoods')->orderBy('ranking', 'desc')->limit(6)->get();
+        $meatAndSeafoods = product::with('category')->where('status', '=', 'active')->where('tag', 'like', 'Meat & Seafoods')->orderBy('ranking', 'desc')->limit(6)->get();
+        // Build homepage sections from every tag assigned to active products.
+        // Tags are stored as comma-separated values (also read this way on product details).
+        $homeTagNames = product::where('status', '=', 'active')
+            ->pluck('tag')
+            ->flatMap(function ($tagString) {
+                return array_map('trim', explode(',', (string) $tagString));
+            })
+            ->filter()
+            ->unique(fn ($tag) => \Illuminate\Support\Str::lower($tag))
+            ->values();
+        $homeTagSections = $homeTagNames->map(function ($tagName) {
+            $tagProducts = product::with('category')
+                ->where('status', '=', 'active')
+                ->whereRaw("FIND_IN_SET(?, REPLACE(tag, ', ', ',')) > 0", [$tagName])
+                ->orderBy('ranking', 'asc')
+                ->limit(10)
+                ->get();
+
+            return ['name' => $tagName, 'products' => $tagProducts];
+        })->filter(fn ($section) => $section['products']->isNotEmpty())->values();
         $coupons = coupons::where('status', '=', 'active')->where('type', '=', 'normal')->orderBy('created_at', 'desc')->get();
         $discount = coupons::where('status', '=', 'active')->where('type', '=', 'discount')->orderBy('created_at', 'asc')->limit(3)->get();
+        $promotions = DB::table('home_promotions')
+            ->where(function ($query) {
+                $query->whereNull('expiry')->orWhere('expiry', '=', '0')->orWhereDate('expiry', '>=', now()->toDateString());
+            })
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
         $shopByCategory = category::where('status', '=', 'active')->orderBy('ranking', 'asc')->limit(10)->get();
         // dd($bestSellers);
-        return view('home', compact('banners', 'categories', 'bestSellers', 'meatAndSeafoods', 'coupons', 'discount', 'shopByCategory'));
+        return view('home', compact('banners', 'categories', 'bestSellers', 'meatAndSeafoods', 'coupons', 'discount', 'promotions', 'shopByCategory', 'homeTagSections'));
     }
     public function view_product($category = null, $type = null)
     {
@@ -64,13 +97,31 @@ class HomeController extends Controller
                 ->orderBy('ranking', 'asc')
                 ->get();
         }
+        $cartQuery = Cart::whereIn('product_id', $products->pluck('id'));
+        $cartQuery = Auth::check()
+            ? $cartQuery->where('buyer_id', Auth::id())
+            : $cartQuery->where('session_id', session()->getId());
+        $cartQuantities = $cartQuery->pluck('quantity', 'product_id');
         // dd($products);
         return view('view_product', compact(
             'products',
             'cat',
             'categories',
-            'type'
+            'type',
+            'cartQuantities'
         ));
+    }
+
+    public function categories()
+    {
+        $categories = Category::where('status', 'active')
+            ->orderBy('ranking', 'asc')
+            ->get()
+            ->filter(fn ($category) => filled($category->name))
+            ->unique(fn ($category) => \Illuminate\Support\Str::lower(trim((string) $category->name)))
+            ->values();
+
+        return view('categories', compact('categories'));
     }
     public function product($category = null, $type = null)
     {
@@ -113,7 +164,9 @@ class HomeController extends Controller
 
     public function product_detail(Request $request)
     {
-        $product_id = $request->query('id');
+        // Security fix (21 Oct 2026): product detail - every value goes to the database as a bound
+        // parameter (no SQL injection), the product id must be a number, and an unknown product shows 404.
+        $product_id = (int) $request->query('id');
         $product = DB::table('products as t1')
             ->select(
                 't1.*',
@@ -128,36 +181,58 @@ class HomeController extends Controller
             ->where('t1.id', $product_id)
             ->where('t1.status', 'active')
             ->first();
+        if (!$product) {
+            abort(404);
+        }
         $categories = category::where('status', '=', 'active')->orderBy('ranking', 'asc')->get();
-        $tags = explode(',', $product->tag);
 
         $remove = ['Todays Deal', 'Best Sellers', 'May Offers'];
         $session_id = session()->getId();
-        $tags = array_filter($tags, function ($t) use ($remove) {
-            return !in_array(trim($t), $remove);
-        });
-        $hub_id = isset($_COOKIE['hub_id']) ? $_COOKIE['hub_id'] : 3;
-
-        $sql = "SELECT t1.*,t4.live_stock,t2.item as title,t3.name as category,IF(t5.id IS NULL, FALSE, TRUE) as cart,t5.quantity,t5.id as cart_id  
-                FROM products t1 
-                INNER JOIN items t2 ON t2.id = t1.item_id 
-                INNER JOIN category t3 ON t3.id = t2.cat_id 
-                LEFT JOIN cart t5 ON (t5.product_id = t1.id) and t5.session_id = '$session_id' 
-                LEFT JOIN inventory t4 ON t4.product_id = t1.product_id and t4.hub_id = $hub_id 
-                WHERE t1.status = 'active' AND t1.id != $product_id";
-
-        if (!empty($tags) && isset($tags)) {
-            foreach ($tags as $k => $tag) {
-                if ($k == 0) {
-                    $sql .= " AND t1.tag LIKE '%$tag%'";
-                } else {
-                    $sql .= " OR t1.tag LIKE '%$tag%'";
-                }
-            }
+        $tags = array_values(array_filter(array_map('trim', explode(',', (string) $product->tag)), function ($t) use ($remove) {
+            return $t !== '' && !in_array($t, $remove, true);
+        }));
+        $hub_id = isset($_COOKIE['hub_id']) ? (int) $_COOKIE['hub_id'] : 3;
+        if ($hub_id <= 0) {
+            $hub_id = 3;
         }
 
-        $moreProduct = DB::select($sql . " ORDER BY t1.id DESC");
+        $sql = "SELECT t1.*, t4.live_stock, t2.item as title, t3.name as category, IF(t5.id IS NULL, FALSE, TRUE) as cart, t5.quantity, t5.id as cart_id
+                FROM products t1
+                INNER JOIN items t2 ON t2.id = t1.item_id
+                INNER JOIN category t3 ON t3.id = t2.cat_id
+                LEFT JOIN cart t5 ON t5.product_id = t1.id AND t5.session_id = ?
+                LEFT JOIN inventory t4 ON t4.product_id = t1.product_id AND t4.hub_id = ?
+                WHERE t1.status = 'active' AND t1.id != ?";
+        $bindings = [$session_id, $hub_id, $product_id];
+
+        if (!empty($tags)) {
+            $likes = [];
+            foreach ($tags as $tag) {
+                $likes[] = 't1.tag LIKE ?';
+                $bindings[] = '%' . $tag . '%';
+            }
+            $sql .= ' AND (' . implode(' OR ', $likes) . ')';
+        }
+
+        $moreProduct = DB::select($sql . ' ORDER BY t1.id DESC', $bindings);
         return view('product_detail', compact('product', 'categories', 'moreProduct'));
+    }
+
+    /** Security fix (21 Oct 2026): checkout - the same delivery charge rule the checkout page shows. */
+    private function serverDeliveryCharge()
+    {
+        $city = isset($_COOKIE['city']) ? $_COOKIE['city'] : 'Lucknow';
+        $delivery_charge = 0;
+        $city_data = DB::table('cities')->where('city', 'like', "%$city%")->first();
+        if ($city_data) {
+            $delivery_price = DB::table('delivery_price')->where('city', $city_data->id)->first();
+            if ($delivery_price) {
+                $delivery_charge = $delivery_price->price;
+            }
+        } else {
+            $delivery_charge = 30; // Default
+        }
+        return $delivery_charge;
     }
 
     private function cartWhereClause($query)
@@ -278,31 +353,29 @@ class HomeController extends Controller
         }
 
         $user_id = Auth::id();
-
         $buyer = Buyer::find($user_id);
+        if (!$buyer) return redirect()->route('home')->with('error', 'Please login first');
 
-        // One row per order_id (orders table is flat: one row per product per order)
-        $orders = DB::table('orders')
-            ->where('buyer_id', $user_id)
-            ->select(
-                'order_id',
-                DB::raw('MAX(id) as id'),
-                DB::raw('MAX(date_added) as date_added'),
-                DB::raw('MAX(order_status) as order_status'),
-                DB::raw('MAX(delivery_type) as delivery_type'),
-                DB::raw('MAX(schedule_time) as schedule_time'),
-                DB::raw('MAX(total_amount) as total_amount'),
-                DB::raw('MAX(delivery_charge) as delivery_charge'),
-                DB::raw('COUNT(*) as order_count')
-            )
-            ->groupBy('order_id')
-            ->orderByDesc('id')
-            ->get();
-
-        // Addresses
+        $referralCode = app(\App\Services\BuyerReferralService::class)->ensureCode((int) $user_id);
+        $orders = DB::table('orders')->where('buyer_id', $user_id)
+            ->select('order_id', DB::raw('MAX(id) as id'), DB::raw('MAX(date_added) as date_added'),
+                DB::raw('MAX(order_status) as order_status'), DB::raw('MAX(delivery_type) as delivery_type'),
+                DB::raw('MAX(schedule_time) as schedule_time'), DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(delivery_charge) as delivery_charge'), DB::raw('COUNT(*) as order_count'))
+            ->groupBy('order_id')->orderByDesc('id')->get();
         $addresses = BuyersAddress::where('buyer_id', $user_id)->get();
+        $walletTransactions = DB::table('buyer_wallet_ledger')->where('buyer_id', $user_id)->orderByDesc('id')->limit(30)->get();
+        if ($walletTransactions->isEmpty()) {
+            foreach (['wallet_transaction_history', 'wallet_history'] as $legacyTable) {
+                if (!\Illuminate\Support\Facades\Schema::hasTable($legacyTable) || !\Illuminate\Support\Facades\Schema::hasColumn($legacyTable, 'buyer_id')) continue;
+                $legacyQuery = DB::table($legacyTable)->where('buyer_id', $user_id);
+                if (\Illuminate\Support\Facades\Schema::hasColumn($legacyTable, 'id')) $legacyQuery->orderByDesc('id');
+                $walletTransactions = $legacyQuery->limit(30)->get();
+                break;
+            }
+        }
 
-        return view('myaccount', compact('buyer', 'orders', 'addresses'));
+        return view('myaccount', compact('buyer', 'orders', 'addresses', 'walletTransactions', 'referralCode'));
     }
     public function trackOrder($order_id)
     {
@@ -417,30 +490,85 @@ class HomeController extends Controller
         return response()->json(['result' => true, 'message' => 'Rating Added Successfully']);
     }
 
+    /** Address type as the buyer_address.type column accepts it (enum or short text). Fix 21 Oct 2026. */
+    private function fitAddressType(string $type): string
+    {
+        $type = trim($type) !== '' ? trim($type) : 'Home';
+        try {
+            $col = DB::selectOne("SELECT DATA_TYPE AS dt, COLUMN_TYPE AS ct, CHARACTER_MAXIMUM_LENGTH AS len FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'buyer_address' AND column_name = 'type'");
+        } catch (\Throwable $e) {
+            return mb_substr($type, 0, 20);
+        }
+        if (!$col) return mb_substr($type, 0, 20);
+        if (strtolower((string) $col->dt) === 'enum' && preg_match_all("/'((?:[^']|'')*)'/", (string) $col->ct, $m)) {
+            $allowed = array_map(fn ($v) => str_replace("''", "'", $v), $m[1]);
+            foreach ($allowed as $a) if (strcasecmp($a, $type) === 0) return $a;
+            $same = ['work' => ['office', 'work'], 'office' => ['work', 'office'], 'home' => ['home', 'house'], 'house' => ['home'], 'other' => ['other', 'others']];
+            foreach ($same[strtolower($type)] ?? [] as $want) foreach ($allowed as $a) if (strcasecmp($a, $want) === 0) return $a;
+            foreach ($allowed as $a) if (in_array(strtolower($a), ['other', 'others'], true)) return $a;
+            return $allowed ? end($allowed) : $type;
+        }
+        return $col->len ? mb_substr($type, 0, (int) $col->len) : $type;
+    }
+
     public function storeAddress(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'phone' => 'required',
-            'locality' => 'required',
-            'street_name' => 'required',
-            'city' => 'required',
-            'landmark' => 'required',
-            'type' => 'required'
+        $data = $request->validate([
+            'address_id' => 'nullable|integer',
+            'name' => 'required|string|max:150',
+            'phone' => 'required|string|max:30',
+            'locality' => 'required|string|max:255',
+            'street_name' => 'required|string|max:500',
+            'landmark' => 'nullable|string|max:255',
+            'city' => 'required|string|max:150',
+            'type' => 'required|string|max:50',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
-        BuyersAddress::create([
-            'buyer_id' => Auth::id(),
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'locality' => $request->locality,
-            'street_name' => $request->street_name,
-            'landmark' => $request->landmark,
-            'city' => $request->city,
-            'type' => $request->type
-        ]);
+        $addressId = $data['address_id'] ?? null;
+        unset($data['address_id']);
+        $data['type'] = $this->fitAddressType((string) $data['type']);   // Fix 21 Oct 2026: match what the database column accepts
+        foreach (['created_at', 'updated_at'] as $timestamp) {
+            if (Schema::hasColumn('buyer_address', $timestamp)) {
+                $data[$timestamp] = now();
+            }
+        }
+        foreach (['latitude', 'longitude'] as $coordinate) {
+            if (!Schema::hasColumn('buyer_address', $coordinate)) {
+                unset($data[$coordinate]);
+            }
+        }
 
-        return back()->with('success', 'Address added successfully');
+        if ($addressId) {
+            $address = BuyersAddress::where('buyer_id', Auth::id())->findOrFail($addressId);
+            $address->update($data);
+            $message = 'Address updated successfully';
+        } else {
+            $data['buyer_id'] = Auth::id();
+            $address = BuyersAddress::create($data);
+            $message = 'Address added successfully';
+        }
+        // Fix 21 Oct 2026: remember where this address is on the map and which hub delivers there.
+        try {
+            $geo = [];
+            $lat = $data['latitude'] ?? null; $lng = $data['longitude'] ?? null;
+            $ckCity = trim((string) ($_COOKIE['city'] ?? ''));
+            $sameCity = $ckCity !== '' && (stripos((string) $data['city'], $ckCity) !== false || stripos($ckCity, (string) $data['city']) !== false);
+            if ((!is_numeric($lat) || !is_numeric($lng)) && $sameCity && is_numeric($_COOKIE['lat'] ?? null) && is_numeric($_COOKIE['lng'] ?? null)) {
+                $lat = (float) $_COOKIE['lat']; $lng = (float) $_COOKIE['lng'];
+            }
+            if (is_numeric($lat) && is_numeric($lng)) {
+                if (Schema::hasColumn('buyer_address', 'latitude')) { $geo['latitude'] = $lat; $geo['longitude'] = $lng; }
+                $hubForAddress = \App\Services\HubLocator::locate((float) $lat, (float) $lng);
+                if (Schema::hasColumn('buyer_address', 'hub_id')) $geo['hub_id'] = $hubForAddress->id ?? null;
+            }
+            if ($geo && !empty($address->id)) DB::table('buyer_address')->where('id', $address->id)->where('buyer_id', Auth::id())->update($geo);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function deleteAddress($id)
@@ -537,6 +665,12 @@ class HomeController extends Controller
 
         $buyer = Buyer::find($user_id);
         $addresses = DB::table('buyer_address')->where('buyer_id', $user_id)->get();
+        $promotions = DB::table('home_promotions')
+            ->where(function ($query) {
+                $query->whereNull('expiry')->orWhere('expiry', '=', '0')->orWhereDate('expiry', '>=', now()->toDateString());
+            })
+            ->orderByDesc('id')
+            ->get();
 
         $cart_items = DB::table('cart')
             ->join('products', 'cart.product_id', '=', 'products.id')
@@ -561,7 +695,7 @@ class HomeController extends Controller
              $delivery_charge = 30; // Default
         }
 
-        return view('checkout', compact('buyer', 'addresses', 'cart_items', 'cart_total', 'delivery_charge', 'hub_id'));
+        return view('checkout', compact('buyer', 'addresses', 'cart_items', 'cart_total', 'delivery_charge', 'hub_id', 'promotions'));
     }
 
     public function checkHub(Request $request)
@@ -571,18 +705,10 @@ class HomeController extends Controller
         $address = $request->address ?? '';
         $city    = $request->city    ?? '';
 
-        $hub = DB::selectOne("
-            SELECT *,
-            111.111 * DEGREES(ACOS(LEAST(1.0,
-                COS(RADIANS(hub_lat)) * COS(RADIANS(?)) * COS(RADIANS(hub_lng - ?)) +
-                SIN(RADIANS(hub_lat)) * SIN(RADIANS(?))
-            ))) AS distance_in_km
-            FROM hubs
-            WHERE status = 'active'
-            HAVING distance_in_km < 100.0
-            ORDER BY distance_in_km ASC
-            LIMIT 1
-        ", [$lat, $lng, $lat]);
+        $hub = \App\Services\HubLocator::locate($lat, $lng);   // Fix 21 Oct 2026: hub whose delivery area contains the point
+        if ($request->boolean('preview')) {   // Fix 21 Oct 2026: let the picker check a point without saving it
+            return response()->json(['result' => (bool) $hub, 'hub' => $hub->hub ?? null, 'message' => $hub ? 'We deliver here' : "Sorry, we don't deliver to this location yet."]);
+        }
 
         if ($hub) {
             $expire = time() + 60 * 60 * 24 * 365;
@@ -683,6 +809,58 @@ class HomeController extends Controller
             return response()->json(['result' => false, 'message' => 'Please select address']);
         }
 
+        // Security fix (21 Oct 2026): checkout - hub, delivery charge, address and payment type
+        // are decided by the server, never taken from the browser.
+        $address_id = (int) $address_id;
+        if (!DB::table('buyer_address')->where('id', $address_id)->where('buyer_id', $user_id)->exists()) {
+            return response()->json(['result' => false, 'message' => 'Please select one of your saved addresses']);
+        }
+        // Fix 21 Oct 2026: the order goes to the hub that delivers to the chosen ADDRESS (not whatever the browser remembered).
+        $addr = DB::table('buyer_address')->where('id', $address_id)->first();
+        $addrLat = $addr->latitude ?? null; $addrLng = $addr->longitude ?? null;
+        if (is_numeric($addrLat) && is_numeric($addrLng) && ((float) $addrLat != 0.0 || (float) $addrLng != 0.0)) {
+            $addrHub = \App\Services\HubLocator::locate((float) $addrLat, (float) $addrLng);
+            if (!$addrHub) {
+                return response()->json(['result' => false, 'message' => "Sorry, we don't deliver to this address yet. Please choose another address."]);
+            }
+            $hubId = (int) $addrHub->id;
+        } else {
+            $hubId = (int) (session('hub_session_id') ?: (isset($_COOKIE['hub_id']) ? $_COOKIE['hub_id'] : 3));
+            // Older address without a map position: it must at least be in the city of the chosen hub.
+            $hubCity = (string) DB::table('hubs')->leftJoin('cities', 'cities.id', '=', 'hubs.city_id')->where('hubs.id', $hubId)->value('cities.city');
+            $addrCity = trim((string) ($addr->city ?? ''));
+            if ($hubCity !== '' && $addrCity !== '' && stripos($addrCity, $hubCity) === false && stripos($hubCity, $addrCity) === false) {
+                return response()->json(['result' => false, 'message' => 'Your delivery location is set to ' . $hubCity . ', but this address is in ' . $addrCity . '. Please choose your location (top of the page) for this address and try again.']);
+            }
+        }
+        if ($hubId <= 0 || !DB::table('hubs')->where('id', $hubId)->whereRaw("LOWER(CAST(status AS CHAR)) IN ('active', '1')")->exists()) {
+            return response()->json(['result' => false, 'message' => 'Please choose your delivery location again']);
+        }
+        // Fix 21 Oct 2026: delivery type and slot are checked on the server (Express 7 AM - 9 PM, slot must not have started).
+        $ffType = $request->delivery_type === 'Scheduled' ? 'Scheduled' : 'Express';
+        $ffHour = (int) date('G');
+        if ($ffType === 'Express') {
+            if ($ffHour < 7 || $ffHour >= 21) {
+                return response()->json(['result' => false, 'message' => 'Express delivery is available from 7 AM to 9 PM. Please choose a delivery slot.']);
+            }
+            $ffDate = date('Y-m-d'); $ffTime = '30 min';
+        } else {
+            $ffSlots = ['7 AM – 9 AM' => 7, '9 AM – 11 AM' => 9, '11 AM – 1 PM' => 11, '1 PM – 3 PM' => 13, '3 PM – 5 PM' => 15, '5 PM – 7 PM' => 17, '7 PM – 9 PM' => 19, '9 PM – 11 PM' => 21];
+            $ffTime = trim((string) $request->schedule_time);
+            if (!isset($ffSlots[$ffTime])) {
+                return response()->json(['result' => false, 'message' => 'Please choose a delivery slot.']);
+            }
+            $ffDate = $request->schedule_date === date('Y-m-d', strtotime('+1 day')) ? date('Y-m-d', strtotime('+1 day')) : date('Y-m-d');
+            if ($ffDate === date('Y-m-d') && $ffHour >= $ffSlots[$ffTime]) {
+                return response()->json(['result' => false, 'message' => 'That slot has already started. Please choose a later slot or Express.']);
+            }
+        }
+        $deliveryCharge = $this->serverDeliveryCharge();
+        $paymentType = (string) $request->payment_type;
+        if (!in_array($paymentType, ['Cash', 'Online', 'Wallet'], true)) {
+            return response()->json(['result' => false, 'message' => 'Please choose a payment method']);
+        }
+
         $cart_items = DB::table('cart')
             ->join('products', 'cart.product_id', '=', 'products.id')
             ->where('cart.buyer_id', $user_id)
@@ -713,30 +891,35 @@ class HomeController extends Controller
 
         DB::beginTransaction();
         try {
+            $ordersHasCreatedAt = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'created_at');
+            $ordersHasUpdatedAt = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'updated_at');
+            $ordersHasCancelReason = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'reason_for_order_cancel');
             foreach ($cart_items as $item) {
-                DB::table('orders')->insert([
+                $orderRow = [
                     'order_id' => $order_id,
                     'buyer_id' => $buyer_id,
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
                     'address_id' => $address_id,
-                    'payment_type' => $request->payment_type,
-                    'delivery_type' => $request->delivery_type,
-                    'delivery_charge' => $request->delivery_charge,
-                    'schedule_date' => $request->schedule_date,
-                    'schedule_time' => $request->schedule_time,
-                    'hub_id' => $request->hub_id,
+                    'payment_type' => $paymentType,
+                    'delivery_type' => $ffType,
+                    'delivery_charge' => $deliveryCharge,
+                    'schedule_date' => $ffDate,
+                    'schedule_time' => $ffTime,
+                    'hub_id' => $hubId,
                     'total_amount' => $total_amount,
                     'order_status' => 'Order Pending',
                     'date_added' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                ];
+                if ($ordersHasCreatedAt) $orderRow['created_at'] = now();
+                if ($ordersHasUpdatedAt) $orderRow['updated_at'] = now();
+                if ($ordersHasCancelReason) $orderRow['reason_for_order_cancel'] = '';
+                DB::table('orders')->insert($orderRow);
 
                 // Update stock
                 DB::table('inventory')
                     ->where('product_id', $item->product_id)
-                    ->where('hub_id', $request->hub_id)
+                    ->where('hub_id', $hubId)
                     ->decrement('live_stock', $item->quantity);
             }
 

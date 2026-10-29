@@ -18,6 +18,11 @@
         </div>
     </div>
 
+
+@if(!empty($referralApplied))
+<div class="container mt-4"><div class="alert alert-success border-0 rounded-4 shadow-sm"><strong>Invite code applied: {{ $referralCode }}</strong><br>Continue by creating or signing in to your Freshful account. This invite can be linked only when a new account is created.</div></div>
+@endif
+
     <div class="container-fluid pt-5">
         
          <div class="row ">
@@ -63,7 +68,7 @@
                 <div class="discount-card text-center py-4 position-relative px-4" style="min-height: 170px;">
                     <span class="works-it-number">5</span>
                     <h6 class="fs-7 mb-0 mt-3">Earn Rewards</h6>
-                    <p class="fs-8 mt-1">Get a ₹150 credit to your freshful wallet once your friend orders</p>
+                    <p class="fs-8 mt-1">Get ₹150 in your Freshful wallet after your friend’s first eligible order is delivered</p>
                 </div>
             </div>
         </div>
@@ -72,7 +77,7 @@
     <div class="container">
         <div class="px-4 py-5 my-5 custom-note">
             <p class="mb-2 fs-5">
-                <strong>*</strong> Applicable on orders above ₹400.00
+                <strong>*</strong> Your friend’s first non-cancelled order must be ₹400 or more and marked delivered before the ₹150 wallet reward is issued.
             </p>
             <p class="mb-0 fs-5">
                 <strong>*</strong> All referral advantages are subject to change

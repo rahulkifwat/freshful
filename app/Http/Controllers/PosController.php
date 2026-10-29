@@ -410,6 +410,7 @@ class PosController extends Controller
             ]);
 
         if ($updated) {
+            if ($request->order_status === 'Order Delivered' && $request->order_id) { try { app(\App\Services\BuyerReferralService::class)->awardForDeliveredOrder((string) $request->order_id); } catch (\Throwable $e) { report($e); } }
             return response()->json(['result' => true, 'message' => 'Status updated successfully.']);
         }
         return response()->json(['result' => false, 'message' => 'Something went wrong.']);

@@ -44,6 +44,7 @@ Route::get('/product/{category?}/{type?}', [HomeController::class, 'product'])->
 
 Route::get('/product_detail', [HomeController::class, 'product_detail'])->name('product_detail');
 
+Route::get('/categories', [HomeController::class, 'categories'])->name('categories');
 Route::get('/view_product/{category?}/{type?}', [HomeController::class, 'view_product'])->name('view_product');
 
 Route::get('/about', function () {
@@ -250,6 +251,7 @@ Route::prefix('admin')->group(function () {
 
 Route::prefix('/user')->group(function () {
     Route::post('/login', [AuthController::class, 'userLogin'])->name('user.login');
+    Route::post('/complete-registration', [AuthController::class, 'completeRegistration'])->name('user.complete-registration');
     Route::get('/logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('/myaccount', [HomeController::class, 'myAccount'])->name('myaccount');
     Route::get('/order/{order_id}', [HomeController::class, 'trackOrder'])->name('track-order');
@@ -1008,3 +1010,23 @@ Route::prefix('production')->group(function () {
         Route::post('/ajax/inward-stock-action', [ProductionController::class, 'inwardStockAction'])->name('production.ajax.inward_stock_action');
     });
 });
+
+
+// Freshful new admin console (/admin/new)
+if (file_exists(__DIR__.'/admin_new.php')) { require __DIR__.'/admin_new.php'; }
+
+// Freshful customer wallet top-up (My Account)
+if (file_exists(__DIR__.'/wallet_web.php')) { require __DIR__.'/wallet_web.php'; }
+
+if (file_exists(__DIR__.'/pos_console.php')) { require __DIR__.'/pos_console.php'; }
+
+if (file_exists(__DIR__.'/hub_console.php')) { require __DIR__.'/hub_console.php'; }
+
+// Freshful staff sign-in portal (22 Oct 2026): new look for every staff login page.
+if (file_exists(__DIR__.'/staff_login.php')) { require __DIR__.'/staff_login.php'; }
+
+// Freshful country console (22 Oct 2026): pan-India command centre.
+if (file_exists(__DIR__.'/country_console.php')) { require __DIR__.'/country_console.php'; }
+
+// Freshful production console (production update 1, 28 Oct 2026): /production/console
+if (file_exists(__DIR__.'/production_console.php')) { require __DIR__.'/production_console.php'; }

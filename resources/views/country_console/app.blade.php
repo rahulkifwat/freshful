@@ -1,0 +1,235 @@
+@php
+  /* Freshful country console shell (22 Oct 2026). All screens are drawn by cc.js from the JSON endpoints. */
+  $ic = [
+    'grid' => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    'pulse' => '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+    'trophy' => '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+    'receipt' => '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+    'calendar' => '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    'close' => '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+    'package' => '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+    'store' => '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v7h14v-7"/>',
+    'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    'truck' => '<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+    'history' => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+    'trash' => '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+    'chart' => '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    'transfer' => '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+    'cash' => '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/>',
+    'users' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 14a5 5 0 0 1 3 5"/>',
+    'bike' => '<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9l-2-3H6M15 9l1-3h2"/>',
+    'alert' => '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5h0"/>',
+    'filechart' => '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 17v-3M12 17v-6M15 17v-2"/>',
+    'target' => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+    'old' => '<path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/>',
+    'menu' => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    'refresh' => '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+    'moon' => '<path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/>',
+    'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+    'logout' => '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+    'scale' => '<path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
+    'tag' => '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+    'image' => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/>',
+    'map' => '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+    'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    'mail' => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    'bell' => '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    'file' => '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    'gear' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    'upload' => '<path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/>',
+    'layers' => '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+    'search' => '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  ];
+  $svg = fn ($n, $s = 18) => '<svg width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($ic[$n] ?? $ic['grid']) . '</svg>';
+  $nav = [
+    'Command' => [['overview', 'Command centre', 'grid'], ['live', 'Live board', 'pulse'], ['league', 'State / city / hub ranking', 'trophy']],
+    'Orders' => [['orders', 'All orders', 'receipt'], ['sched', 'Scheduled orders', 'calendar'], ['cancels', 'Cancellations', 'close']],
+    'Inventory management' => [['sheet', 'Hub inventory sheet', 'grid'], ['stock', 'Stock by product', 'package'], ['stock-hubs', 'Stock by hub', 'store'], ['danger', 'Danger & expired stock', 'clock'], ['ledger', 'Stock ledger', 'history']],
+    'Communicator' => [['comm-txn', 'Hub inward / outward transactions', 'history'], ['inward', 'Accept inward stocks', 'truck'], ['request', 'Request outward stocks', 'transfer'], ['ihsend', 'InterHub orders (send stock)', 'truck'], ['transfers', 'InterHub moments view', 'pulse']],
+    'Wastage' => [['writeoff', 'Write off / spoilage', 'trash'], ['wastage', 'Wastage report', 'chart']],
+    'Money' => [['cash', 'Cash at hubs', 'cash']],
+    'Customer management' => [['customers', 'All customers', 'users'], ['wallets', 'Wallet transactions', 'cash']],
+    'Delivery boy' => [['rider-add', 'Add delivery boy', 'bike'], ['riders', 'All delivery boys', 'bike'], ['rider-perf', 'Performance & incentives', 'trophy']],
+    'Service' => [['grievances', 'Grievances', 'alert']],
+    'Reports' => [['reports', 'Sales report', 'filechart'], ['targets', 'Targets', 'target']],
+  ];
+  $navColor = [];
+  if (($actor['role'] ?? '') === 'admin') {
+    /* Admin (update 2): head-office modules first, then every console screen. Keys starting "ad-" are drawn by ad.js. Each group has its own colour (icon tiles). */
+    $nav = [
+      'Head office' => [['ad-home', 'Dashboard', 'grid'], ['overview', 'Command centre', 'pulse'], ['ad-god', 'God view (live map)', 'map'], ['ad-heat', 'Order heat map', 'target'], ['ad-dispatch', 'Live dispatch', 'truck'], ['live', 'Live board', 'pulse'], ['league', 'State / city / hub ranking', 'trophy']],
+      'Orders' => [['orders', 'All orders', 'receipt'], ['sched', 'Scheduled orders', 'calendar'], ['cancels', 'Cancellations', 'close'], ['ad-refunds', 'Refunds', 'cash'], ['reports', 'Sales summary', 'chart']],
+      'Catalogue' => [['ad-products', 'Products', 'package'], ['ad-maincat', 'Categories', 'tag'], ['ad-category', 'Sub categories', 'layers'], ['ad-units', 'Product units', 'scale'], ['ad-tags', 'Product tags', 'tag'], ['ad-filters', 'Product filters', 'layers'], ['ad-missing', 'Stock without a product', 'alert'], ['ad-import', 'Excel import / bulk update', 'upload']],
+      'Inventory management' => array_merge($nav['Inventory management'], [['ad-invreport', 'Inventory report detail', 'filechart']]),
+      'Communicator' => $nav['Communicator'],
+      'Wastage' => $nav['Wastage'],
+      'Money' => $nav['Money'],
+      'Customer management' => [['customers', 'All customers', 'users'], ['ad-buyers', 'Customer accounts', 'user'], ['wallets', 'Wallet transactions', 'cash']],
+      'Customer service' => [['ad-tickets', 'Support tickets', 'mail'], ['ad-disputes', 'Disputes', 'scale'], ['ad-reviews', 'Ratings & reviews', 'trophy'], ['grievances', 'Grievance report', 'alert']],
+      'Delivery boy' => array_merge($nav['Delivery boy'], [['ad-riders-live', 'Live locations', 'map']]),
+      'Staff & roles' => [['ad-staff', 'Staff users', 'users'], ['ad-roles', 'Roles & permissions', 'shield']],
+      'Locations' => [['ad-hubs', 'Hubs & delivery areas', 'map'], ['ad-cities', 'Cities', 'map'], ['ad-delivery', 'Delivery charges', 'truck']],
+      'Marketing' => [['ad-banners', 'Website banners', 'image'], ['ad-appbanners', 'App banners', 'image'], ['ad-slider', 'Side slider', 'image'], ['ad-offers', 'Home offers', 'tag'], ['ad-promos', 'Promo codes', 'tag'], ['ad-coupons', 'Coupons & deals', 'tag'], ['ad-certs', 'Certificates', 'shield'], ['ad-push', 'Push notifications', 'bell']],
+      'Enquiries' => [['ad-contact', 'Contact us', 'mail'], ['ad-franchise', 'Franchise enquiries', 'store'], ['ad-newsletter', 'Newsletter', 'mail']],
+      'Content' => [['ad-policies', 'Policies & pages', 'file'], ['ad-grievcat', 'Grievance categories', 'alert']],
+      'Reports' => [['targets', 'Targets', 'target'], ['ad-audit', 'Change log (who changed what)', 'history']],
+      'Settings' => [['ad-profile', 'My profile & password', 'gear']],
+    ];
+    $navColor = ['Head office' => '#EA4A1F', 'Orders' => '#2563EB', 'Catalogue' => '#0E9F6E', 'Inventory management' => '#0891B2', 'Communicator' => '#7C3AED', 'Wastage' => '#DC2626',
+      'Money' => '#D97706', 'Customer management' => '#DB2777', 'Customer service' => '#E11D48', 'Delivery boy' => '#0D9488', 'Staff & roles' => '#4F46E5', 'Locations' => '#059669',
+      'Marketing' => '#EA580C', 'Enquiries' => '#9333EA', 'Content' => '#475569', 'Reports' => '#1D4ED8', 'Settings' => '#64748B'];
+    /* Driver management (drivers update 1, 28 Oct 2026): rider app accounts, document check, order assignment, driver wallets. Drawn by dr.js. */
+    if (file_exists(resource_path('views/country_console/assets/dr.js'))) {
+      $drNav = ['Driver management' => [['dr-pending', 'Pending approvals', 'shield'], ['dr-list', 'Driver list', 'bike'], ['dr-assign', 'Order assignment', 'truck'], ['dr-wallet', 'Driver wallets', 'cash']]];
+      $drAt = array_search('Delivery boy', array_keys($nav), true);
+      $nav = $drAt === false ? $nav + $drNav : array_slice($nav, 0, $drAt + 1, true) + $drNav + array_slice($nav, $drAt + 1, null, true);
+      $navColor['Driver management'] = '#0F766E';
+    }
+  }
+  $role = (string) ($actor['role'] ?? 'country'); $prefix = (string) ($actor['prefix'] ?? 'country_manager'); $names = (string) ($actor['names'] ?? 'ccc.');
+  $roleLabel = (string) ($actor['role_label'] ?? 'Country manager');
+  $brand = ['country' => ['Freshful Country', 'Pan-India command centre'], 'area' => ['Freshful Area', 'Your hubs command centre'], 'operation' => ['Freshful Operations', 'Operations command centre'], 'admin' => ['Freshful Admin', 'Head office control']][$role] ?? ['Freshful Country', 'Pan-India command centre'];
+  /* Production console (production update 1, 28 Oct 2026): production menu, limited to what the production role may open. */
+  $prc = null;
+  if ($role === 'production' && class_exists(\App\Services\ProductionConsole\ProductionAccess::class)) {
+    $brand = ['Freshful Production', 'Production command centre'];
+    $prOk = array_flip((array) ($actor['screens'] ?? []));
+    $prNav = [
+      'Production' => [['pr-home', 'Production dashboard', 'grid'], ['pr-plan', 'Production plan', 'calendar'], ['pr-sheet', 'Production sheet (print)', 'file'], ['pr-batches', 'Dispatches to hubs', 'truck'], ['pr-receipts', 'Hub receipts & differences', 'scale'], ['pr-board', 'Production stock board', 'layers'], ['pr-products', 'Products', 'package']],
+      'Inventory management' => [['sheet', 'Hub inventory sheet', 'grid'], ['stock', 'Stock by product', 'package'], ['stock-hubs', 'Stock by hub', 'store'], ['inward', 'Pending inward / accept', 'truck'], ['danger', 'Danger & expired stock', 'clock'], ['ledger', 'Stock ledger', 'history']],
+      'Communicator' => [['comm-txn', 'Hub inward / outward transactions', 'history'], ['request', 'Request outward stocks', 'transfer'], ['ihsend', 'InterHub orders (send stock)', 'truck'], ['transfers', 'InterHub moments view', 'pulse']],
+      'Wastage' => [['writeoff', 'Write off / spoilage', 'trash'], ['wastage', 'Wastage report', 'chart']],
+      'Orders' => [['orders', 'All orders', 'receipt'], ['sched', 'Scheduled orders', 'calendar'], ['cancels', 'Cancellations', 'close']],
+      'Customers' => [['customers', 'All customers', 'users'], ['wallets', 'Wallet transactions', 'cash']],
+      'Money' => [['cash', 'Cash at hubs', 'cash'], ['reports', 'Sales report', 'filechart']],
+      'Delivery boy' => [['riders', 'All delivery boys', 'bike'], ['rider-perf', 'Performance & incentives', 'trophy'], ['rider-add', 'Add delivery boy', 'bike']],
+      'Service' => [['grievances', 'Grievances', 'alert']],
+    ];
+    $nav = [];
+    foreach ($prNav as $prG => $prItems) { $prItems = array_values(array_filter($prItems, fn ($x) => isset($prOk[$x[0]]))); if ($prItems) $nav[$prG] = $prItems; }
+    $prA = \App\Services\ProductionConsole\ProductionAccess::class;
+    $prc = ['screens' => array_keys($prOk), 'role' => $actor['perm_role'] ?? null,
+      'colors' => ['Production' => '#0F766E', 'Inventory management' => '#0891B2', 'Communicator' => '#7C3AED', 'Wastage' => '#DC2626', 'Orders' => '#2563EB', 'Customers' => '#DB2777', 'Money' => '#D97706', 'Delivery boy' => '#0D9488', 'Service' => '#E11D48', 'Other' => '#64748B'],
+      'can' => ['plan' => $prA::api('pr.plan.save') === null, 'send' => $prA::api('pr.send') === null, 'cancel' => $prA::api('pr.line.cancel') === null, 'toggle' => $prA::api('pr.product.toggle') === null, 'stale' => $prA::api('pr.stale.clear') === null]];
+  }
+  $name = (string) ($actor['name'] ?? $roleLabel);
+  $initials = '';
+  foreach (array_slice(array_values(array_filter(preg_split('/\s+/', trim($name)))), 0, 2) as $w) $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+  $logout = \Illuminate\Support\Facades\Route::has($prefix . '.logout') ? route($prefix . '.logout') : url($prefix . '/logout');
+  $icons = []; foreach ($ic as $k => $v) $icons[$k] = $svg($k, 16);
+@endphp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{{ $brand[0] }} · command centre</title>
+<link rel="icon" href="{{ asset('assets/image/Fevi.png') }}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>{!! file_get_contents(resource_path('views/country_console/assets/cc.css')) !!}</style>
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/ad.css')))
+<style>{!! file_get_contents(resource_path('views/country_console/assets/ad.css')) !!}</style>
+@endif
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/dr.css')))
+{{-- drivers update 1 --}}<style>{!! file_get_contents(resource_path('views/country_console/assets/dr.css')) !!}</style>
+@endif
+@if ($role === 'production' && file_exists(resource_path('views/country_console/assets/pr.css')))
+{{-- production update 1 --}}<style>{!! file_get_contents(resource_path('views/country_console/assets/pr.css')) !!}</style>
+@endif
+<script>try { var t = localStorage.getItem('ff-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+</head>
+<body class="role-{{ $role }}">
+@if ($role === 'admin')<script>try { if (localStorage.getItem('ad-rail') === '1' && innerWidth > 1024) document.body.classList.add('ad-rail'); } catch (e) {}</script>@endif
+<div class="cc-shell">
+  <aside class="cc-side" id="ccSide">
+    <div class="cc-brand"><div class="cc-logo">F</div><div><b>{{ $brand[0] }}</b><small>{{ $brand[1] }}</small></div></div>
+    @if ($role === 'admin')
+    <label class="ad-find" for="adFind">{!! $svg('search', 15) !!}<input id="adFind" type="search" placeholder="Find a page" autocomplete="off" aria-label="Find a page in the menu"><kbd>/</kbd></label>
+    <nav class="cc-nav ad-nav" aria-label="Admin menu">
+      @foreach ($nav as $group => $items)
+        <section class="ad-grp" data-group="{{ $group }}" style="--c: {{ $navColor[$group] ?? '#64748B' }}">
+          <button type="button" class="ad-grp-h" aria-expanded="true"><span>{{ $group }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="ad-list">
+          @foreach ($items as [$key, $label, $icon])
+            <a href="#{{ $key }}" data-view="{{ $key }}" data-tip="{{ $label }}" data-label="{{ mb_strtolower($label . ' ' . $group) }}"><span class="ad-tile">{!! $svg($icon, 16) !!}</span><span class="ad-lbl">{{ $label }}</span><em class="cc-badge" id="nb-{{ $key }}" hidden></em></a>
+          @endforeach
+          </div>
+        </section>
+      @endforeach
+      <p class="ad-nores" id="adNoRes" hidden>No page matches.</p>
+      <section class="ad-grp" style="--c:#64748B"><div class="ad-list"><a href="{{ route($names . 'classic') }}" data-tip="Old admin panel"><span class="ad-tile">{!! $svg('old', 16) !!}</span><span class="ad-lbl">Old admin panel</span></a></div></section>
+    </nav>
+    @else
+    <nav class="cc-nav" aria-label="Country console">
+      @foreach ($nav as $group => $items)
+        <div class="cc-sep">{{ $group }}</div>
+        @foreach ($items as [$key, $label, $icon])
+          <a href="#{{ $key }}" data-view="{{ $key }}">{!! $svg($icon) !!}<span>{{ $label }}</span><em class="cc-badge" id="nb-{{ $key }}" hidden></em></a>
+        @endforeach
+      @endforeach
+      <div class="cc-sep">Other</div>
+      <a href="{{ route($names . 'classic') }}">{!! $svg('old') !!}<span>Old {{ strtolower($roleLabel) }} panel</span></a>
+    </nav>
+    @endif
+    <div class="cc-me"><span class="cc-av">{{ $initials !== '' ? $initials : 'C' }}</span><div><b>{{ $name }}</b><small>{{ $roleLabel }}</small></div>
+      <a class="cc-ib" href="{{ $logout }}" title="Log out" aria-label="Log out">{!! $svg('logout', 17) !!}</a></div>
+  </aside>
+  <div class="cc-main">
+    <header class="cc-top">
+      <button type="button" class="cc-ib cc-menu" id="ccMenu" aria-label="Menu">{!! $svg('menu') !!}</button>
+      @if ($role === 'admin')<button type="button" class="cc-ib ad-railbtn" id="adRail" aria-label="Show or hide the menu" title="Show or hide the menu">{!! $svg('menu', 17) !!}</button>@endif
+      <div class="cc-title">@if ($role === 'admin')<div class="ad-crumb" id="adCrumb"></div>@endif<h1 id="ccTitle">Command centre</h1><p id="ccSub">{{ date('l, d M Y') }}</p></div>
+      @if ($role === 'admin')<button type="button" class="ad-search-btn" id="adSearchBtn" title="Find a page (Ctrl+K)">{!! $svg('search', 15) !!}<span>Find a page</span><kbd>Ctrl K</kbd></button>@endif
+      <span class="cc-live" id="ccLive"><i></i><span id="ccLiveText">Loading…</span></span>
+      <button type="button" class="cc-ib" id="ccRefresh" title="Refresh" aria-label="Refresh">{!! $svg('refresh', 17) !!}</button>
+      <button type="button" class="cc-ib" id="ccTheme" title="Light / dark" aria-label="Light or dark"><span class="cc-moon">{!! $svg('moon', 17) !!}</span><span class="cc-sun">{!! $svg('sun', 17) !!}</span></button>
+      @if ($role === 'admin')<a class="cc-btn ad-hide-sm" href="{{ route($names . 'classic') }}">Old admin</a><a class="cc-btn ad-hide-sm" href="{{ $logout }}">Log out</a>@endif
+    </header>
+    <div class="cc-filters" id="ccFilters" role="search" aria-label="Filters">
+      <label id="fStateWrap">State<select class="cc-sel" id="fState"><option value="">All states</option></select></label>
+      <label>City<select class="cc-sel" id="fCity"><option value="">All cities</option></select></label>
+      <label>Hub<select class="cc-sel" id="fHub"><option value="">All hubs</option></select></label>
+      <label id="fTypeWrap">Hub type<select class="cc-sel" id="fType"><option value="">Own + franchise</option></select></label>
+      <label>Status<select class="cc-sel" id="fStatus"><option value="all">All hubs</option><option value="active">Active hubs</option><option value="inactive">Inactive hubs</option></select></label>
+      <div class="cc-dates" id="ccDates">
+        <label>Dates<select class="cc-sel" id="fPreset">
+          <option value="today">Today</option><option value="yesterday">Yesterday</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option>
+          <option value="month">This month</option><option value="lastmonth">Last month</option><option value="90">Last 90 days</option><option value="custom">Custom…</option></select></label>
+        <label id="fCustom" hidden>From / to<span style="display:flex;gap:4px"><input type="date" class="cc-in" id="fFrom"><input type="date" class="cc-in" id="fTo"></span></label>
+      </div>
+      <label>Units<select class="cc-sel" id="fUnits"><option value="w">kg / pcs</option><option value="p">Packs</option></select></label>
+      <button type="button" class="cc-clear" id="fClear">Clear</button>
+      <div class="cc-scope" id="ccScope"></div>
+    </div>
+    <main class="cc-view" id="ccView" aria-live="polite"></main>
+  </div>
+</div>
+<div class="cc-over" id="ccOver"></div>
+<aside class="cc-drawer" id="ccDrawer" aria-modal="true" role="dialog"><header><h3 id="ccDTitle"></h3><button type="button" class="cc-ib" id="ccDClose" aria-label="Close">{!! $svg('close', 17) !!}</button></header><div id="ccDBody"></div></aside>
+<section class="cc-modal" id="ccModal" aria-modal="true" role="dialog"><header><h3 id="ccMTitle"></h3><button type="button" class="cc-ib" id="ccMClose" aria-label="Close">{!! $svg('close', 17) !!}</button></header><div id="ccMBody"></div><footer id="ccMFoot"></footer></section>
+<div class="cc-toasts" id="ccToasts" aria-live="assertive"></div>
+<div class="cc-tip" id="ccTip"></div>
+<script>
+window.CCC = {!! json_encode([
+  'base' => url($prefix . '/console/api'), 'csrf' => csrf_token(), 'login' => url($prefix . '/login'), 'role' => $role, 'roleLabel' => $roleLabel,
+  'meta' => $meta, 'reasons' => $reasons, 'groups' => $groups, 'moveTypes' => $moveTypes, 'tStatus' => $tStatus, 'targetsOn' => $targetsOn,
+  'actor' => $name, 'today' => date('Y-m-d'), 'icons' => $icons, 'cashLimit' => (float) config('hub_console.cash_limit', 20000),
+  'wasteLimit' => (float) config('country_console.wastage_limit_pct', 3), 'brand' => $brand[0], 'home' => $role === 'admin' ? 'ad-home' : 'overview', 'mapsKey' => ($role === 'admin' && class_exists(\App\Services\AdminConsole\AdminMaps::class)) ? \App\Services\AdminConsole\AdminMaps::key() : '', 'circleKm' => (float) config('admin_console.circle_km', 3), 'planTime' => (string) config('hub_console.danger_plan_time', '11:00'),
+], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
+</script>
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/ad.js')))
+<script>{!! file_get_contents(resource_path('views/country_console/assets/ad.js')) !!}</script>
+@endif
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/dr.js')))
+{{-- drivers update 1 --}}<script>{!! file_get_contents(resource_path('views/country_console/assets/dr.js')) !!}</script>
+@endif
+@if ($role === 'production' && $prc && file_exists(resource_path('views/country_console/assets/pr.js')))
+{{-- production update 1 --}}<script>window.PRC = {!! json_encode($prc, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};</script>
+<script>{!! file_get_contents(resource_path('views/country_console/assets/pr.js')) !!}</script>
+@endif
+<script>{!! file_get_contents(resource_path('views/country_console/assets/cc.js')) !!}</script>
+</body>
+</html>

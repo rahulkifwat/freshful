@@ -1,0 +1,3 @@
+app/Services/HubConsole/HubDangerService.php
+app/Console/Commands/HubDangerPlan.php
+database/migrations/2026_10_22_400000_create_hub_stock_lots_table.php

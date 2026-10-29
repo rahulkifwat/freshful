@@ -38,7 +38,7 @@ class HubController extends Controller
         if (Schema::hasTable('orders')) {
             $base = DB::table('orders')->when($hub_id, fn ($q) => $q->where('hub_id', $hub_id));
 
-            $stats['today_orders']     = (clone $base)->whereDate('created_at', today())->distinct('order_id')->count('order_id');
+            $stats['today_orders']     = (clone $base)->whereDate('date_added', today())->distinct('order_id')->count('order_id');
             $stats['scheduled_orders'] = (clone $base)->where('order_status', 'Order Placed')->distinct('order_id')->count('order_id');
             $stats['delivered']        = (clone $base)->where('order_status', 'Delivered')->distinct('order_id')->count('order_id');
             $stats['cancelled']        = (clone $base)->where('order_status', 'Cancelled')->distinct('order_id')->count('order_id');
@@ -66,10 +66,10 @@ class HubController extends Controller
                     DB::raw('MAX(buyer_phone) as buyer_phone'),
                     DB::raw('SUM(total_price) as total_price'),
                     DB::raw('MAX(order_status) as order_status'),
-                    DB::raw('MAX(created_at) as created_at')
+                    DB::raw('MAX(date_added) as created_at')
                 )
                 ->when($hub_id, fn ($q) => $q->where('hub_id', $hub_id))
-                ->whereDate('created_at', today())
+                ->whereDate('date_added', today())
                 ->groupBy('order_id')
                 ->orderByDesc(DB::raw('MAX(id)'))
                 ->paginate(25)->withQueryString();
@@ -91,7 +91,7 @@ class HubController extends Controller
                     DB::raw('MAX(buyer_phone) as buyer_phone'),
                     DB::raw('SUM(total_price) as total_price'),
                     DB::raw('MAX(order_status) as order_status'),
-                    DB::raw('MAX(created_at) as created_at'),
+                    DB::raw('MAX(date_added) as created_at'),
                     DB::raw('MAX(schedule_date) as schedule_date')
                 )
                 ->when($hub_id, fn ($q) => $q->where('hub_id', $hub_id))
@@ -117,11 +117,11 @@ class HubController extends Controller
                     DB::raw('MAX(buyer_phone) as buyer_phone'),
                     DB::raw('SUM(total_price) as total_price'),
                     DB::raw('MAX(order_status) as order_status'),
-                    DB::raw('MAX(created_at) as created_at')
+                    DB::raw('MAX(date_added) as created_at')
                 )
                 ->when($hub_id, fn ($q) => $q->where('hub_id', $hub_id))
                 ->where('order_status', 'Cancelled')
-                ->whereDate('created_at', today())
+                ->whereDate('date_added', today())
                 ->groupBy('order_id')
                 ->orderByDesc(DB::raw('MAX(id)'))
                 ->paginate(25)->withQueryString();
@@ -203,7 +203,7 @@ class HubController extends Controller
                     DB::raw('MAX(id) as id'),
                     DB::raw('SUM(total_price) as total_price'),
                     DB::raw('MAX(order_status) as order_status'),
-                    DB::raw('MAX(created_at) as created_at')
+                    DB::raw('MAX(date_added) as created_at')
                 )
                 ->groupBy('order_id')
                 ->orderByDesc(DB::raw('MAX(id)'))

@@ -144,20 +144,17 @@
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const button = document.getElementById("open-location");
-        const collapseTarget = document.getElementById("location-dropdown");
-
-        const bsCollapse = new bootstrap.Collapse(collapseTarget, {
-            toggle: false // prevent auto toggle on init
-        });
-
-        button.addEventListener("click", function() {
-            bsCollapse.toggle();
-        });
+        const compareLink = document.getElementById('compare-page-link');
+        const compareBadge = document.getElementById('compare-badge');
+        let compareIds = [];
+        try { compareIds = JSON.parse(localStorage.getItem('freshfulCompare') || '[]').map(Number).filter(Boolean); } catch (_) {}
+        if (compareLink) compareLink.href = compareLink.href.split('?')[0] + (compareIds.length ? '?ids=' + compareIds.join(',') : '');
+        if (compareBadge) { compareBadge.textContent = compareIds.length; compareBadge.hidden = compareIds.length === 0; }
     });
 </script>
 <script>
-    document.getElementById("sendOtpBtn").addEventListener("click", function() {
+    const sendOtpButton = document.getElementById("sendOtpBtn");
+    if (sendOtpButton) sendOtpButton.addEventListener("click", function() {
         console.log("Send OTP button clicked");
         const phone = document.getElementById("phoneLogin").value;
             fetch("{{ route('send-otp') }}", {
@@ -187,6 +184,7 @@
 <script>
     const buyer_id = {{ Auth::user()->id ?? 0 }};
     const getcartUrl = "{{ route('get-cart') }}";
+    window.cartQuantities = window.cartQuantities || {};
     function loadCart() {
         fetch(getcartUrl, { credentials: 'same-origin' })
             .then(res => res.json())
@@ -194,13 +192,20 @@
                 if (data.result && data.products && data.products.length > 0) {
                     renderCart(data.products);
                 } else {
+                    window.cartQuantities = {};
                     document.getElementById('cart-items').innerHTML = `
                         <div class="text-center py-4">
                             <img src="{{ asset('uploads/empty-cart.png') }}" alt="Empty cart" style="max-width:180px;opacity:0.8;">
-                            <p class="text-muted mt-2 fs-7">Your cart is empty</p>
+                            <h3 class="mt-2 fs-5 fw-bold">Your cart is empty</h3>
+                            <p class="text-muted fs-7">Add something fresh and it will appear here.</p>
                         </div>`;
                     updateCartBadge(0);
                     updateBill(0);
+                    const floatBar = document.getElementById('ff-cart-float');
+                    const drawerCount = document.getElementById('ff-cart-drawer-count');
+                    if (floatBar) floatBar.hidden = true;
+                    if (drawerCount) drawerCount.textContent = '0 items';
+                    syncProductQuantityControls();
                 }
             })
             .catch(() => {
@@ -212,47 +217,61 @@
     function renderCart(products) {
         let html = '';
         let subtotal = 0;
+        let itemCount = 0;
+        window.cartQuantities = {};
+
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
         products.forEach((item, index) => {
             let pid = item.cart_pid;
             let price = parseFloat(item.main_price) || 0;
             let qty = parseInt(item.quantity);
+            itemCount += qty;
+            window.cartQuantities[pid] = qty;
             let total = price * qty;
             let unit = ((item.unit_quantity ?? '') + ' ' + (item.product_unit ?? '')).trim();
+            let productImage = item.product_image ? ('/uploads/images/products/' + encodeURIComponent(item.product_image)) : item.image;
 
             subtotal += total;
 
             html += `
-            <div class="d-flex align-items-center justify-content-between border-bottom mb-3 pb-3" id="cart_item_${pid}">
-                <div class="flex-grow-1 me-2">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="bg-accent p-1 d-flex align-items-center justify-content-center"
-                            style="border-radius: 5px; width: 25px;height: 25px;">
-                            ${index + 1}
-                        </span>
-                        <h6 class="mb-0 fs-7">${item.title}</h6>
-                        <button class="btn btn-sm p-0 ms-auto text-muted" onclick="updateQty(${pid}, 0)" title="Remove">&times;</button>
+            <article class="ff-cart-row" id="cart_item_${pid}">
+                <img class="ff-cart-row-image" src="${escapeHtml(productImage)}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src='{{ asset('uploads/empty-cart.png') }}'">
+                <div class="ff-cart-row-info">
+                    <strong class="ff-cart-row-title">${escapeHtml(item.title)}</strong>
+                    <span class="ff-cart-row-meta">${escapeHtml(unit)}</span>
+                    <span class="ff-cart-row-price">₹${price.toFixed(2)} each</span>
+                </div>
+                <div class="ff-cart-row-tools">
+                    <div class="ff-cart-stepper" aria-label="Change quantity">
+                        <button type="button" onclick="updateQty(${pid}, ${qty - 1})" aria-label="Decrease quantity">−</button>
+                        <span>${qty}</span>
+                        <button type="button" onclick="updateQty(${pid}, ${qty + 1})" aria-label="Increase quantity">+</button>
                     </div>
-                    <span class="badge bg-light text-dark border">${unit}</span>
-                    <span class="text-danger fw-bold ms-2">₹${price}</span>
+                    <strong class="ff-cart-row-total">₹${total.toFixed(2)}</strong>
+                    <button type="button" class="ff-cart-remove" onclick="updateQty(${pid}, 0)" aria-label="Remove ${escapeHtml(item.title)}" title="Remove item"><i class="bi bi-trash3"></i></button>
                 </div>
-
-                <div class="d-flex align-items-center gap-1">
-                    <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="updateQty(${pid}, ${qty - 1})">−</button>
-                    <span class="px-2">${qty}</span>
-                    <button class="btn btn-sm btn-outline-secondary qty-btn" onclick="updateQty(${pid}, ${qty + 1})">+</button>
-                </div>
-            </div>
+            </article>
             `;
         });
 
         if (products.length === 0) {
-            html = '<div class="text-center py-4"><p class="text-muted">Your cart is empty</p></div>';
+            html = '<div class="text-center py-4"><h3 class="fs-5 fw-bold">Your cart is empty</h3><p class="text-muted mb-0">Add something fresh and it will appear here.</p></div>';
         }
 
         document.getElementById('cart-items').innerHTML = html;
-        updateCartBadge(products.length);
+        updateCartBadge(itemCount);
         updateBill(subtotal);
+        const countText = itemCount + (itemCount === 1 ? ' item' : ' items');
+        const drawerCount = document.getElementById('ff-cart-drawer-count');
+        if (drawerCount) drawerCount.textContent = countText;
+        const floatBar = document.getElementById('ff-cart-float');
+        const floatCount = document.getElementById('ff-cart-float-count');
+        const floatTotal = document.getElementById('ff-cart-float-total');
+        if (floatBar) floatBar.hidden = itemCount < 1;
+        if (floatCount) floatCount.textContent = countText;
+        if (floatTotal) floatTotal.textContent = '₹' + subtotal.toFixed(2);
+        syncProductQuantityControls();
     }
 
     function updateCartBadge(count) {
@@ -269,11 +288,13 @@
         let discount = 0;
         let total = subtotal + delivery - discount;
 
-        document.getElementById('subtotal').innerText = `₹${subtotal}`;
-        document.getElementById('delivery').innerText = `₹${delivery}`;
-        document.getElementById('discount').innerText = `₹${discount}`;
-        document.getElementById('total').innerText = `₹${total}`;
-        document.getElementById('footer-total').innerText = `₹${total}`;
+        const values = {subtotal, delivery, discount, total};
+        Object.entries(values).forEach(([id, value]) => {
+            const node = document.getElementById(id);
+            if (node) node.innerText = `₹${Number(value).toFixed(2)}`;
+        });
+        const footerTotal = document.getElementById('footer-total');
+        if (footerTotal) footerTotal.innerText = `₹${Number(total).toFixed(2)}`;
     }
 </script>
 <script>
@@ -319,18 +340,40 @@ function openLoginFromCart() {
     if (cartOffcanvas) {
         cartEl.addEventListener('hidden.bs.offcanvas', function handler() {
             cartEl.removeEventListener('hidden.bs.offcanvas', handler);
-            bootstrap.Offcanvas.getOrCreateInstance(loginEl).show();
+            bootstrap.Modal.getOrCreateInstance(loginEl).show();
         }, { once: true });
         cartOffcanvas.hide();
     } else {
-        bootstrap.Offcanvas.getOrCreateInstance(loginEl).show();
+        bootstrap.Modal.getOrCreateInstance(loginEl).show();
     }
 }
 
-function addToCart(product_id, quantity = 1) {
-    updateCartHttp({ product_id, buyer_id, quantity })
+function openFreshfulPromo() {
+    const promoEl = document.getElementById('promocode');
+    if (!promoEl) {
+        window.location.href = "{{ url('/checkout') }}";
+        return;
+    }
+    const cartEl = document.getElementById('cardoffcanvas');
+    const cartOffcanvas = cartEl ? bootstrap.Offcanvas.getInstance(cartEl) : null;
+    const showPromo = () => bootstrap.Modal.getOrCreateInstance(promoEl).show();
+    if (cartOffcanvas) {
+        cartEl.addEventListener('hidden.bs.offcanvas', showPromo, { once: true });
+        cartOffcanvas.hide();
+    } else {
+        showPromo();
+    }
+}
+
+function addToCart(product_id, quantity = null) {
+    const nextQuantity = (quantity === null || quantity === undefined)
+        ? (Number(window.cartQuantities[product_id] || 0) + 1)
+        : Number(quantity);
+    updateCartHttp({ product_id, buyer_id, quantity: nextQuantity })
         .then(data => {
             if (data.result) {
+                window.cartQuantities[product_id] = nextQuantity;
+                syncProductQuantityControls();
                 updateCartBadge(data.cart_count);
                 loadCart();
                 notify(data.message || 'Added to cart', 'success');
@@ -340,86 +383,191 @@ function addToCart(product_id, quantity = 1) {
         })
         .catch(() => notify('Network error while adding to cart', 'error'));
 }
+
+function syncProductQuantityControls() {
+    document.querySelectorAll('[data-product-quantity]').forEach(control => {
+        const productId = control.dataset.productQuantity;
+        const quantity = Number(window.cartQuantities[productId] || 0);
+        const addButton = control.querySelector('.product-add-button');
+        const stepper = control.querySelector('.catalog-quantity, .ff-quantity-stepper');
+        const value = control.querySelector('.ff-quantity-value');
+        if (addButton) addButton.hidden = quantity > 0;
+        if (stepper) stepper.hidden = quantity < 1;
+        if (value) value.textContent = quantity;
+    });
+}
+
+function changeProductQuantity(product_id, amount) {
+    const quantity = Math.max(0, Number(window.cartQuantities[product_id] || 0) + Number(amount));
+    addToCart(product_id, quantity);
+}
+
+function addSelectedProductQuantity(productId) {
+    const selected = Math.max(1, Number(document.getElementById('detailQuantity')?.value) || 1);
+    const current = Number(window.cartQuantities[productId] || 0);
+    addToCart(productId, current + selected);
+}
+
+function addProductToCompare(productId) {
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem('freshfulCompare') || '[]').map(Number).filter(Boolean); } catch (_) {}
+    productId = Number(productId);
+    if (!ids.includes(productId)) ids.push(productId);
+    localStorage.setItem('freshfulCompare', JSON.stringify(ids.slice(-4)));
+    const link = document.getElementById('compare-page-link');
+    const badge = document.getElementById('compare-badge');
+    if (link) link.href = link.href.split('?')[0] + '?ids=' + ids.slice(-4).join(',');
+    if (badge) { badge.textContent = Math.min(ids.length, 4); badge.hidden = false; }
+    notify('Product added to comparison', 'success');
+}
 </script>
 <script>
-// Location search — Google Places Autocomplete + hub verification
+// Location search — Google Places Autocomplete + hub verification (v2 21 Oct 2026: pick freely, confirm to save, auto-detect)
+function freshfulLocationPinIcon() {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="72" viewBox="0 0 48 72"><path d="M22 39 L19 65 Q24 72 29 65 L26 39 Z" fill="#8a9196" stroke="#555d62" stroke-width="1"/><circle cx="24" cy="23" r="21" fill="#f20d18" stroke="#fff" stroke-width="3"/><circle cx="24" cy="23" r="7" fill="#fff"/></svg>';
+    return { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg), scaledSize: new google.maps.Size(40, 60), anchor: new google.maps.Point(20, 58) };
+}
+var FF_LOC = { map: null, marker: null, geocoder: null, ac: null, pending: null, seq: 0 };
+function ffLocCsrf() {
+    var m = document.querySelector('meta[name="csrf-token"]'); if (m && m.content) return m.content;
+    var i = document.querySelector('input[name="_token"]'); return i ? i.value : '';
+}
+function ffLocCookie(n) { var m = document.cookie.match('(?:^|; )' + n + '=([^;]*)'); try { return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return m ? m[1] : ''; } }
+function ffLocEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function ffLocStatus(html) { var s = document.getElementById('location-status'); if (s) s.innerHTML = html || ''; }
+function ffLocPost(body) {
+    return fetch('/ajax/check-hub', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': ffLocCsrf() },
+        body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+}
+function ffLocBox() {
+    var b = document.getElementById('ff-loc-confirm'); if (b) return b;
+    var st = document.getElementById('location-status'); if (!st) return null;
+    b = document.createElement('div'); b.id = 'ff-loc-confirm'; b.style.cssText = 'display:none;margin-top:12px;padding:14px;border:1px solid #e6eae4;border-radius:14px;background:#fafbf9';
+    b.innerHTML = '<div style="font-size:12px;color:#68736b;letter-spacing:.04em;text-transform:uppercase">Deliver to</div>' +
+        '<div id="ff-loc-addr" style="font-weight:600;margin-top:2px"></div><div id="ff-loc-avail" style="font-size:13px;margin-top:4px"></div>' +
+        '<div style="font-size:12px;color:#68736b;margin-top:6px">Not exact? Drag the pin or tap the map to move it.</div>' +
+        '<button type="button" id="ff-loc-go" disabled style="width:100%;margin-top:12px;min-height:46px;border:0;border-radius:12px;background:#f53b13;color:#fff;font-weight:700;opacity:.5">Confirm this location</button>';
+    st.parentNode.insertBefore(b, st);
+    b.querySelector('#ff-loc-go').addEventListener('click', ffLocConfirm);
+    return b;
+}
 function initLocationSearch() {
+    if (!window.google || !google.maps) return;
+    if (!FF_LOC.geocoder) FF_LOC.geocoder = new google.maps.Geocoder();
+    var modal = document.getElementById('location-dropdown');
+    if (modal && !modal.dataset.ffBound) { modal.dataset.ffBound = '1'; modal.addEventListener('shown.bs.modal', ffLocSetupMap); }
+    if (modal && modal.classList.contains('show')) ffLocSetupMap();
+    if (!ffLocCookie('lat') && !ffLocCookie('hub_id')) ffLocAutoDetect();
+}
+function ffLocSetupMap() {
     var input = document.getElementById('locationSearchInput');
-    if (!input || typeof google === 'undefined') return;
-
-    var autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-
-    autocomplete.addListener('place_changed', function () {
-        var place = autocomplete.getPlace();
-        if (!place.geometry) return;
-
-        var lat  = place.geometry.location.lat();
-        var lng  = place.geometry.location.lng();
-        var addr = place.formatted_address;
-        var city = '';
-
-        (place.address_components || []).forEach(function (c) {
-            if (c.types.indexOf('locality') === 0) city = c.short_name;
+    var el = document.getElementById('freshful-header-map');
+    if (!el || !window.google) return;
+    ffLocBox();
+    if (!FF_LOC.map) {
+        var lat = parseFloat(ffLocCookie('lat')), lng = parseFloat(ffLocCookie('lng'));
+        var has = !isNaN(lat) && !isNaN(lng);
+        FF_LOC.map = new google.maps.Map(el, { center: has ? { lat: lat, lng: lng } : { lat: 20.5937, lng: 78.9629 }, zoom: has ? 16 : 5,
+            mapTypeControl: false, streetViewControl: false, fullscreenControl: true, gestureHandling: 'greedy', clickableIcons: false });
+        FF_LOC.marker = new google.maps.Marker({ map: FF_LOC.map, position: has ? { lat: lat, lng: lng } : null, draggable: true, icon: freshfulLocationPinIcon(), title: 'Drag to your exact location' });
+        FF_LOC.map.addListener('click', function (e) { ffLocMove(e.latLng, false); });
+        FF_LOC.marker.addListener('dragend', function (e) { ffLocMove(e.latLng, false); });
+    }
+    google.maps.event.trigger(FF_LOC.map, 'resize');
+    if (input && !input.dataset.autocompleteReady) {
+        FF_LOC.ac = new google.maps.places.Autocomplete(input, { types: ['geocode'], componentRestrictions: { country: 'in' }, fields: ['geometry', 'formatted_address', 'address_components', 'name'] });
+        FF_LOC.ac.addListener('place_changed', function () {
+            var place = FF_LOC.ac.getPlace();
+            if (place && place.geometry) { ffLocMove(place.geometry.location, true); return; }
+            var typed = (place && place.name) || input.value;
+            if (!typed) return;
+            ffLocStatus('<span class="text-muted">Finding ' + ffLocEsc(typed) + '…</span>');
+            FF_LOC.geocoder.geocode({ address: typed, componentRestrictions: { country: 'IN' } }, function (r, s) {
+                if (s !== 'OK' || !r || !r[0]) { ffLocStatus('<span class="text-danger">We could not find that place. Pick a suggestion or tap the map.</span>'); return; }
+                ffLocStatus(''); ffLocMove(r[0].geometry.location, true);
+            });
         });
-
-        checkHubLocation(lat, lng, addr, city);
-    });
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+        input.dataset.autocompleteReady = '1';
+    }
+    if (FF_LOC.pending) ffLocShow(FF_LOC.pending);
 }
-
-function useMyLocation() {
-    var status = document.getElementById('location-status');
-    if (!navigator.geolocation) { if (status) status.textContent = 'Geolocation not supported.'; return; }
-    if (status) status.textContent = 'Detecting your location…';
-
-    navigator.geolocation.getCurrentPosition(function (pos) {
-        var lat = pos.coords.latitude;
-        var lng = pos.coords.longitude;
-
-        if (typeof google === 'undefined') { checkHubLocation(lat, lng, '', ''); return; }
-
-        var geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, gstatus) {
-            var addr = '', city = '';
-            if (gstatus === 'OK' && results[0]) {
-                addr = results[0].formatted_address;
-                var inp = document.getElementById('locationSearchInput');
-                if (inp) inp.value = addr;
-                (results[0].address_components || []).forEach(function (c) {
-                    if (c.types.indexOf('locality') === 0) city = c.short_name;
-                });
-            }
-            checkHubLocation(lat, lng, addr, city);
-        });
-    }, function () {
-        if (status) status.textContent = 'Unable to get your location. Please enable location access.';
-    });
+function ffLocMove(latLng, zoomIn) {
+    if (FF_LOC.map) {
+        FF_LOC.map.panTo(latLng);
+        if (zoomIn || FF_LOC.map.getZoom() < 15) FF_LOC.map.setZoom(17);
+        FF_LOC.marker.setPosition(latLng);
+    }
+    ffLocPreview(typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat, typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng, null);
 }
-
-function checkHubLocation(lat, lng, address, city) {
-    var status = document.getElementById('location-status');
-    if (status) status.innerHTML = '<span class="text-muted">Checking service availability…</span>';
-
-    fetch('{{ route("check-hub") }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ lat: lat, lng: lng, address: address, city: city }),
-        credentials: 'same-origin'
-    })
-    .then(r => r.json())
-    .then(function (res) {
-        if (res.result) {
-            if (status) status.innerHTML = '<span class="text-success fw-semibold">✓ ' + res.message + '</span>';
-            setTimeout(function () { location.reload(); }, 800);
-        } else {
-            if (status) status.innerHTML = '<span class="text-danger">' + res.message + '</span>';
+/* Look up the address and whether a hub delivers there - nothing is saved yet. */
+function ffLocPreview(lat, lng, done) {
+    var my = ++FF_LOC.seq;
+    FF_LOC.pending = { lat: lat, lng: lng, address: '', city: '', ok: false, checking: true };
+    ffLocShow(FF_LOC.pending);
+    FF_LOC.geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, status) {
+        if (my !== FF_LOC.seq) return;
+        var p = FF_LOC.pending;
+        if (status === 'OK' && results && results[0]) {
+            p.address = results[0].formatted_address || '';
+            (results[0].address_components || []).forEach(function (c) {
+                if (!p.city && (c.types.indexOf('locality') >= 0 || c.types.indexOf('postal_town') >= 0)) p.city = c.long_name;
+            });
+            if (!p.city) (results[0].address_components || []).forEach(function (c) { if (!p.city && c.types.indexOf('administrative_area_level_2') >= 0) p.city = c.long_name; });
+            var input = document.getElementById('locationSearchInput'); if (input) input.value = p.address;
         }
-    })
-    .catch(function () {
-        if (status) status.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+        ffLocPost({ lat: lat, lng: lng, address: p.address, city: p.city, preview: 1 }).then(function (res) {
+            if (my !== FF_LOC.seq) return;
+            p.checking = false; p.ok = !!res.result; p.message = res.message || ''; p.hub = res.hub || '';
+            ffLocShow(p); if (done) done(p);
+        }).catch(function () { if (my !== FF_LOC.seq) return; p.checking = false; p.ok = false; p.message = 'Network error. Please try again.'; ffLocShow(p); if (done) done(p); });
     });
 }
+function ffLocShow(p) {
+    var b = ffLocBox(); if (!b) return;
+    b.style.display = 'block';
+    document.getElementById('ff-loc-addr').textContent = p.address || (p.checking ? 'Finding address…' : 'Pinned location');
+    var av = document.getElementById('ff-loc-avail'), go = document.getElementById('ff-loc-go');
+    if (p.checking) { av.innerHTML = '<span class="text-muted">Checking delivery…</span>'; }
+    else if (p.ok) { av.innerHTML = '<span class="text-success fw-semibold">✓ We deliver here</span>'; }
+    else { av.innerHTML = '<span class="text-danger">' + ffLocEsc(p.message || "Sorry, we don't deliver here yet.") + '</span>'; }
+    go.disabled = !p.ok || p.checking; go.style.opacity = go.disabled ? '.5' : '1';
+}
+function ffLocConfirm() {
+    var p = FF_LOC.pending; if (!p || !p.ok) return;
+    var go = document.getElementById('ff-loc-go'); if (go) { go.disabled = true; go.textContent = 'Saving…'; }
+    ffLocPost({ lat: p.lat, lng: p.lng, address: p.address, city: p.city }).then(function (res) {
+        if (res.result) { ffLocStatus('<span class="text-success fw-semibold">✓ ' + ffLocEsc(res.message) + '</span>'); setTimeout(function () { location.reload(); }, 400); }
+        else { ffLocStatus('<span class="text-danger">' + ffLocEsc(res.message) + '</span>'); if (go) { go.textContent = 'Confirm this location'; go.disabled = false; } }
+    }).catch(function () { ffLocStatus('<span class="text-danger">Network error. Please try again.</span>'); if (go) { go.textContent = 'Confirm this location'; go.disabled = false; } });
+}
+/* First visit: find the customer automatically; save it straight away when we deliver there. */
+function ffLocAutoDetect() {
+    try { if (sessionStorage.getItem('ff-loc-auto')) return; sessionStorage.setItem('ff-loc-auto', '1'); } catch (e) {}
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+        ffLocPreview(pos.coords.latitude, pos.coords.longitude, function (p) {
+            if (p.ok) { ffLocConfirm(); return; }
+            var m = document.getElementById('location-dropdown');
+            if (m && window.bootstrap) bootstrap.Modal.getOrCreateInstance(m).show();
+        });
+    }, function () {}, { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
+}
+function useMyLocation() {
+    if (!navigator.geolocation) { ffLocStatus('Location access is not available in this browser.'); return; }
+    ffLocStatus('<span class="text-muted">Getting your current location…</span>');
+    navigator.geolocation.getCurrentPosition(function (pos) {
+        ffLocStatus('');
+        ffLocMove(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude), true);
+    }, function () { ffLocStatus('<span class="text-danger">Location access was blocked. Search for an address or tap the map instead.</span>'); },
+    { enableHighAccuracy: true, timeout: 12000 });
+}
+/* Kept for older pages that call it directly: shows the place for confirmation. */
+function checkHubLocation(lat, lng, address, city) { ffLocPreview(lat, lng, null); }
+function freshfulResolveHeaderPin(position) { ffLocMove(position, false); }
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOZz0ZH-6fFQg8vixFsEtvrq006HXoZwA&callback=initLocationSearch&libraries=places" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&callback=initLocationSearch&libraries=places" async defer></script>
 
 <script>
 (function () {
@@ -443,16 +591,25 @@ function checkHubLocation(lat, lng, address, city) {
                         dropdown.style.display = 'block';
                         return;
                     }
-                    dropdown.innerHTML = items.map(item => `
-                        <a href="${item.detail_url}" class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none text-dark"
-                           style="border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f8f8f8'" onmouseout="this.style.background=''">
-                            <img src="${item.image_url}" alt="${item.product_name}"
-                                 style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;">
-                            <div>
-                                <div class="fw-semibold fs-7">${item.product_name}</div>
-                                <div class="text-danger small">₹${item.main_price}</div>
-                            </div>
-                        </a>`).join('');
+                    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));
+                    const productImageBase = "{{ asset('uploads/images/products') }}/";
+                    dropdown.innerHTML = items.map(item => {
+                        const imageName = String(item.product_image || '').replace(/^\/+/, '');
+                        const imageUrl = imageName
+                            ? productImageBase + imageName.split('/').map(encodeURIComponent).join('/')
+                            : String(item.image_url || '');
+                        const title = escapeHtml(item.product_name || item.item_name || 'Product');
+                        const price = escapeHtml(item.main_price ?? '');
+                        const href = escapeHtml(item.detail_url || '#');
+                        const image = escapeHtml(imageUrl);
+                        const thumbnail = image
+                            ? `<img src="${image}" alt="${title}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`
+                            : '';
+                        return `<a href="${href}" class="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none text-dark freshful-search-result">
+                            ${thumbnail}<span class="freshful-search-placeholder" ${image ? 'hidden' : ''}><i class="bi bi-basket2"></i></span>
+                            <div class="flex-grow-1 min-w-0"><div class="fw-semibold fs-7 text-truncate">${title}</div><div class="text-danger small">₹${price}</div></div>
+                        </a>`;
+                    }).join('');
                     dropdown.style.display = 'block';
                 })
                 .catch(() => { dropdown.style.display = 'none'; });
@@ -473,5 +630,119 @@ function checkHubLocation(lat, lng, address, city) {
             if (first) { e.preventDefault(); window.location.href = first.href; }
         }
     });
+})();
+</script>
+
+<script>
+(function () {
+    document.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-scroll-target][data-scroll-direction]');
+        if (!button) return;
+        const track = document.getElementById(button.dataset.scrollTarget);
+        if (!track) return;
+        const direction = Number(button.dataset.scrollDirection) || 1;
+        const item = track.firstElementChild;
+        const style = getComputedStyle(track);
+        const gap = parseFloat(style.columnGap || style.gap) || 12;
+        const step = item ? item.getBoundingClientRect().width + gap : track.clientWidth * .8;
+        track.scrollBy({ left: direction * Math.max(step * 2, track.clientWidth * .72), behavior: 'smooth' });
+    });
+
+    let addressMap, addressMarker, addressGeocoder, addressAutocomplete;
+    let activeAddressForm;
+    const parts = (result) => {
+        const all = {};
+        (result.address_components || []).forEach(function (item) {
+            item.types.forEach(type => { if (!all[type]) all[type] = item.long_name; });
+        });
+        const road = [all.street_number, all.route].filter(Boolean).join(' ');
+        const locality = all.sublocality_level_1 || all.sublocality || all.neighborhood || all.locality || all.administrative_area_level_3 || '';
+        const city = all.locality || all.administrative_area_level_2 || all.administrative_area_level_1 || '';
+        return { road: road || result.formatted_address || '', locality: locality || city || result.formatted_address || '', city: city || locality || '' };
+    };
+    function fillFromPin(position) {
+        if (!activeAddressForm || !addressGeocoder) return;
+        const status = document.getElementById('freshful-address-map-status');
+        if (status) status.textContent = 'Finding this address…';
+        addressGeocoder.geocode({ location: position }, function (results, resultStatus) {
+            if (resultStatus !== 'OK' || !results || !results[0]) {
+                if (status) status.textContent = 'Pin saved. Please complete the address fields manually.';
+                return;
+            }
+            const result = results[0], data = parts(result);
+            const set = (name, value) => { const input = activeAddressForm.querySelector('[name="' + name + '"]'); if (input && value) input.value = value; };
+            set('street_name', data.road);
+            set('locality', data.locality);
+            set('city', data.city);
+            set('latitude', typeof position.lat === 'function' ? position.lat() : position.lat);
+            set('longitude', typeof position.lng === 'function' ? position.lng() : position.lng);
+            if (status) status.textContent = 'Pinned: ' + result.formatted_address;
+        });
+    }
+    function initAddressMap() {
+        const mapElement = document.getElementById('freshful-address-map');
+        const form = document.querySelector('[data-freshful-address-form]');
+        if (!mapElement || !form || !form.closest('.modal')?.classList.contains('show')) return;
+        activeAddressForm = form;
+        if (!window.google || !google.maps) { setTimeout(initAddressMap, 450); return; }
+        addressGeocoder = addressGeocoder || new google.maps.Geocoder();
+        const search = document.getElementById('freshful-address-map-search');
+        if (!addressMap) {
+            addressMap = new google.maps.Map(mapElement, { center: { lat: 20.5937, lng: 78.9629 }, zoom: 5, mapTypeControl: false, streetViewControl: false, fullscreenControl: true });
+            addressMarker = new google.maps.Marker({ map: addressMap, draggable: true, icon: freshfulLocationPinIcon(), title: 'Delivery address', zIndex: 999999 });
+            addressMap.addListener('click', e => { addressMap.setCenter(e.latLng); addressMap.setZoom(Math.max(addressMap.getZoom(), 15)); addressMarker.setPosition(e.latLng); fillFromPin(e.latLng); });
+            addressMarker.addListener('dragend', e => fillFromPin(e.latLng));
+        }
+        google.maps.event.trigger(addressMap, 'resize');
+        if (search && !search.dataset.autocompleteReady) {
+            addressAutocomplete = new google.maps.places.Autocomplete(search, { types: ['geocode'], componentRestrictions: { country: 'in' } });
+            addressAutocomplete.addListener('place_changed', function () {
+                const place = addressAutocomplete.getPlace();
+                if (!place.geometry) return;
+                addressMap.setCenter(place.geometry.location); addressMap.setZoom(16); addressMarker.setPosition(place.geometry.location); fillFromPin(place.geometry.location);
+            });
+            search.dataset.autocompleteReady = '1';
+        }
+        const lat = Number(form.querySelector('[name="latitude"]')?.value);
+        const lng = Number(form.querySelector('[name="longitude"]')?.value);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && (lat || lng)) {
+            const position = { lat, lng }; addressMap.setCenter(position); addressMap.setZoom(16); addressMarker.setPosition(position);
+        } else {
+            const placeText = [form.querySelector('[name="street_name"]')?.value, form.querySelector('[name="locality"]')?.value, form.querySelector('[name="city"]')?.value].filter(Boolean).join(', ');
+            if (placeText) addressGeocoder.geocode({ address: placeText }, (results, status) => { if (status === 'OK' && results[0]) { addressMap.setCenter(results[0].geometry.location); addressMap.setZoom(15); addressMarker.setPosition(results[0].geometry.location); } });
+        }
+    }
+    function resetAddressForm() {
+        const form = document.querySelector('[data-freshful-address-form]'); if (!form) return;
+        form.reset(); form.querySelector('[name="address_id"]').value = '';
+        const modal = form.closest('.modal'), title = modal.querySelector('.modal-title'), save = modal.querySelector('[data-address-save]');
+        if (title) title.textContent = 'Add delivery address'; if (save) save.textContent = 'Save Address';
+        const status = document.getElementById('freshful-address-map-status'); if (status) status.textContent = 'Click the map to place the pin.';
+        if (addressMarker) addressMarker.setPosition(null);
+    }
+    document.addEventListener('click', function (event) {
+        const add = event.target.closest('[data-freshful-add-address]');
+        if (add) { resetAddressForm(); return; }
+        const edit = event.target.closest('.freshful-edit-address');
+        if (edit) {
+            event.preventDefault(); resetAddressForm();
+            const form = document.querySelector('[data-freshful-address-form]'), modalEl = form?.closest('.modal');
+            if (!form || !modalEl) return;
+            const data = {
+                id: edit.dataset.addressId || '', name: edit.dataset.addressName || '', phone: edit.dataset.addressPhone || '',
+                locality: edit.dataset.addressLocality || '', street_name: edit.dataset.addressStreetName || '', landmark: edit.dataset.addressLandmark || '',
+                city: edit.dataset.addressCity || '', type: edit.dataset.addressType || '', latitude: edit.dataset.addressLatitude || '', longitude: edit.dataset.addressLongitude || ''
+            };
+            Object.keys(data).forEach(key => { const input = form.querySelector('[name="' + key + '"]'); if (input && data[key] !== null && data[key] !== undefined) input.value = data[key]; });
+            modalEl.querySelector('.modal-title').textContent = 'Edit delivery address'; modalEl.querySelector('[data-address-save]').textContent = 'Update Address';
+            bootstrap.Modal.getOrCreateInstance(modalEl).show(); setTimeout(initAddressMap, 200);
+        }
+        if (event.target.closest('[data-freshful-use-location]')) {
+            if (!navigator.geolocation) { const status = document.getElementById('freshful-address-map-status'); if (status) status.textContent = 'Location access is not available in this browser.'; return; }
+            const status = document.getElementById('freshful-address-map-status'); if (status) status.textContent = 'Getting your current location…';
+            navigator.geolocation.getCurrentPosition(pos => { if (!addressMap) return; const p = { lat: pos.coords.latitude, lng: pos.coords.longitude }; addressMap.setCenter(p); addressMap.setZoom(17); addressMarker.setPosition(p); fillFromPin(p); }, () => { if (status) status.textContent = 'Location access was blocked. Search or pin the map instead.'; });
+        }
+    });
+    document.addEventListener('shown.bs.modal', function (event) { if (event.target.querySelector('#freshful-address-map')) setTimeout(initAddressMap, 150); });
 })();
 </script>
