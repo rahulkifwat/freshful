@@ -557,6 +557,9 @@ class HomeController extends Controller
 
     $data['type'] = $type;
 
+    // buyer_address columns are NOT NULL; an empty optional landmark arrives as null.
+    $data['landmark'] = (string) ($data['landmark'] ?? '');
+
     // Support both current form fields and legacy form fields.
     $lat = $request->filled('user_lat')
         ? $request->input('user_lat')
@@ -606,7 +609,7 @@ class HomeController extends Controller
     }
 
     if (Schema::hasColumn($table, 'hub_id')) {
-        $data['hub_id'] = is_numeric($hubId) ? (int) $hubId : null;
+        $data['hub_id'] = is_numeric($hubId) ? (int) $hubId : 0; // NOT NULL column, 0 = no hub yet
     }
 
     // Keep compatibility with databases that have explicit timestamps.
