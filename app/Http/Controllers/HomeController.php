@@ -512,64 +512,149 @@ class HomeController extends Controller
     }
 
     public function storeAddress(Request $request)
-    {
-        $data = $request->validate([
-            'address_id' => 'nullable|integer',
-            'name' => 'required|string|max:150',
-            'phone' => 'required|string|max:30',
-            'locality' => 'required|string|max:255',
-            'street_name' => 'required|string|max:500',
-            'landmark' => 'nullable|string|max:255',
-            'city' => 'required|string|max:150',
-            'type' => 'required|string|max:50',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
-        ]);
+{
+    $data = $request->validate([
+        'address_id' => 'nullable|integer',
+        'name' => 'required|string|max:150',
+        'phone' => 'required|string|max:30',
+        'locality' => 'required|string|max:255',
+        'street_name' => 'required|string|max:500',
+        'landmark' => 'nullable|string|max:255',
+        'city' => 'required|string|max:150',
+        'type' => 'required|string|max:50',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
+        'user_lat' => 'nullable|numeric|between:-90,90',
+        'user_lng' => 'nullable|numeric|between:-180,180',
+        'hub_id' => 'nullable|integer',
+    ]);
 
-        $addressId = $data['address_id'] ?? null;
-        unset($data['address_id']);
-        $data['type'] = $this->fitAddressType((string) $data['type']);   // Fix 21 Oct 2026: match what the database column accepts
-        foreach (['created_at', 'updated_at'] as $timestamp) {
-            if (Schema::hasColumn('buyer_address', $timestamp)) {
-                $data[$timestamp] = now();
-            }
-        }
-        foreach (['latitude', 'longitude'] as $coordinate) {
-            if (!Schema::hasColumn('buyer_address', $coordinate)) {
-                unset($data[$coordinate]);
-            }
-        }
+    $addressId = $data['address_id'] ?? null;
 
-        if ($addressId) {
-            $address = BuyersAddress::where('buyer_id', Auth::id())->findOrFail($addressId);
-            $address->update($data);
-            $message = 'Address updated successfully';
-        } else {
-            $data['buyer_id'] = Auth::id();
-            $address = BuyersAddress::create($data);
-            $message = 'Address added successfully';
-        }
-        // Fix 21 Oct 2026: remember where this address is on the map and which hub delivers there.
-        try {
-            $geo = [];
-            $lat = $data['latitude'] ?? null; $lng = $data['longitude'] ?? null;
-            $ckCity = trim((string) ($_COOKIE['city'] ?? ''));
-            $sameCity = $ckCity !== '' && (stripos((string) $data['city'], $ckCity) !== false || stripos($ckCity, (string) $data['city']) !== false);
-            if ((!is_numeric($lat) || !is_numeric($lng)) && $sameCity && is_numeric($_COOKIE['lat'] ?? null) && is_numeric($_COOKIE['lng'] ?? null)) {
-                $lat = (float) $_COOKIE['lat']; $lng = (float) $_COOKIE['lng'];
-            }
-            if (is_numeric($lat) && is_numeric($lng)) {
-                if (Schema::hasColumn('buyer_address', 'latitude')) { $geo['latitude'] = $lat; $geo['longitude'] = $lng; }
-                $hubForAddress = \App\Services\HubLocator::locate((float) $lat, (float) $lng);
-                if (Schema::hasColumn('buyer_address', 'hub_id')) $geo['hub_id'] = $hubForAddress->id ?? null;
-            }
-            if ($geo && !empty($address->id)) DB::table('buyer_address')->where('id', $address->id)->where('buyer_id', Auth::id())->update($geo);
-        } catch (\Throwable $e) {
-            report($e);
-        }
+    unset(
+        $data['address_id'],
+        $data['latitude'],
+        $data['longitude'],
+        $data['user_lat'],
+        $data['user_lng'],
+        $data['hub_id']
+    );
 
-        return back()->with('success', $message);
+    // Normalize address type for the database enum.
+    $type = match (strtolower(trim((string) $request->input('type')))) {
+        'home' => 'Home',
+        'work', 'office' => 'Office',
+        'other', 'others' => 'Others',
+        default => '',
+    };
+
+    if ($type === '') {
+        return back()->withInput()->with(
+            'error',
+            'Please select a valid address type.'
+        );
     }
+
+    $data['type'] = $type;
+
+    // Support both current form fields and legacy form fields.
+    $lat = $request->filled('user_lat')
+        ? $request->input('user_lat')
+        : ($request->filled('latitude')
+            ? $request->input('latitude')
+            : ($_COOKIE['lat'] ?? null));
+
+    $lng = $request->filled('user_lng')
+        ? $request->input('user_lng')
+        : ($request->filled('longitude')
+            ? $request->input('longitude')
+            : ($_COOKIE['lng'] ?? null));
+
+    $hubId = $request->filled('hub_id')
+        ? $request->input('hub_id')
+        : ($_COOKIE['hub_id'] ?? session('hub_session_id', 0));
+
+    // Preserve the delivery-location requirement for driver navigation.
+    if (
+        !is_numeric($lat) ||
+        !is_numeric($lng) ||
+        ((float) $lat == 0.0 && (float) $lng == 0.0)
+    ) {
+        return back()->withInput()->with(
+            'error',
+            'Please select your delivery location first.'
+        );
+    }
+
+    $table = 'buyer_address';
+
+    // Save whichever coordinate columns exist in this database.
+    if (Schema::hasColumn($table, 'latitude')) {
+        $data['latitude'] = (float) $lat;
+    }
+
+    if (Schema::hasColumn($table, 'longitude')) {
+        $data['longitude'] = (float) $lng;
+    }
+
+    if (Schema::hasColumn($table, 'user_lat')) {
+        $data['user_lat'] = (string) $lat;
+    }
+
+    if (Schema::hasColumn($table, 'user_lng')) {
+        $data['user_lng'] = (string) $lng;
+    }
+
+    if (Schema::hasColumn($table, 'hub_id')) {
+        $data['hub_id'] = is_numeric($hubId) ? (int) $hubId : null;
+    }
+
+    // Keep compatibility with databases that have explicit timestamps.
+    foreach (['created_at', 'updated_at'] as $timestamp) {
+        if (Schema::hasColumn($table, $timestamp)) {
+            $data[$timestamp] = now();
+        }
+    }
+
+    if ($addressId) {
+        $address = BuyersAddress::where('buyer_id', Auth::id())
+            ->findOrFail($addressId);
+
+        $address->update($data);
+        $message = 'Address updated successfully';
+    } else {
+        $data['buyer_id'] = Auth::id();
+
+        if (Schema::hasColumn($table, 'status')) {
+            $data['status'] = 'active';
+        }
+
+        $address = BuyersAddress::create($data);
+        $message = 'Address added successfully';
+    }
+
+    // Recalculate the delivery hub when the locator is available.
+    try {
+        $hubForAddress = \App\Services\HubLocator::locate(
+            (float) $lat,
+            (float) $lng
+        );
+
+        if (
+            Schema::hasColumn($table, 'hub_id') &&
+            !empty($hubForAddress->id)
+        ) {
+            DB::table($table)
+                ->where('id', $address->id)
+                ->where('buyer_id', Auth::id())
+                ->update(['hub_id' => $hubForAddress->id]);
+        }
+    } catch (\Throwable $e) {
+        report($e);
+    }
+
+    return back()->with('success', $message);
+}
 
     public function deleteAddress($id)
     {
