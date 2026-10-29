@@ -426,18 +426,44 @@ class HomeController extends Controller
             'street_name' => 'required',
             'city' => 'required',
             'landmark' => 'required',
-            'type' => 'required'
+            'type' => 'required',
+            'user_lat' => 'nullable|numeric|between:-90,90',
+            'user_lng' => 'nullable|numeric|between:-180,180',
+            'hub_id' => 'nullable|integer',
         ]);
+
+        // Delivery location: from the form if it sends one, otherwise the location the customer
+        // picked on the site (cookies set by checkHub), same as the legacy PHP site.
+        $lat = $request->filled('user_lat') ? $request->user_lat : ($_COOKIE['lat'] ?? null);
+        $lng = $request->filled('user_lng') ? $request->user_lng : ($_COOKIE['lng'] ?? null);
+        $hubId = $request->filled('hub_id') ? $request->hub_id : ($_COOKIE['hub_id'] ?? session('hub_session_id', 0));
+
+        // Without coordinates the driver app can't navigate to the address.
+        if (! is_numeric($lat) || ! is_numeric($lng) || ((float) $lat == 0.0 && (float) $lng == 0.0)) {
+            return back()->withInput()->with('error', 'Please select your delivery location first.');
+        }
+
+        // buyer_address.type is enum('Home','Office','Others'); the forms send home/work/other.
+        $type = match (strtolower(trim((string) $request->type))) {
+            'home'                    => 'Home',
+            'work', 'office'          => 'Office',
+            'other', 'others'         => 'Others',
+            default                   => '',
+        };
 
         BuyersAddress::create([
             'buyer_id' => Auth::id(),
+            'hub_id' => (int) $hubId,
+            'user_lat' => (string) $lat,
+            'user_lng' => (string) $lng,
             'name' => $request->name,
             'phone' => $request->phone,
             'locality' => $request->locality,
             'street_name' => $request->street_name,
             'landmark' => $request->landmark,
             'city' => $request->city,
-            'type' => $request->type
+            'type' => $type,
+            'status' => 'active',
         ]);
 
         return back()->with('success', 'Address added successfully');
