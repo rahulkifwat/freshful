@@ -181,6 +181,7 @@ class OrderController extends DriverController
             'result'  => true,
             'message' => $orders ? 'success' : 'No assigned orders',
             'orders'  => $orders,
+            'rider_id' => $this->driverId($request),
             'count'   => count($orders),
             'summary' => [
                 'pending'     => count(array_filter($orders, fn ($o) => $o['stage'] === 'pending')),
