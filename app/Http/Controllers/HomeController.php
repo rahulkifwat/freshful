@@ -483,8 +483,7 @@ class HomeController extends Controller
             'product_id' => $product_id,
             'rating'     => $rating,
             'feedback'   => $feedback,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'date_added' => now(),
         ]);
 
         return response()->json(['result' => true, 'message' => 'Rating Added Successfully']);
@@ -979,6 +978,9 @@ class HomeController extends Controller
 
         DB::beginTransaction();
         try {
+            $sgLines = [];
+            foreach ($cart_items as $sgItem) { $sgLines[(int) $sgItem->product_id] = ($sgLines[(int) $sgItem->product_id] ?? 0) + (float) $sgItem->quantity; }
+            if ($sgMsg = \App\Services\Stock\StockGuard::shortage((int) $hubId, $sgLines)) { DB::rollBack(); return response()->json(['result' => false, 'message' => $sgMsg]); }
             $ordersHasCreatedAt = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'created_at');
             $ordersHasUpdatedAt = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'updated_at');
             $ordersHasCancelReason = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'reason_for_order_cancel');

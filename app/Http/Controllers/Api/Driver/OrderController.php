@@ -15,7 +15,7 @@ class OrderController extends DriverController
     /** /api/driver/orders/driver-orders — rider's orders grouped into today / weekly / monthly */
     public function index(Request $request): JsonResponse
     {
-        $orders = DB::table('orders')->where('rider_id', $this->driverId($request))->orderByDesc('date_added')->get();
+        $orders = DB::table('orders')->whereIn("rider_id", $this->rb($request))->orderByDesc('date_added')->get();
 
         $now = Carbon::now(self::TZ);
         $today = $now->toDateString();
@@ -102,7 +102,7 @@ class OrderController extends DriverController
         }
 
         $orders = $this->rows($this->ordersWithDetails()
-            ->where('o.rider_id', $this->driverId($request))
+            ->whereIn("o.rider_id", $this->rb($request))
             ->where('o.order_status', $status)
             ->orderByDesc('o.date_added')
             ->get());
@@ -119,7 +119,7 @@ class OrderController extends DriverController
     public function assigned(Request $request): JsonResponse
     {
         $groups = [
-            'pending'     => ['Order Placed', 'Order Processed'],
+            'pending'     => ['Order Placed'],
             'in_progress' => ['Order Dispatched', 'Order Shipped'],
         ];
         $filter = $request->input('filter', 'all');
@@ -131,18 +131,28 @@ class OrderController extends DriverController
         $rows = $this->ordersWithDetails()
             ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
             ->addSelect('p.product_name', 'p.product_image', 'p.product_unit')
-            ->where('o.rider_id', $this->driverId($request))
+            ->whereIn("o.rider_id", $this->rb($request))
             ->whereIn('o.order_status', $statuses)
             ->orderBy('o.date_added')
             ->orderBy('o.id')
             ->get();
 
+        $acc = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('pos_rider_assign') && $rows->isNotEmpty()) {
+                $ids = $rows->pluck('order_id')->unique()->values()->all();
+                DB::table('pos_rider_assign')->whereIn('order_id', $ids)->whereNull('seen_at')->update(['seen_at' => now()]);
+                $acc = DB::table('pos_rider_assign')->whereIn('order_id', $ids)->whereNotNull('accepted_at')->pluck('accepted_at', 'order_id');
+            }
+        } catch (\Throwable $e) {
+        }
         $orders = [];
         foreach ($rows as $row) {
             $order = &$orders[$row->order_id];
             $order ??= [
                 'order_id'          => $row->order_id,
                 'order_status'      => $row->order_status,
+                'accepted'          => isset($acc[$row->order_id]),
                 'stage'             => in_array($row->order_status, $groups['pending'], true) ? 'pending' : 'in_progress',
                 'total_amount'      => $row->total_amount,
                 'amount_to_collect' => $row->amount_to_collect,
@@ -198,8 +208,22 @@ class OrderController extends DriverController
     public function deliver(Request $request): JsonResponse
     {
         $orderId = trim((string) $this->requireFilled($request, 'order_id'));
-        $driverId = (int) $this->driverId($request);
+        $driverId = (int) $this->rb($request)->value("id");
         $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
+
+        $viaPos = $this->deliverViaPos($orderId, $driverId);
+        if ($viaPos) {
+            $f = DB::table('orders')->where('order_id', $orderId)->first(['payment_type', 'amount_to_collect', 'delivery_complete_time']);
+            return $this->respond([
+                'result'            => true,
+                'message'           => 'Order delivered successfully',
+                'order_id'          => $orderId,
+                'order_status'      => 'Order Delivered',
+                'delivered_at'      => $f->delivery_complete_time ?? $this->now(),
+                'payment_type'      => $f->payment_type ?? null,
+                'amount_to_collect' => $f->amount_to_collect ?? null,
+            ]);
+        }
 
         $result = DB::transaction(function () use ($orderId, $driverId, $deliverable) {
             $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
@@ -249,7 +273,59 @@ class OrderController extends DriverController
         ]);
     }
 
-    private function ordersWithDetails()
+/** POS2: the rider accepts an order the hub assigned to him (POST orders/accept, order_id). */
+    public function accept(Request $request): JsonResponse
+    {
+        $orderId = trim((string) $this->requireFilled($request, 'order_id'));
+        $mine = $this->rb($request)->pluck('id')->map(fn ($i) => (int) $i)->all();
+        $row = DB::table('orders')->where('order_id', $orderId)->first(['rider_id', 'order_status', 'hub_id']);
+        if (! $row) {
+            throw new ApiException('Order not found');
+        }
+        if (! in_array((int) $row->rider_id, $mine, true)) {
+            throw new ApiException('This order is not assigned to you');
+        }
+        if (! in_array($row->order_status, ['Order Placed', 'Order Dispatched', 'Order Shipped'], true)) {
+            throw new ApiException('This order can no longer be accepted');
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('pos_rider_assign')) {
+            $cur = DB::table('pos_rider_assign')->where('order_id', $orderId)->first();
+            if ($cur) {
+                if (empty($cur->accepted_at)) {
+                    DB::table('pos_rider_assign')->where('order_id', $orderId)->update(['accepted_at' => now(), 'seen_at' => $cur->seen_at ?: now()]);
+                }
+            } else {
+                DB::table('pos_rider_assign')->insert(['order_id' => $orderId, 'rider_id' => (int) $row->rider_id, 'hub_id' => (int) $row->hub_id, 'assigned_at' => now(), 'seen_at' => now(), 'accepted_at' => now()]);
+            }
+        }
+
+        return $this->respond(['result' => true, 'message' => 'Order accepted', 'order_id' => $orderId, 'accepted' => true]);
+    }
+
+    /** POS2: a rider delivery runs through the same step the hub uses, so cash orders wait for settlement and prepaid ones close themselves. */
+    private function deliverViaPos(string $orderId, int $driverId): ?array
+    {
+        $out = ['Order Dispatched', 'Order Shipped'];
+        try {
+            $p = DB::table('orders')->where('order_id', $orderId)->get(['order_status', 'rider_id', 'hub_id']);
+            if ($p->isEmpty() || $p->contains(fn ($r) => (int) $r->rider_id !== $driverId || ! in_array($r->order_status, $out, true))) {
+                return null;
+            }
+            $hub = (int) $p->first()->hub_id;
+            if ($hub <= 0 || ! class_exists(\App\Services\PosConsole\PosConsoleService::class)) {
+                return null;
+            }
+            $res = (new \App\Services\PosConsole\PosConsoleService($hub))->act($orderId, 'deliver', null, null, ['guard' => 'rider', 'id' => $driverId]);
+
+            return ! empty($res['ok']) ? $res : null;
+        } catch (\Throwable $e) {
+            $s = DB::table('orders')->where('order_id', $orderId)->value('order_status');
+
+            return in_array($s, ['Order Processed', 'Order Delivered'], true) ? ['ok' => true, 'to' => $s] : null;
+        }
+    }
+
+    private function rb($r){return DB::table("delivery_boy")->where("regid",$r->attributes->get("driver")["id"])->select("id");}     private function ordersWithDetails()
     {
         return DB::table('orders as o')
             ->leftJoin('buyers as b', 'b.id', '=', 'o.buyer_id')

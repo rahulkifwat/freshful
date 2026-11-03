@@ -63,7 +63,6 @@
                             <button type="button" onclick="document.getElementById('detailQuantity').stepUp()" aria-label="Increase quantity">+</button>
                         </div>
                         <button type="button" onclick="addSelectedProductQuantity({{ $product->id }})" class="btn btn-primary rounded-pill px-4 py-2 fw-bold"><i class="bi bi-basket2 me-1"></i>Add to Cart</button>
-                        <button type="button" onclick="addProductToCompare({{ $product->id }})" class="btn btn-outline-secondary rounded-pill px-3 py-2"><i class="bi bi-arrow-left-right me-1"></i>Compare</button>
                     </div>
                     <hr class="my-3">
                     <div class="ff-detail-meta">

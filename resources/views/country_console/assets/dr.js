@@ -68,6 +68,86 @@
         [{ t: 'Reject', cls: 'solid-bad', fn: function (b) { var v = $('drRj').value.trim(); if (v.length < 5) { toast('Write the message to the driver.', 'bad'); return; } act(b, '/ad/drivers/' + d.id + '/reject', { reason: v }, function () { closeModal(); refreshBadge(); if (after) after(); }); } }]);
       document.querySelectorAll('#ccMBody [data-q]').forEach(function (b) { b.addEventListener('click', function () { var t = $('drRj'); t.value = (t.value.trim() ? t.value.trim() + '\n' : '') + b.getAttribute('data-q'); t.focus(); }); });
     }
+      /* ---- drivers2: edit / delete / change hub (additive) ---- */
+  function drCss() {
+    if (document.getElementById('drEdCss')) return;
+    var s = document.createElement('style');
+    s.id = 'drEdCss';
+    s.textContent = '.dr-ed,.dr-del{border:1px solid #e5d9d3;background:#fff;color:#7a1d0a;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;margin-right:4px}' +
+      '.dr-ed:hover{background:linear-gradient(135deg,#F70202,#FF5500);color:#fff;border-color:transparent}' +
+      '.dr-del{color:#b00000}.dr-del:hover{background:#b00000;color:#fff;border-color:transparent}' +
+      '.dr-fg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}' +
+      '.dr-fg label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:3px}' +
+      '.dr-fg input,.dr-fg select,.dr-fg textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:13px;background:#fff}' +
+      '.dr-fg .full{grid-column:1/-1}.dr-h{grid-column:1/-1;font-weight:700;font-size:13px;margin-top:6px;color:#7a1d0a;border-bottom:1px solid #eee;padding-bottom:3px}' +
+      '.dr-note{grid-column:1/-1;font-size:12px;background:#fff4ee;border:1px solid #ffd8c4;border-radius:8px;padding:7px 10px;color:#7a3b1d}' +
+      '@media(max-width:640px){.dr-fg{grid-template-columns:1fr}}';
+    document.head.appendChild(s);
+  }
+
+  function editDriver(id, after) {
+    drCss();
+    Promise.resolve(api('/ad/drivers/' + id + '/edit-data')).then(function (d) {
+      if (!d || d.ok === false) { toast((d && d.message) || 'Could not load the driver', 'bad'); return; }
+      var f = d.fields || {};
+      var hubs = d.hubs || [];
+      var byCity = {}, order = [];
+      hubs.forEach(function (h) { var c = h.city || 'No city'; if (!byCity[c]) { byCity[c] = []; order.push(c); } byCity[c].push(h); });
+      var opts = '<option value="0">No hub</option>';
+      order.forEach(function (c) {
+        opts += '<optgroup label="' + esc(c) + '">';
+        byCity[c].forEach(function (h) {
+          opts += '<option value="' + h.id + '"' + (String(h.id) === String(f.hub_id) ? ' selected' : '') + '>' + esc(h.name) + (h.active ? '' : ' (inactive)') + '</option>';
+        });
+        opts += '</optgroup>';
+      });
+      function inp(key, label, type, full) {
+        return '<div' + (full ? ' class="full"' : '') + '><label>' + label + '</label><input id="edf-' + key + '" type="' + (type || 'text') + '" value="' + esc(f[key] == null ? '' : f[key]) + '"></div>';
+      }
+      var h = '<div class="dr-fg">' +
+        '<div class="dr-h">Account</div>' +
+        inp('name', 'Full name') + inp('emp_no', 'Employee number') +
+        inp('phone', 'Phone') + inp('email', 'Email', 'email') +
+        '<div class="dr-h">Hub, city and location</div>' +
+        '<div><label>Hub (city follows the hub)</label><select id="edf-hub_id">' + opts + '</select></div>' +
+        '<div><label>Delivery status</label><select id="edf-boy_status">' +
+        ['active', 'disabled', 'pending'].map(function (s) { return '<option value="' + s + '"' + (f.boy_status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>' +
+        '<div class="full"><label>Home address / relocation address</label><textarea id="edf-address" rows="2">' + esc(f.address || '') + '</textarea></div>' +
+        (d.open_orders ? '<div class="dr-note">This driver has ' + d.open_orders + ' open order(s). The hub cannot be changed until they are delivered.</div>' : '') +
+        '<div class="dr-h">Personal</div>' +
+        inp('father_name', 'Father name') + inp('dob', 'Date of birth', 'date') +
+        inp('blood_group', 'Blood group') + inp('language', 'Language') +
+        '<div class="dr-h">Emergency contact</div>' +
+        inp('emergency_name', 'Name') + inp('emergency_phone', 'Phone') +
+        inp('emergency_relationship', 'Relationship', 'text', true) +
+        '<div class="dr-h">Vehicle</div>' +
+        inp('vehicle_type', 'Vehicle type') + inp('vehicle_number', 'Vehicle number') +
+        '</div>';
+      openModal('Edit driver: ' + esc(f.name || ''), h, [{
+        t: 'Save changes', cls: 'pri', fn: function (btn) {
+          var body = {};
+          ['name', 'emp_no', 'phone', 'email', 'hub_id', 'boy_status', 'address', 'father_name', 'dob', 'blood_group', 'language',
+            'emergency_name', 'emergency_phone', 'emergency_relationship', 'vehicle_type', 'vehicle_number'].forEach(function (k) {
+            var e = document.getElementById('edf-' + k);
+            body[k] = e ? e.value : '';
+          });
+          act(btn, '/ad/drivers/' + id + '/edit', body, function () { closeModal(); if (after) after(); });
+        }
+      }]);
+    });
+  }
+
+  function deleteDriver(r, after) {
+    Promise.resolve(ask({
+      title: 'Delete driver',
+      text: 'Delete ' + (r.name || 'this driver') + ' permanently? Drivers with orders or wallet history cannot be deleted, deactivate them instead.',
+      ok: 'Delete', tone: 'danger', cancel: 'Keep'
+    })).then(function (yes) {
+      if (!yes) return;
+      act(null, '/ad/drivers/' + r.id + '/delete', {}, function () { if (after) after(); });
+    });
+  }
+
     function toggleFlow(r, btn, after) {
       var off = !r.suspended;
       var go = function () { act(btn, '/ad/drivers/' + r.id + '/toggle', {}, function () { if (after) after(); }); };
@@ -89,6 +169,7 @@
     }
 
     /* ------------------------------------------------------------------ driver file (review + everything about the driver) */
+    K.driverDrawer = driverDrawer;
     function driverDrawer(id, after, focus, keep) {
       if (keep == null) openDrawer('Driver', '<div class="cc-load"><i></i>Loading…</div>');
       var reload = function () { driverDrawer(id, after, null, $('ccDBody').scrollTop); if (after) after(); };
@@ -221,10 +302,12 @@
             { k: 'wallet', t: 'Wallet', n: 1, f: function (r) { return r.wallet == null ? '<span class="muted">–</span>' : money2(r.wallet); } },
             { k: 'open', t: 'Orders', n: 1, f: function (r) { return '<b>' + r.open + '</b> open<small>' + r.delivered30 + ' delivered · 30 d</small>'; }, c: function (r) { return r.open; } },
             { k: 'seen', t: 'Last seen', n: 1, f: function (r) { return since(r.seen); }, c: function (r) { return r.seen ? dt(r.seen) : ''; } },
-            { k: '_a', t: '', nosort: 1, csv: false, f: function (r) { return '<div class="ad-acts">' + (r.state === 'pending' ? '<button type="button" class="cc-btn pri" data-rv="' + r.id + '">Review</button>' : '') +
+            { k: '_a', t: '', nosort: 1, csv: false, f: function (r) { return '<div class="ad-acts">' + '<button type="button" class="dr-ed" data-ed="' + r.id + '">Edit</button><button type="button" class="dr-del" data-dl="' + r.id + '">Delete</button>' + (r.state === 'pending' ? '<button type="button" class="cc-btn pri" data-rv="' + r.id + '">Review</button>' : '') +
               '<button type="button" class="ad-sw' + (r.suspended ? '' : ' is-on') + '" role="switch" aria-checked="' + (r.suspended ? 'false' : 'true') + '" aria-label="Account active" title="' + (r.suspended ? 'Deactivated: click to activate' : 'Active: click to deactivate') + '" data-tg="' + r.id + '"><i></i></button></div>'; } }],
             rows, { per: 50, csv: 'freshful-drivers.csv', empty: q ? 'No driver matches.' : 'No drivers here.', click: function (r) { driverDrawer(r.id, function () { V['dr-list'].run(root); }); }, after: function (w) {
               w.querySelectorAll('[data-rv]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); driverDrawer(+b.getAttribute('data-rv'), function () { V['dr-list'].run(root); }); }); });
+              w.querySelectorAll('[data-ed]').forEach(function (x) { x.addEventListener('click', function (e) { e.stopPropagation(); editDriver(parseInt(x.getAttribute('data-ed'), 10), function () { V['dr-list'].run(root); }); }); });
+              w.querySelectorAll('[data-dl]').forEach(function (x) { x.addEventListener('click', function (e) { e.stopPropagation(); var id = parseInt(x.getAttribute('data-dl'), 10); var r = d.rows.filter(function (q) { return q.id === id; })[0] || { id: id }; deleteDriver(r, function () { V['dr-list'].run(root); }); }); });
               w.querySelectorAll('[data-tg]').forEach(function (x) { x.addEventListener('click', function (e) {
                 e.stopPropagation();
                 var r = d.rows.filter(function (y) { return y.id === +x.getAttribute('data-tg'); })[0];

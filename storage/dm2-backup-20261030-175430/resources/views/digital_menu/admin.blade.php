@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Digital Menu | Freshful admin</title>
+@verbatim
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f6f4f2;color:#1c1c1e;font-size:14px}
+.wrap{max-width:1360px;margin:0 auto;padding:18px 16px 90px}
+h1{font-size:24px;margin:0}h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:16px 0 8px}
+.sub{color:#5f5f63;margin:2px 0 0}
+.top{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.top .sp{flex:1}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{border:1px solid #d9d4cf;background:#fff;border-radius:999px;padding:9px 20px;font-weight:700;cursor:pointer;font-size:14px;color:#1c1c1e}
+.tab.on{border-color:transparent;color:#fff;background:linear-gradient(110deg,#F70202,#FF5500)}
+.card{background:#fff;border:1px solid #ece7e3;border-radius:16px;padding:18px;margin-bottom:16px}
+.btn{border:0;border-radius:999px;padding:10px 20px;font-weight:700;color:#fff;background:linear-gradient(110deg,#F70202,#FF5500);cursor:pointer;font-size:14px}
+.btn.ghost{background:#fff;color:#1c1c1e;border:1px solid #d9d4cf}.btn.dark{background:#1c1c1e}.btn.sm{padding:6px 14px;font-size:12px}.btn[disabled]{opacity:.5;cursor:default}
+.btn.danger{background:#fff;color:#b42318;border:1px solid #f0c7c3}
+input[type=text],input[type=number],input[type=search],input[type=datetime-local],select,textarea{width:100%;padding:10px 12px;border:1px solid #d9d4cf;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:#1c1c1e}
+textarea{resize:vertical;min-height:64px}
+input[type=color]{width:54px;height:38px;border:1px solid #d9d4cf;border-radius:8px;padding:2px;background:#fff;cursor:pointer}
+label.l{display:block;font-size:12px;font-weight:700;margin:0 0 5px;color:#3b3b3f}
+.f{margin-bottom:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12px;color:#6b6b70}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sc{background:#fff;border:1px solid #ece7e3;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.sc .nm{font-size:16px;font-weight:800}
+.pill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;background:#f1eeeb;color:#4b4b50}
+.pill.live{background:linear-gradient(110deg,#F70202,#FF5500);color:#fff}.pill.draft{background:#fff1e0;color:#9a4a00}.pill.off{background:#e9e7e5;color:#6b6b70}
+.shape{border:2px solid #cfc8c2;border-radius:6px;background:#faf8f6;display:inline-block;vertical-align:middle}
+.shape.L{width:34px;height:20px}.shape.P{width:20px;height:34px}
+.edit{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:18px;align-items:start}
+@media(max-width:1100px){.edit{grid-template-columns:1fr}}
+.prev{position:sticky;top:10px}
+.pbox{position:relative;border-radius:14px;overflow:hidden;background:#111;border:1px solid #d9d4cf}
+.pbox iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:#111}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{border:1px solid #d9d4cf;background:#fff;border-radius:12px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:13px;color:#1c1c1e;font-family:inherit}
+.seg button.on{border-color:#F70202;background:#fef2f2;color:#b91c1c}
+.lay{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.lay button{border:1px solid #d9d4cf;background:#fff;border-radius:12px;padding:10px 6px 8px;cursor:pointer;font-size:12px;font-weight:700;color:#1c1c1e;font-family:inherit}
+.lay button.on{border-color:#F70202;background:#fef2f2;color:#b91c1c}
+.pic{display:flex;gap:3px;height:30px;justify-content:center;margin-bottom:6px}.pic i{display:block;background:#d8d2cc;border-radius:3px;flex:1;max-width:30px}.pic.board{flex-direction:column}.pic.board i{max-width:none;height:5px;flex:none}.pic.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.pic.gr i{max-width:none}
+.lay button.on .pic i{background:#f7a5a5}
+.pl{border:1px solid #ece7e3;border-radius:12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;padding:8px 10px;background:#fff}
+.pl.drag{opacity:.4}.pl .h{cursor:grab;color:#9a9a9f;font-size:18px;padding:0 4px;user-select:none}
+.pl img,.thumb{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#f1eeeb;flex:none}
+.pl .t{flex:1;min-width:0}.pl .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl .t span{font-size:12px;color:#6b6b70}
+.ib{border:1px solid #d9d4cf;background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px;color:#1c1c1e}.ib[disabled]{opacity:.35;cursor:default}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #d9d4cf;background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;font-family:inherit;color:#1c1c1e}
+.chip.on{border-color:#F70202;background:#fef2f2;color:#b91c1c}.chip i{width:20px;height:20px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.1)}
+.tg{display:flex;align-items:center;gap:8px;padding:6px 0}.tg input{width:18px;height:18px;accent-color:#F70202}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #ece7e3;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:20;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+.bar .st{flex:1;font-size:13px;color:#4b4b50}.bar .st b{color:#1c1c1e}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ic{background:#fff;border:1px solid #ece7e3;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}.ic .r{display:flex;gap:10px}.ic .thumb{width:64px;height:64px}
+.ic.arch{opacity:.6}
+.ov{position:fixed;inset:0;background:rgba(20,15,12,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.md{background:#fff;border-radius:18px;width:min(720px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.md.sm{width:min(460px,100%)}
+.md .hd{padding:16px 20px;border-bottom:1px solid #f0ebe7;font-size:17px;font-weight:800}.md .bd{padding:16px 20px;overflow:auto}.md .ft{padding:12px 20px;border-top:1px solid #f0ebe7;display:flex;gap:10px;justify-content:flex-end}
+.plist{max-height:320px;overflow:auto;border:1px solid #ece7e3;border-radius:12px}
+.pi{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid #f3efec;cursor:pointer}.pi:last-child{border-bottom:0}.pi:hover{background:#faf8f6}.pi.sel{background:#fef2f2}
+.pi input{width:18px;height:18px;accent-color:#F70202}.pi .t{flex:1;min-width:0}.pi .t b{display:block}.pi .t span{font-size:12px;color:#6b6b70}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#1c1c1e;color:#fff;border-radius:12px;padding:11px 20px;font-weight:600;z-index:80;display:none;max-width:90vw}
+#toast.bad{background:#b42318}
+.off{opacity:.6}.empty{padding:34px;text-align:center;color:#6b6b70}
+.up{display:flex;gap:10px;align-items:center}.up img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:#f1eeeb}
+.of{border:1px solid #ece7e3;border-radius:12px;padding:10px;margin-bottom:8px}
+</style>
+@endverbatim
+</head>
+<body data-ready="{{ $ready ? 1 : 0 }}" data-embed="{{ $embed ? 1 : 0 }}">
+@verbatim
+<div class="wrap" id="app">
+  <div id="notready" class="card" style="display:none"><h2>Digital Menu is not set up yet</h2><p class="sub">The database tables are missing. Please ask your developer to run the Digital Menu installer again.</p></div>
+  <div id="main" style="display:none">
+    <div class="top">
+      <div><h1>Digital Menu</h1><p class="sub">Up to 10 TV screens for each outlet. Prices come live from Products.</p></div>
+      <div class="sp"></div>
+      <div style="min-width:240px"><label class="l" for="hub">Outlet</label><select id="hub"></select></div>
+    </div>
+    <div class="tabs"><button class="tab on" data-tab="screens">Screens</button><button class="tab" data-tab="items">Item library</button></div>
+    <section id="v-screens"></section>
+    <section id="v-items" style="display:none"></section>
+    <section id="v-editor" style="display:none"></section>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="mroot"></div>
+<script>
+(function () {
+  'use strict';
+  var B = document.body.dataset, CSRF = document.querySelector('meta[name=csrf-token]').content;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var money = function (v) { v = +v || 0; return '₹' + (v % 1 === 0 ? v.toLocaleString('en-IN') : v.toFixed(2)); };
+  var S = { boot: null, hub: 0, screens: [], tab: 'screens', ed: null, items: [], cats: [], iq: '', icat: '', ist: 'active' };
+  var BASE = '/admin/digital-menu/api';
+
+  function api(method, path, body, form) {
+    var o = { method: method, headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' };
+    if (body !== undefined && body !== null) { if (form) o.body = body; else { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); } }
+    return fetch(BASE + path, o).then(function (r) { return r.json().catch(function () { return { ok: false, message: 'The server sent an unexpected answer (' + r.status + ').' }; }).then(function (j) { if (r.status === 401) j.message = 'Please sign in to the admin again.'; return j; }); }).catch(function () { return { ok: false, message: 'Network problem. Please try again.' }; });
+  }
+  var tt = null;
+  function toast(m, bad) { var t = $('#toast'); t.textContent = m; t.className = bad ? 'bad' : ''; t.style.display = 'block'; clearTimeout(tt); tt = setTimeout(function () { t.style.display = 'none'; }, bad ? 6000 : 3200); }
+  function modal(o) {
+    return new Promise(function (res) {
+      var d = document.createElement('div'); d.className = 'ov';
+      d.innerHTML = '<div class="md ' + (o.small ? 'sm' : '') + '"><div class="hd">' + esc(o.title) + '</div><div class="bd">' + (o.html || '') + '</div><div class="ft">' + (o.cancel === false ? '' : '<button class="btn ghost" data-r="0">' + esc(o.cancel || 'Cancel') + '</button>') + (o.ok === false ? '' : '<button class="btn ' + (o.danger ? 'dark' : '') + '" data-r="1">' + esc(o.ok || 'OK') + '</button>') + '</div></div>';
+      $('#mroot').appendChild(d);
+      var close = function (v) { d.remove(); res(v); };
+      d.addEventListener('click', function (e) { if (e.target === d && o.cancel !== false) close(false); });
+      $$('[data-r]', d).forEach(function (b) { b.onclick = function () { if (b.getAttribute('data-r') === '1') { if (o.validate && !o.validate(d)) return; close(o.collect ? o.collect(d) : true); } else close(false); }; });
+      if (o.init) o.init(d, close);
+    });
+  }
+  function sure(title, text, ok) { return modal({ title: title, html: '<p style="margin:0">' + text + '</p>', ok: ok || 'Yes', small: true }); }
+
+  /* ---------------- boot ---------------- */
+  function boot() {
+    if (B.ready !== '1') { $('#notready').style.display = ''; return; }
+    api('GET', '/boot').then(function (j) {
+      if (!j.ok) { $('#notready').style.display = ''; $('#notready').innerHTML = '<h2>Digital Menu</h2><p class="sub">' + esc(j.message) + '</p>'; return; }
+      S.boot = j; var saved = 0; try { saved = +localStorage.getItem('dm-hub') || 0; } catch (e) {}
+      S.hub = j.hubs.some(function (h) { return h.id === saved; }) ? saved : j.hub;
+      $('#main').style.display = '';
+      var sel = $('#hub'); sel.innerHTML = j.hubs.map(function (h) { return '<option value="' + h.id + '">' + esc(h.label) + '</option>'; }).join(''); sel.value = S.hub;
+      sel.onchange = function () { S.hub = +sel.value; try { localStorage.setItem('dm-hub', S.hub); } catch (e) {} loadScreens(); };
+      $$('.tab').forEach(function (b) { b.onclick = function () { setTab(b.getAttribute('data-tab')); }; });
+      loadScreens();
+    });
+  }
+  function setTab(t) {
+    S.tab = t; S.ed = null;
+    $$('.tab').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === t); });
+    $('#v-screens').style.display = t === 'screens' ? '' : 'none'; $('#v-items').style.display = t === 'items' ? '' : 'none'; $('#v-editor').style.display = 'none';
+    $('.tabs').style.display = ''; $('#hub').closest('div').style.visibility = t === 'items' ? 'hidden' : '';
+    if (t === 'items') loadItems(); else loadScreens();
+  }
+
+  /* ---------------- screens ---------------- */
+  function loadScreens() {
+    api('GET', '/screens?hub=' + S.hub).then(function (j) { if (!j.ok) return toast(j.message, true); S.screens = j.screens; drawScreens(); });
+  }
+  var LAY = { showcase: 'Showcase', duo: 'Two cards', trio: 'Three cards', board: 'Price board', offers: 'Offers poster' };
+  function stateOf(s) { if (s.status === 'off') return ['off', 'Switched off']; if (!s.published) return ['draft', 'Not published']; if (s.dirty) return ['draft', 'Live, changes not published']; return ['live', 'Live v' + s.version]; }
+  function drawScreens() {
+    var h = '<div class="row" style="margin-bottom:12px"><b>' + S.screens.length + ' of ' + S.boot.max + ' screens used</b><span class="sp" style="flex:1"></span><button class="btn" id="addS"' + (S.screens.length >= S.boot.max ? ' disabled' : '') + '>+ Add screen</button></div>';
+    if (!S.screens.length) h += '<div class="card empty"><h2>No screens yet</h2><p>Add the first screen for this outlet, for example Counter TV 1. You can add up to ' + S.boot.max + '.</p></div>';
+    else h += '<div class="sgrid">' + S.screens.map(function (s) {
+      var st = stateOf(s);
+      return '<div class="sc ' + (s.status === 'off' ? 'off' : '') + '"><div class="row"><span class="shape ' + (s.orientation === 'portrait' ? 'P' : 'L') + '"></span><div class="nm" style="flex:1">' + esc(s.name) + '</div><span class="pill ' + st[0] + '">' + esc(st[1]) + '</span></div>' +
+        '<div class="hint">' + (s.orientation === 'portrait' ? 'Portrait' : 'Landscape') + ' - ' + esc(LAY[s.layout] || s.layout) + ' - ' + s.seconds + ' s - ' + (s.layout === 'offers' ? s.offers + ' offer(s)' : s.items + ' item(s)') + '</div>' +
+        '<div class="row"><button class="btn sm" data-ed="' + s.id + '">Edit</button><button class="btn sm ghost" data-pv="' + s.id + '">Preview</button><button class="btn sm ghost" data-tv="' + s.id + '"' + (s.published ? '' : ' disabled') + '>Open TV</button><button class="btn sm ghost" data-cp="' + s.id + '">Copy link</button></div></div>';
+    }).join('') + '</div>';
+    $('#v-screens').innerHTML = h;
+    var a = $('#addS'); if (a) a.onclick = addScreen;
+    $$('[data-ed]').forEach(function (b) { b.onclick = function () { openEditor(+b.getAttribute('data-ed')); }; });
+    $$('[data-pv]').forEach(function (b) { b.onclick = function () { var s = byId(+b.getAttribute('data-pv')); window.open(s.preview, '_blank'); }; });
+    $$('[data-tv]').forEach(function (b) { b.onclick = function () { var s = byId(+b.getAttribute('data-tv')); window.open(s.url + '?kiosk=1', '_blank'); }; });
+    $$('[data-cp]').forEach(function (b) { b.onclick = function () { copy(byId(+b.getAttribute('data-cp')).url); }; });
+  }
+  function byId(id) { return S.screens.filter(function (s) { return s.id === id; })[0]; }
+  function copy(t) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('TV link copied.'); }, function () { prompt('Copy this link', t); }); else prompt('Copy this link', t); }
+  function addScreen() {
+    modal({ title: 'Add a screen', ok: 'Create screen', html: '<div class="f"><label class="l">Screen name</label><input type="text" id="n" maxlength="80" placeholder="Counter TV 1"></div><div class="f"><label class="l">Orientation</label><div class="seg" id="o"><button data-v="landscape" class="on">Landscape</button><button data-v="portrait">Portrait</button></div></div><div class="f"><label class="l">Layout</label><select id="l">' + Object.keys(LAY).map(function (k) { return '<option value="' + k + '"' + (k === 'trio' ? ' selected' : '') + '>' + LAY[k] + '</option>'; }).join('') + '</select></div>',
+      init: function (d) { $$('#o button', d).forEach(function (b) { b.onclick = function () { $$('#o button', d).forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); }; }); $('#n', d).focus(); },
+      validate: function (d) { if (!$('#n', d).value.trim()) { toast('Give the screen a name.', true); return false; } return true; },
+      collect: function (d) { return { name: $('#n', d).value.trim(), orientation: $('#o .on', d).getAttribute('data-v'), layout: $('#l', d).value }; } }).then(function (v) {
+      if (!v) return; api('POST', '/screens', { hub_id: S.hub, name: v.name, orientation: v.orientation, layout: v.layout }).then(function (j) { if (!j.ok) return toast(j.message, true); toast('Screen created.'); S.ed = null; openEditor(j.screen.id); });
+    });
+  }
+
+  /* ---------------- editor ---------------- */
+  function openEditor(id) {
+    api('GET', '/screens/' + id).then(function (j) {
+      if (!j.ok) return toast(j.message, true);
+      S.ed = { id: id, sc: j.screen, cfg: j.config, res: j.resolved, dirty: false };
+      $('#v-screens').style.display = 'none'; $('#v-items').style.display = 'none'; $('#v-editor').style.display = ''; $('.tabs').style.display = 'none';
+      drawEditor();
+    });
+  }
+  function mark() { S.ed.dirty = true; barState(); }
+  function barState() {
+    var e = S.ed, st = stateOf(e.sc), el = $('#bst'); if (!el) return;
+    el.innerHTML = e.dirty ? '<b>Unsaved changes.</b> Save the draft to refresh the preview.' : (st[0] === 'live' ? '<b>' + esc(st[1]) + '.</b> The TV shows this screen.' : '<b>' + esc(st[1]) + '.</b> ' + (e.sc.published ? 'Publish to send the changes to the TV.' : 'Publish to start showing it on the TV.'));
+    $('#bsave').disabled = !e.dirty; $('#bpub').disabled = e.dirty;
+  }
+  function toggle(label, key, grp) { var c = S.ed.cfg, v = grp ? c[grp][key] : c[key]; return '<label class="tg"><input type="checkbox" data-tg="' + key + '"' + (grp ? ' data-g="' + grp + '"' : '') + (v ? ' checked' : '') + '><span>' + label + '</span></label>'; }
+  function drawEditor() {
+    var e = S.ed, c = e.cfg, t = c.theme, P = S.boot.presets;
+    var pic = { showcase: '<div class="pic"><i style="max-width:60px"></i></div>', duo: '<div class="pic"><i></i><i></i></div>', trio: '<div class="pic"><i></i><i></i><i></i></div>', board: '<div class="pic board"><i></i><i></i><i></i><i></i></div>', offers: '<div class="pic gr"><i style="height:12px"></i><i style="height:12px"></i><i style="height:12px"></i></div>' };
+    var h = '<div class="row" style="margin-bottom:12px"><button class="btn ghost sm" id="back">&larr; All screens</button><h2 style="margin:0;flex:1">' + esc(c.name) + '</h2></div><div class="edit"><div>';
+    h += '<div class="card"><h2>1. Screen</h2><div class="f"><label class="l">Screen name</label><input type="text" id="e-name" maxlength="80" value="' + esc(c.name) + '"></div>' +
+      '<div class="f"><label class="l">Orientation</label><div class="seg" id="e-or"><button data-v="landscape"' + (c.orientation === 'landscape' ? ' class="on"' : '') + '>Landscape TV</button><button data-v="portrait"' + (c.orientation === 'portrait' ? ' class="on"' : '') + '>Portrait TV</button></div></div>' +
+      '<div class="f"><label class="l">Layout</label><div class="lay" id="e-lay">' + Object.keys(LAY).map(function (k) { return '<button data-v="' + k + '"' + (c.layout === k ? ' class="on"' : '') + '>' + pic[k] + LAY[k] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="grid2"><div class="f"><label class="l">Seconds on each slide (5 or more)</label><input type="number" id="e-sec" min="5" max="120" value="' + c.seconds + '"><div class="chips" style="margin-top:6px">' + [5, 8, 10, 15, 20, 30].map(function (n) { return '<button class="chip" data-sec="' + n + '">' + n + ' s</button>'; }).join('') + '</div></div>' +
+      '<div class="f" id="e-perw"' + (c.layout === 'board' ? '' : ' style="display:none"') + '><label class="l">Rows on each price board slide</label><select id="e-per">' + [4, 6, 8, 10, 12].map(function (n) { return '<option' + (c.per === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></div></div></div>';
+    h += '<div class="card" id="plcard"><div class="row" style="margin-bottom:8px"><h2 style="margin:0;flex:1">2. Playlist</h2><button class="btn sm" id="addI">+ Add items</button></div><p class="hint" style="margin:0 0 10px">' + (c.layout === 'offers' ? 'This layout shows the offers below. The playlist is not used.' : 'Items show in this order. Drag the handle or use the arrows. Prices and names are read live from Products.') + '</p><div id="pl"></div></div>';
+    h += '<div class="card"><div class="row" style="margin-bottom:8px"><h2 style="margin:0;flex:1">3. Offers (' + (c.layout === 'offers' ? 'shown on the poster' : 'More today strip') + ')</h2><button class="btn sm ghost" id="addO">+ Add offer</button></div><div class="f"><label class="l">Strip title</label><input type="text" id="e-ot" maxlength="30" value="' + esc(c.offers_title) + '"></div><div id="ofl"></div></div>';
+    h += '<div class="card"><h2>4. Look</h2><label class="l">Colour theme</label><div class="chips" id="e-pre">' + Object.keys(P).map(function (k) { return '<button class="chip' + (t.preset === k ? ' on' : '') + '" data-p="' + k + '"><i style="background:linear-gradient(135deg,' + P[k].bg1 + ',' + P[k].bg2 + ')"></i>' + esc(P[k].label) + '</button>'; }).join('') + '</div>' +
+      '<div class="grid3" style="margin-top:12px">' + [['bg1', 'Background 1'], ['bg2', 'Background 2'], ['text', 'Header text'], ['card', 'Card'], ['cardText', 'Card text'], ['accent', 'Accent 1'], ['accent2', 'Accent 2']].map(function (x) { return '<div class="f"><label class="l">' + x[1] + '</label><input type="color" data-c="' + x[0] + '" value="' + t[x[0]] + '"></div>'; }).join('') + '<div class="f"><label class="l">Gradient angle</label><input type="number" id="e-ang" min="0" max="360" value="' + t.angle + '"></div></div>' +
+      '<div class="grid2"><div class="f"><label class="l">Font</label><select id="e-font">' + S.boot.fonts.map(function (f) { return '<option' + (t.font === f ? ' selected' : '') + '>' + f + '</option>'; }).join('') + '</select></div><div class="f"><label class="l">Motion</label><select id="e-mot"><option value="rise"' + (c.motion === 'rise' ? ' selected' : '') + '>Staged rise (recommended)</option><option value="fade"' + (c.motion === 'fade' ? ' selected' : '') + '>Soft fade</option><option value="none"' + (c.motion === 'none' ? ' selected' : '') + '>No animation</option></select></div></div>' +
+      '<div class="f"><label class="l">Background picture (optional)</label><div class="up"><img id="bgimg" src="' + (t.bgImage ? '/uploads/images/digital_menu/' + esc(t.bgImage) : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==') + '"><input type="file" id="bgf" accept="image/png,image/jpeg,image/webp"><button class="btn sm ghost" id="bgx"' + (t.bgImage ? '' : ' style="display:none"') + '>Remove</button></div><label class="l" style="margin-top:8px">Picture strength <span id="bgov">' + t.bgImageOpacity + '</span>%</label><input type="range" id="bgo" min="0" max="100" value="' + t.bgImageOpacity + '" style="width:100%"></div></div>';
+    h += '<div class="card"><h2>5. Show on the TV</h2><div class="grid2"><div>' + toggle('Freshful logo', 'logo', 'show') + toggle('Clock', 'clock', 'show') + toggle('Outlet name', 'outlet', 'show') + '</div><div>' + toggle('Show MRP struck through', 'mrp', 'show') + toggle('Show "Save %"', 'save', 'show') + toggle('Show "Only a few left"', 'stock', 'show') + '</div></div>' + toggle('Hide items that are out of stock at this outlet', 'hide_oos') + toggle('Gentle float on the pictures (3 px)', 'idle') +
+      '<div class="f" style="margin-top:8px"><label class="l">Scrolling message at the bottom (leave empty to hide)</label><input type="text" id="e-tk" maxlength="180" value="' + esc(c.ticker) + '"></div></div>';
+    h += '<div class="card"><h2>6. TV link and status</h2><div class="f"><label class="l">Private TV link (open this in the TV browser)</label><div class="row"><input type="text" readonly id="e-url" value="' + esc(e.sc.url) + '?kiosk=1" style="flex:1;min-width:220px"><button class="btn sm ghost" id="e-cp">Copy</button></div><p class="hint">Anyone with the link can watch the screen, nobody can change it. Press F on the TV keyboard, or double click, for full screen.</p></div>' +
+      '<div class="row"><button class="btn sm ghost" id="e-st">' + (e.sc.status === 'off' ? 'Switch the screen on' : 'Switch the screen off') + '</button><button class="btn sm ghost" id="e-dup">Duplicate screen</button><button class="btn sm ghost" id="e-key">Make a new link</button><button class="btn sm danger" id="e-del">Delete screen</button></div></div>';
+    h += '</div><div class="prev"><div class="card"><div class="row" style="margin-bottom:8px"><h2 style="margin:0;flex:1">Preview (draft)</h2><button class="btn sm ghost" id="pv-re">Refresh</button><button class="btn sm ghost" id="pv-op">Open</button></div><div class="pbox" id="pbox"></div><p class="hint" style="margin-bottom:0">Shows the saved draft. Prices and stock are live.</p></div></div></div>' +
+      '<div class="bar"><button class="btn ghost" id="b-back">Close</button><div class="st" id="bst"></div><button class="btn ghost" id="bsave">Save draft</button><button class="btn" id="bpub">Publish</button></div>';
+    $('#v-editor').innerHTML = h;
+    wireEditor(); drawPlaylist(); drawOffers(); drawPreview(); barState();
+  }
+  function drawPreview() {
+    var e = S.ed, c = e.cfg, box = $('#pbox'); if (!box) return;
+    var port = c.orientation === 'portrait', W = port ? 1080 : 1920, H = port ? 1920 : 1080, bw = Math.min(box.parentNode.clientWidth - 36, port ? 280 : 480) || 300, k = bw / W;
+    box.style.width = bw + 'px'; box.style.height = Math.round(H * k) + 'px';
+    box.innerHTML = '<iframe title="Preview" src="' + esc(e.sc.preview) + '&_=' + Date.now() + '" style="width:' + W + 'px;height:' + H + 'px;transform:scale(' + k + ')"></iframe>';
+  }
+  function wireEditor() {
+    var e = S.ed, c = e.cfg, t = c.theme;
+    $('#back').onclick = $('#b-back').onclick = function () { if (e.dirty) { sure('Leave without saving?', 'Your unsaved changes will be lost.', 'Leave').then(function (y) { if (y) leave(); }); } else leave(); };
+    function leave() { S.ed = null; $('#v-editor').style.display = 'none'; $('#v-screens').style.display = ''; $('.tabs').style.display = ''; loadScreens(); }
+    $('#e-name').oninput = function () { c.name = this.value; mark(); };
+    $$('#e-or button').forEach(function (b) { b.onclick = function () { c.orientation = b.getAttribute('data-v'); $$('#e-or button').forEach(function (x) { x.classList.toggle('on', x === b); }); mark(); }; });
+    $$('#e-lay button').forEach(function (b) { b.onclick = function () { c.layout = b.getAttribute('data-v'); $$('#e-lay button').forEach(function (x) { x.classList.toggle('on', x === b); }); $('#e-perw').style.display = c.layout === 'board' ? '' : 'none'; mark(); }; });
+    $('#e-sec').oninput = function () { c.seconds = Math.max(5, Math.min(120, +this.value || 5)); mark(); };
+    $$('[data-sec]').forEach(function (b) { b.onclick = function () { c.seconds = +b.getAttribute('data-sec'); $('#e-sec').value = c.seconds; mark(); }; });
+    $('#e-per').onchange = function () { c.per = +this.value; mark(); };
+    $('#e-ot').oninput = function () { c.offers_title = this.value; mark(); };
+    $$('#e-pre button').forEach(function (b) { b.onclick = function () { var p = S.boot.presets[b.getAttribute('data-p')]; ['bg1', 'bg2', 'text', 'card', 'cardText', 'accent', 'accent2', 'angle'].forEach(function (k) { t[k] = p[k]; }); t.preset = b.getAttribute('data-p'); $$('[data-c]').forEach(function (i) { i.value = t[i.getAttribute('data-c')]; }); $('#e-ang').value = t.angle; $$('#e-pre button').forEach(function (x) { x.classList.toggle('on', x === b); }); mark(); }; });
+    $$('[data-c]').forEach(function (i) { i.oninput = function () { t[i.getAttribute('data-c')] = i.value.toUpperCase(); t.preset = 'custom'; $$('#e-pre button').forEach(function (x) { x.classList.remove('on'); }); mark(); }; });
+    $('#e-ang').oninput = function () { t.angle = Math.max(0, Math.min(360, +this.value || 0)); t.preset = 'custom'; mark(); };
+    $('#e-font').onchange = function () { t.font = this.value; mark(); };
+    $('#e-mot').onchange = function () { c.motion = this.value; mark(); };
+    $('#bgo').oninput = function () { t.bgImageOpacity = +this.value; $('#bgov').textContent = this.value; mark(); };
+    $('#bgf').onchange = function () { var f = this.files[0]; if (!f) return; upload(f).then(function (r) { if (!r) return; t.bgImage = r.file; $('#bgimg').src = r.url; $('#bgx').style.display = ''; mark(); }); };
+    $('#bgx').onclick = function () { t.bgImage = ''; $('#bgimg').src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; this.style.display = 'none'; mark(); };
+    $$('[data-tg]').forEach(function (i) { i.onchange = function () { var k = i.getAttribute('data-tg'), g = i.getAttribute('data-g'); if (g) c[g][k] = i.checked; else c[k] = i.checked; mark(); }; });
+    $('#e-tk').oninput = function () { c.ticker = this.value; mark(); };
+    $('#e-cp').onclick = function () { copy(e.sc.url + '?kiosk=1'); };
+    $('#pv-re').onclick = drawPreview; $('#pv-op').onclick = function () { window.open(e.sc.preview, '_blank'); };
+    $('#addI').onclick = pickItems; $('#addO').onclick = function () { if (c.offers.length >= 8) return toast('You can add up to 8 offers.', true); c.offers.push({ name: '', price: null, pack: '', image: '', bg: '#FFF1E8', color: '#1C1411' }); drawOffers(); mark(); };
+    $('#bsave').onclick = save; $('#bpub').onclick = publish;
+    $('#e-st').onclick = function () { api('POST', '/screens/' + e.id + '/status', { status: e.sc.status === 'off' ? 'active' : 'off' }).then(function (j) { if (!j.ok) return toast(j.message, true); e.sc = j.screen; toast(e.sc.status === 'off' ? 'Screen switched off. The TV shows a message.' : 'Screen switched on.'); drawEditor(); }); };
+    $('#e-dup').onclick = function () { api('POST', '/screens/' + e.id + '/duplicate').then(function (j) { if (!j.ok) return toast(j.message, true); toast('Screen duplicated.'); openEditor(j.screen.id); }); };
+    $('#e-key').onclick = function () { sure('Make a new TV link?', 'The old link stops working. You must open the new link on the TV.', 'Make new link').then(function (y) { if (!y) return; api('POST', '/screens/' + e.id + '/rekey').then(function (j) { if (!j.ok) return toast(j.message, true); e.sc = j.screen; toast('New link ready.'); drawEditor(); }); }); };
+    $('#e-del').onclick = function () { sure('Delete this screen?', 'The screen and its TV link are removed. Items in the library stay.', 'Delete screen').then(function (y) { if (!y) return; api('POST', '/screens/' + e.id + '/delete').then(function (j) { if (!j.ok) return toast(j.message, true); toast('Screen deleted.'); S.ed = null; $('#v-editor').style.display = 'none'; $('#v-screens').style.display = ''; $('.tabs').style.display = ''; loadScreens(); }); }); };
+  }
+  function upload(file) {
+    var fd = new FormData(); fd.append('image', file);
+    return api('POST', '/upload', fd, true).then(function (j) { if (!j.ok) { toast(j.message, true); return null; } return j; });
+  }
+  function save() {
+    var e = S.ed; $('#bsave').disabled = true;
+    return api('POST', '/screens/' + e.id, { config: e.cfg }).then(function (j) { if (!j.ok) { toast(j.message, true); $('#bsave').disabled = false; return false; } e.sc = j.screen; e.cfg = j.config; e.res = j.resolved; e.dirty = false; toast('Draft saved.'); drawEditor(); return true; });
+  }
+  function publish() {
+    var e = S.ed; if (e.dirty) return;
+    sure('Publish this screen?', 'The TV will show this layout, playlist and look within a minute.', 'Publish').then(function (y) { if (!y) return; api('POST', '/screens/' + e.id + '/publish').then(function (j) { if (!j.ok) return toast(j.message, true); e.sc = j.screen; toast('Published. The TV updates within a minute.'); drawEditor(); }); });
+  }
+
+  /* playlist */
+  function itemInfo(ref) { return S.ed.res[ref.id] || { id: ref.id, name: 'Item #' + ref.id, pack: '', price: 0, image: '', active: false }; }
+  function drawPlaylist() {
+    var e = S.ed, l = e.cfg.items, el = $('#pl');
+    if (!l.length) { el.innerHTML = '<div class="empty" style="padding:18px">No items yet. Click Add items.</div>'; return; }
+    el.innerHTML = l.map(function (ref, i) {
+      var it = itemInfo(ref), sched = ref.from || ref.until;
+      return '<div class="pl" draggable="true" data-i="' + i + '"><span class="h" title="Drag">&#8942;&#8942;</span>' + (it.image ? '<img src="' + esc(it.image) + '" alt="">' : '<span class="thumb"></span>') + '<div class="t"><b>' + esc(it.name) + (!it.active ? ' (switched off)' : '') + '</b><span>' + esc(it.pack) + ' - ' + money(it.price) + (sched ? ' - scheduled' : '') + (ref.featured ? ' - featured' : '') + '</span></div>' +
+        '<button class="ib" data-up="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="Move up">&uarr;</button><button class="ib" data-dn="' + i + '"' + (i === l.length - 1 ? ' disabled' : '') + ' title="Move down">&darr;</button><button class="btn sm ghost" data-sc="' + i + '">Schedule</button><button class="ib" data-rm="' + i + '" title="Remove">x</button></div>';
+    }).join('');
+    var from = null;
+    $$('.pl', el).forEach(function (r) {
+      r.ondragstart = function () { from = +r.getAttribute('data-i'); r.classList.add('drag'); };
+      r.ondragend = function () { r.classList.remove('drag'); };
+      r.ondragover = function (ev) { ev.preventDefault(); };
+      r.ondrop = function (ev) { ev.preventDefault(); var to = +r.getAttribute('data-i'); if (from === null || from === to) return; var m = l.splice(from, 1)[0]; l.splice(to, 0, m); from = null; drawPlaylist(); mark(); };
+    });
+    $$('[data-up]', el).forEach(function (b) { b.onclick = function () { var i = +b.getAttribute('data-up'); l.splice(i - 1, 0, l.splice(i, 1)[0]); drawPlaylist(); mark(); }; });
+    $$('[data-dn]', el).forEach(function (b) { b.onclick = function () { var i = +b.getAttribute('data-dn'); l.splice(i + 1, 0, l.splice(i, 1)[0]); drawPlaylist(); mark(); }; });
+    $$('[data-rm]', el).forEach(function (b) { b.onclick = function () { l.splice(+b.getAttribute('data-rm'), 1); drawPlaylist(); mark(); }; });
+    $$('[data-sc]', el).forEach(function (b) { b.onclick = function () { schedule(+b.getAttribute('data-sc')); }; });
+  }
+  function schedule(i) {
+    var ref = S.ed.cfg.items[i], it = itemInfo(ref);
+    modal({ title: 'Schedule: ' + it.name, ok: 'Apply', html: '<p class="hint" style="margin-top:0">Leave both empty to show the item all the time. Times are India time.</p><div class="grid2"><div class="f"><label class="l">Show from</label><input type="datetime-local" id="sf" value="' + (ref.from ? ref.from.replace(' ', 'T') : '') + '"></div><div class="f"><label class="l">Show until</label><input type="datetime-local" id="su" value="' + (ref.until ? ref.until.replace(' ', 'T') : '') + '"></div></div><label class="tg"><input type="checkbox" id="sft"' + (ref.featured ? ' checked' : '') + '><span>Featured item (marked in the list)</span></label>',
+      collect: function (d) { return { from: $('#sf', d).value.replace('T', ' '), until: $('#su', d).value.replace('T', ' '), featured: $('#sft', d).checked }; } }).then(function (v) { if (!v) return; ref.from = v.from || null; ref.until = v.until || null; ref.featured = v.featured; drawPlaylist(); mark(); });
+  }
+  function pickItems() {
+    var e = S.ed, have = {}; e.cfg.items.forEach(function (r) { have[r.id] = true; });
+    modal({ title: 'Add items to this screen', ok: 'Add selected', html: '<div class="row" style="margin-bottom:10px"><input type="search" id="pq" placeholder="Search the item library" style="flex:1"><button class="btn sm ghost" id="pnew">+ New item</button><button class="btn sm ghost" id="pprod">+ From products</button></div><div class="plist" id="pli"></div>',
+      init: function (d) {
+        var tm = null; function ld() { api('GET', '/items?status=active&q=' + encodeURIComponent($('#pq', d).value)).then(function (j) { if (!j.ok) return; $('#pli', d).innerHTML = j.items.filter(function (i) { return !have[i.id]; }).map(function (i) { var s = i.shown || {}; return '<label class="pi"><input type="checkbox" value="' + i.id + '"><div class="t"><b>' + esc(s.name || '') + '</b><span>' + esc(s.pack || '') + ' - ' + money(s.price) + (i.category ? ' - ' + esc(i.category) : '') + '</span></div></label>'; }).join('') || '<div class="empty" style="padding:16px">No more items. Use New item or From products.</div>'; j.items.forEach(function (i) { e.res[i.id] = i.shown; }); }); }
+        $('#pq', d).oninput = function () { clearTimeout(tm); tm = setTimeout(ld, 250); }; ld();
+        $('#pnew', d).onclick = function () { itemEditor(null, true).then(function (it) { if (it) { d.remove(); addToPlaylist([it.id], it); } }); };
+        $('#pprod', d).onclick = function () { productPicker().then(function (ids) { if (ids && ids.length) { d.remove(); addToPlaylist(ids); } }); };
+      },
+      collect: function (d) { return $$('#pli input:checked', d).map(function (x) { return +x.value; }); } }).then(function (ids) { if (ids && ids.length) addToPlaylist(ids); });
+  }
+  function addToPlaylist(ids, item) {
+    var e = S.ed; if (item && item.shown) e.res[item.id] = item.shown;
+    var need = ids.filter(function (id) { return !e.res[id]; });
+    var done = function () { ids.forEach(function (id) { if (!e.cfg.items.some(function (r) { return r.id === id; })) e.cfg.items.push({ id: id, from: null, until: null, featured: false }); }); drawPlaylist(); mark(); };
+    if (!need.length) return done();
+    api('GET', '/items?status=all').then(function (j) { if (j.ok) j.items.forEach(function (i) { e.res[i.id] = i.shown; }); done(); });
+  }
+
+  /* offers */
+  function drawOffers() {
+    var c = S.ed.cfg, el = $('#ofl');
+    if (!c.offers.length) { el.innerHTML = '<div class="hint">No offers. Add small offer cards such as a marinade, a masala or an egg tray.</div>'; return; }
+    el.innerHTML = c.offers.map(function (o, i) {
+      return '<div class="of"><div class="up"><img src="' + (o.image ? '/uploads/images/digital_menu/' + esc(o.image) : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==') + '"><input type="file" data-of="' + i + '" accept="image/png,image/jpeg,image/webp"><span style="flex:1"></span><button class="ib" data-orm="' + i + '" title="Remove">x</button></div>' +
+        '<div class="grid3" style="margin-top:8px"><div><label class="l">Name</label><input type="text" data-on="' + i + '" maxlength="40" value="' + esc(o.name) + '"></div><div><label class="l">Price</label><input type="number" data-op="' + i + '" min="0" step="0.01" value="' + (o.price == null ? '' : o.price) + '"></div><div><label class="l">Pack (optional)</label><input type="text" data-ok="' + i + '" maxlength="20" value="' + esc(o.pack) + '"></div></div>' +
+        '<div class="row" style="margin-top:8px"><label class="l" style="margin:0">Card colour</label><input type="color" data-obg="' + i + '" value="' + o.bg + '"><label class="l" style="margin:0 0 0 10px">Text colour</label><input type="color" data-oco="' + i + '" value="' + o.color + '"></div></div>';
+    }).join('');
+    $$('[data-on]', el).forEach(function (x) { x.oninput = function () { c.offers[+x.getAttribute('data-on')].name = x.value; mark(); }; });
+    $$('[data-op]', el).forEach(function (x) { x.oninput = function () { c.offers[+x.getAttribute('data-op')].price = x.value === '' ? null : +x.value; mark(); }; });
+    $$('[data-ok]', el).forEach(function (x) { x.oninput = function () { c.offers[+x.getAttribute('data-ok')].pack = x.value; mark(); }; });
+    $$('[data-obg]', el).forEach(function (x) { x.oninput = function () { c.offers[+x.getAttribute('data-obg')].bg = x.value.toUpperCase(); mark(); }; });
+    $$('[data-oco]', el).forEach(function (x) { x.oninput = function () { c.offers[+x.getAttribute('data-oco')].color = x.value.toUpperCase(); mark(); }; });
+    $$('[data-orm]', el).forEach(function (x) { x.onclick = function () { c.offers.splice(+x.getAttribute('data-orm'), 1); drawOffers(); mark(); }; });
+    $$('[data-of]', el).forEach(function (x) { x.onchange = function () { var f = x.files[0], i = +x.getAttribute('data-of'); if (!f) return; upload(f).then(function (r) { if (!r) return; c.offers[i].image = r.file; drawOffers(); mark(); }); }; });
+  }
+
+  /* ---------------- item library ---------------- */
+  function loadItems() {
+    api('GET', '/items?status=' + S.ist + '&q=' + encodeURIComponent(S.iq) + '&cat=' + encodeURIComponent(S.icat)).then(function (j) { if (!j.ok) return toast(j.message, true); S.items = j.items; S.cats = j.categories; drawItems(); });
+  }
+  function drawItems() {
+    var h = '<div class="row" style="margin-bottom:12px"><input type="search" id="iq" placeholder="Search items" value="' + esc(S.iq) + '" style="max-width:280px"><select id="icat" style="max-width:200px"><option value="">All categories</option>' + S.cats.map(function (c) { return '<option' + (S.icat === c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select><select id="ist" style="max-width:160px"><option value="active"' + (S.ist === 'active' ? ' selected' : '') + '>Active</option><option value="archived"' + (S.ist === 'archived' ? ' selected' : '') + '>Archived</option><option value="all"' + (S.ist === 'all' ? ' selected' : '') + '>All</option></select><span style="flex:1"></span><button class="btn ghost" id="ifp">+ From products</button><button class="btn" id="inew">+ New custom item</button></div>';
+    h += S.items.length ? '<div class="igrid">' + S.items.map(function (i) {
+      var s = i.shown || {};
+      return '<div class="ic ' + (i.status === 'archived' ? 'arch' : '') + '"><div class="r">' + (s.image ? '<img class="thumb" src="' + esc(s.image) + '" alt="">' : '<span class="thumb"></span>') + '<div style="min-width:0;flex:1"><b>' + esc(s.name || '(no name)') + '</b><div class="hint">' + esc(s.pack || '') + ' - ' + money(s.price) + '</div><div class="hint">' + (i.product_code ? 'Linked to product ' + esc(i.product_code) + (i.price == null ? ' (live price)' : '') : 'Custom item') + (s.product_missing ? ' - product missing' : '') + '</div></div></div>' +
+        '<div class="hint">' + (i.category ? esc(i.category) + ' - ' : '') + 'On ' + i.used.length + ' screen(s)' + (i.status === 'archived' ? ' - archived' : '') + '</div><div class="row"><button class="btn sm" data-ie="' + i.id + '">Edit</button><button class="btn sm ghost" data-id="' + i.id + '">Duplicate</button><button class="btn sm ghost" data-ia="' + i.id + '">' + (i.status === 'archived' ? 'Restore' : 'Archive') + '</button></div></div>';
+    }).join('') + '</div>' : '<div class="card empty"><h2>No items</h2><p>Add products from your catalogue, or create a custom item.</p></div>';
+    $('#v-items').innerHTML = h;
+    var tm = null; $('#iq').oninput = function () { S.iq = this.value; clearTimeout(tm); tm = setTimeout(loadItems, 300); };
+    $('#icat').onchange = function () { S.icat = this.value; loadItems(); }; $('#ist').onchange = function () { S.ist = this.value; loadItems(); };
+    $('#inew').onclick = function () { itemEditor(null).then(function (it) { if (it) loadItems(); }); };
+    $('#ifp').onclick = function () { productPicker().then(function (ids) { if (ids && ids.length) loadItems(); }); };
+    $$('[data-ie]').forEach(function (b) { b.onclick = function () { var it = S.items.filter(function (x) { return x.id === +b.getAttribute('data-ie'); })[0]; itemEditor(it).then(function (r) { if (r) loadItems(); }); }; });
+    $$('[data-id]').forEach(function (b) { b.onclick = function () { api('POST', '/items/' + b.getAttribute('data-id') + '/duplicate').then(function (j) { if (!j.ok) return toast(j.message, true); toast('Item duplicated.'); loadItems(); }); }; });
+    $$('[data-ia]').forEach(function (b) { b.onclick = function () { var it = S.items.filter(function (x) { return x.id === +b.getAttribute('data-ia'); })[0], to = it.status === 'archived' ? 'active' : 'archived'; var go = function () { api('POST', '/items/' + it.id + '/state', { status: to }).then(function (j) { if (!j.ok) return toast(j.message, true); toast(to === 'archived' ? 'Item archived. It no longer shows on any TV.' : 'Item restored.'); loadItems(); }); }; if (to === 'archived' && it.used.length) sure('Archive this item?', 'It is used on ' + it.used.length + ' screen(s) and will stop showing there.', 'Archive').then(function (y) { if (y) go(); }); else go(); }; });
+  }
+  function productPicker() {
+    return modal({ title: 'Add items from products', ok: 'Add selected', html: '<input type="search" id="q" placeholder="Search products by name, code or tag" style="margin-bottom:10px"><div class="plist" id="pl2"></div><p class="hint">Linked items always show the live name, pack and price from Products.</p>',
+      init: function (d) { var tm = null; function ld() { api('GET', '/products?q=' + encodeURIComponent($('#q', d).value)).then(function (j) { if (!j.ok) return; $('#pl2', d).innerHTML = j.products.map(function (p) { return '<label class="pi">' + '<input type="checkbox" value="' + esc(p.code) + '"' + (p.linked ? ' disabled' : '') + '>' + (p.img ? '<img class="thumb" style="width:40px;height:40px" src="' + esc(p.img) + '" alt="">' : '') + '<div class="t"><b>' + esc(p.name) + '</b><span>' + esc(p.pack) + ' - ' + money(p.price) + (p.tag ? ' - ' + esc(p.tag) : '') + (p.linked ? ' - already in library' : '') + '</span></div></label>'; }).join('') || '<div class="empty" style="padding:16px">No products found.</div>'; }); }
+        $('#q', d).oninput = function () { clearTimeout(tm); tm = setTimeout(ld, 250); }; ld(); },
+      collect: function (d) { return $$('#pl2 input:checked', d).map(function (x) { return x.value; }); } }).then(function (codes) {
+      if (!codes || !codes.length) return false;
+      return api('POST', '/items/from-products', { codes: codes }).then(function (j) { if (!j.ok) { toast(j.message, true); return false; } toast(j.created.length + ' item(s) added to the library.'); return j.created; });
+    });
+  }
+  function itemEditor(it, quiet) {
+    var isNew = !it; it = it || { id: 0, product_code: '', name: '', pack: '', price: null, mrp: null, description: '', image: '', cutout: false, badge: '', category: '', veg: null, used: [] };
+    return Promise.all(S.boot.hubs.map(function (h) { return api('GET', '/screens?hub=' + h.id).then(function (j) { return (j.screens || []).map(function (s) { return { id: s.id, name: s.name, hub: h.label }; }); }); })).then(function (lists) {
+      return [].concat.apply([], lists);
+    }).then(function (screens) {
+      var used = {}; (it.used || []).forEach(function (u) { used[u.id] = true; });
+      var file = null, removeImg = false, code = it.product_code || '';
+      return modal({ title: isNew ? 'New item' : 'Edit item', ok: 'Save item', html:
+        '<div class="f"><label class="l">Linked product (optional). Linked items show the live name, pack and price.</label><div class="row"><input type="text" id="lp" readonly placeholder="Not linked: custom item" value="' + esc(code) + '" style="flex:1"><button class="btn sm ghost" id="lpick">Choose product</button><button class="btn sm ghost" id="lclr"' + (code ? '' : ' style="display:none"') + '>Unlink</button></div></div>' +
+        '<div class="grid2"><div class="f"><label class="l">Name' + (code ? ' (empty = product name)' : '') + '</label><input type="text" id="in" maxlength="120" value="' + esc(it.name) + '"></div><div class="f"><label class="l">Pack / weight (empty = product pack)</label><input type="text" id="ip" maxlength="40" value="' + esc(it.pack) + '" placeholder="500 Gram"></div></div>' +
+        '<div class="grid3"><div class="f"><label class="l">Price (empty = product price)</label><input type="number" id="ipr" min="0" step="0.01" value="' + (it.price == null ? '' : it.price) + '"></div><div class="f"><label class="l">MRP (empty = product MRP)</label><input type="number" id="imr" min="0" step="0.01" value="' + (it.mrp == null ? '' : it.mrp) + '"></div><div class="f"><label class="l">Badge, for example Fresh today</label><input type="text" id="ib" maxlength="40" value="' + esc(it.badge) + '"></div></div>' +
+        '<div class="f"><label class="l">Description</label><input type="text" id="id" maxlength="255" value="' + esc(it.description) + '" placeholder="Short line shown on big cards"></div>' +
+        '<div class="grid2"><div class="f"><label class="l">Category</label><input type="text" id="ic" maxlength="60" value="' + esc(it.category) + '" placeholder="Chicken, Seafood, Vegetables"></div><div class="f"><label class="l">Veg mark</label><select id="iv"><option value="">Not shown</option><option value="1"' + (it.veg === true ? ' selected' : '') + '>Veg</option><option value="0"' + (it.veg === false ? ' selected' : '') + '>Non-veg (nothing shown)</option></select></div></div>' +
+        '<div class="f"><label class="l">Picture (empty = the product picture)</label><div class="up"><img id="iim" src="' + (it.image ? '/uploads/images/digital_menu/' + esc(it.image) : 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==') + '"><input type="file" id="if" accept="image/png,image/jpeg,image/webp"><button class="btn sm ghost" id="ix"' + (it.image ? '' : ' style="display:none"') + '>Use product picture</button></div><label class="tg"><input type="checkbox" id="icut"' + (it.cutout ? ' checked' : '') + '><span>The picture has a transparent background (dish cut-out)</span></label></div>' +
+        (quiet ? '' : '<div class="f"><label class="l">Show on these screens</label><div class="plist" style="max-height:170px">' + (screens.map(function (s) { return '<label class="pi"><input type="checkbox" data-sc value="' + s.id + '"' + (used[s.id] ? ' checked' : '') + '><div class="t"><b>' + esc(s.name) + '</b><span>' + esc(s.hub) + '</span></div></label>'; }).join('') || '<div class="empty" style="padding:12px">No screens yet.</div>') + '</div></div>'),
+        init: function (d) {
+          $('#lpick', d).onclick = function () { var ov = d; ov.style.display = 'none'; productPickerOne().then(function (p) { ov.style.display = ''; if (!p) return; code = p.code; $('#lp', d).value = code; $('#lclr', d).style.display = ''; if (!$('#in', d).value) $('#in', d).placeholder = p.name; if (!$('#ic', d).value && p.tag) $('#ic', d).value = p.tag; }); };
+          $('#lclr', d).onclick = function () { code = ''; $('#lp', d).value = ''; this.style.display = 'none'; };
+          $('#if', d).onchange = function () { file = this.files[0] || null; removeImg = false; if (file) { $('#iim', d).src = URL.createObjectURL(file); $('#ix', d).style.display = ''; } };
+          $('#ix', d).onclick = function () { file = null; removeImg = true; $('#iim', d).src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; this.style.display = 'none'; };
+        },
+        validate: function (d) { if (!code && (!$('#in', d).value.trim() || !(+$('#ipr', d).value > 0))) { toast('A custom item needs a name and a price, or choose a product to link.', true); return false; } return true; },
+        collect: function (d) {
+          var fd = new FormData(); fd.append('id', it.id || ''); fd.append('product_code', code); fd.append('name', $('#in', d).value); fd.append('pack', $('#ip', d).value); fd.append('price', $('#ipr', d).value); fd.append('mrp', $('#imr', d).value);
+          fd.append('badge', $('#ib', d).value); fd.append('description', $('#id', d).value); fd.append('category', $('#ic', d).value); fd.append('veg', $('#iv', d).value); fd.append('cutout', $('#icut', d).checked ? '1' : '0');
+          if (file) fd.append('image', file); if (removeImg) fd.append('remove_image', '1');
+          if (!quiet) { fd.append('screens[]', ''); $$('[data-sc]:checked', d).forEach(function (x) { fd.append('screens[]', x.value); }); }
+          return fd;
+        } }).then(function (fd) {
+        if (!fd) return null;
+        if (quiet) { fd.delete('screens[]'); }
+        return api('POST', '/items', fd, true).then(function (j) { if (!j.ok) { toast(j.message, true); return null; } toast('Item saved.'); return j.item; });
+      });
+    });
+  }
+  function productPickerOne() {
+    return modal({ title: 'Choose a product', ok: 'Use this product', html: '<input type="search" id="q" placeholder="Search products by name, code or tag" style="margin-bottom:10px"><div class="plist" id="pl3"></div>',
+      init: function (d) { var tm = null; function ld() { api('GET', '/products?q=' + encodeURIComponent($('#q', d).value)).then(function (j) { if (!j.ok) return; $('#pl3', d).innerHTML = j.products.map(function (p) { return '<label class="pi"><input type="radio" name="pp" value="' + esc(p.code) + '" data-n="' + esc(p.name) + '" data-t="' + esc(p.tag) + '"><div class="t"><b>' + esc(p.name) + '</b><span>' + esc(p.code) + ' - ' + esc(p.pack) + ' - ' + money(p.price) + '</span></div></label>'; }).join('') || '<div class="empty" style="padding:16px">No products found.</div>'; }); }
+        $('#q', d).oninput = function () { clearTimeout(tm); tm = setTimeout(ld, 250); }; ld(); },
+      validate: function (d) { if (!$('#pl3 input:checked', d)) { toast('Choose one product.', true); return false; } return true; },
+      collect: function (d) { var x = $('#pl3 input:checked', d); return { code: x.value, name: x.getAttribute('data-n'), tag: x.getAttribute('data-t') }; } });
+  }
+
+  boot();
+})();
+</script>
+@endverbatim
+</body>
+</html>

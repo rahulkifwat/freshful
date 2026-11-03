@@ -32,7 +32,6 @@
                 @endif
             </div>
             <div class="ff-product-actions">
-                <button type="button" class="ff-compare-button" onclick="addProductToCompare({{ $product->id }})" aria-label="Compare {{ $name }}" title="Add to comparison"><i class="bi bi-arrow-left-right"></i></button>
                 <div class="ff-quantity-control" data-product-quantity="{{ $product->id }}">
                     <button type="button" class="ff-add product-add-button" onclick="addToCart({{ $product->id }})">Add</button>
                     <div class="ff-quantity-stepper" hidden aria-label="Change quantity for {{ $name }}">

@@ -39,6 +39,10 @@ class OrderController extends BuyerController
             $last = DB::table('orders')->orderByDesc('id')->lockForUpdate()->value('order_id');
             $orderId = $last ? $this->increment($last) : 'ORD200000';
 
+            $sgLines = [];
+            foreach ($productIds as $sgI => $sgPid) { $sgPid = (int) trim((string) $sgPid); if ($sgPid) $sgLines[$sgPid] = ($sgLines[$sgPid] ?? 0) + (float) ($quantities[$sgI] ?? 0); }
+            if ($sgMsg = \App\Services\Stock\StockGuard::shortage((int) ($base['hub_id'] ?? 0), $sgLines)) throw new ApiException($sgMsg);
+
             foreach ($productIds as $i => $productId) {
                 DB::table('orders')->insert(array_merge($base, [
                     'order_id'   => $orderId,

@@ -1,0 +1,293 @@
+== date: Fri Oct 30 02:27:35 PM UTC 2026
+
+-- orders
+id int(11)
+order_id varchar(255)
+product_id int(11)
+buyer_id int(11)
+address_id int(11)
+hub_id int(11)
+rider_id int(11)
+total_amount varchar(11)
+amount_to_collect varchar(255)
+amount_to_return varchar(255)
+quantity varchar(11)
+order_status enum('Order Pending','Order Cancel','Order Placed','Order Processed','Order Shipped','Order Delivered','Order Dispatched')
+reason_for_order_cancel varchar(255)
+order_complete_time varchar(255)
+processing_complete_time varchar(255)
+shipping_complete_time varchar(255)
+delivery_complete_time varchar(255)
+payment_status varchar(255)
+payment_type enum('Card','Cash','Wallet','Online')
+payment_id varchar(100)
+delivery_type enum('Scheduled','Express')
+delivery_charge int(11)
+schedule_date varchar(255)
+schedule_time varchar(255)
+txn_id varchar(255)
+date_added timestamp
+updated_at timestamp
+status varchar(255)
+rows: 170
+
+-- inventory
+id int(11)
+product_id varchar(100)
+hub_id int(11)
+stock int(100)
+live_stock int(100)
+fresh_stock int(100)
+variance int(100)
+created_at timestamp
+updated_at timestamp
+rows: 1867
+
+-- products
+id int(11)
+ranking int(11)
+product_id varchar(100)
+category_id varchar(255)
+item_id int(11)
+product_image varchar(255)
+product_name varchar(255)
+product_unit varchar(255)
+unit_quantity varchar(255)
+gross_quantity varchar(255)
+MRP varchar(255)
+cost_price varchar(100)
+main_price varchar(255)
+stock varchar(255)
+off varchar(255)
+description text
+property varchar(255)
+tag varchar(255)
+pieces varchar(255)
+serves varchar(255)
+cooking_time varchar(255)
+status enum('active','disabled')
+date_added datetime
+rows: 133
+
+-- hub_stock_moves
+id bigint(20) unsigned
+hub_id int(10) unsigned
+product_code varchar(40)
+type varchar(20)
+before_qty decimal(12,3)
+change_qty decimal(12,3)
+after_qty decimal(12,3)
+expected_qty decimal(12,3)
+note varchar(250)
+by_id int(10) unsigned
+by_name varchar(120)
+created_at timestamp
+ref varchar(40)
+lots text
+rows: 10
+
+-- hub_stock_lots
+id bigint(20) unsigned
+hub_id int(10) unsigned
+product_code varchar(40)
+received_on date
+qty_in decimal(12,3)
+qty_left decimal(12,3)
+source varchar(20)
+ref varchar(40)
+created_at timestamp
+updated_at timestamp
+rows: 969
+
+-- cart
+id int(11)
+product_id varchar(11)
+buyer_id int(11)
+quantity varchar(255)
+total_price varchar(255)
+session_id varchar(255)
+hub_id int(11)
+payment_status varchar(255)
+order_status varchar(255)
+created_at timestamp
+rows: 17
+
+-- hubs
+id int(255)
+city_id int(255)
+hub varchar(255)
+hub_lat varchar(255)
+hub_lng varchar(255)
+type varchar(100)
+all_latlng text
+status enum('active','disabled','pending')
+rows: 19
+
+-- pos_users
+missing
+
+-- buyers
+id int(11)
+name varchar(255)
+email varchar(255)
+gender enum('Male','Female','')
+phone varchar(15)
+password varchar(255)
+otp varchar(255)
+email_verify tinyint(1)
+phone_verify tinyint(1)
+status enum('active','disabled','pending')
+date_added datetime
+wallet_amount varchar(255)
+cart_count varchar(255)
+fcm_id text
+auth_id varchar(255)
+provider varchar(255)
+regId varchar(255)
+f_otp varchar(255)
+new_user int(11)
+referral_code varchar(24)
+referred_by_buyer_id bigint(20) unsigned
+created_at datetime
+updated_at datetime
+rows: 134
+
+-- delivery_type values
+{"delivery_type":"","n":1}
+{"delivery_type":"Scheduled","n":115}
+{"delivery_type":"Express","n":54}
+
+-- payment_type values
+{"payment_type":"","n":7}
+{"payment_type":"Cash","n":130}
+{"payment_type":"Wallet","n":15}
+{"payment_type":"Online","n":18}
+
+-- hubs.type values
+{"type":null,"n":4}
+{"type":"circle","n":1}
+{"type":"polygon","n":14}
+
+-- tables like stock/lock/outlet/pos
+cache_locks
+danger_stock
+hub_stock_lots
+hub_stock_moves
+pos_cash_handovers
+pos_day_closes
+pos_order_events
+pos_order_weights
+pos_rider_assign
+pos_rider_status
+pos_settlements
+pos_user
+storefront_stock_alerts
+wastage_stock
+
+== where live_stock / inventory is written or read in app code
+app/Http/Controllers/OperationManagerController.php:199:                    'inv.stock as inventory_stock','inv.live_stock','inv.fresh_stock','inv.variance')
+app/Http/Controllers/HomeController.php:173:                't4.live_stock',
+app/Http/Controllers/HomeController.php:199:        $sql = "SELECT t1.*, t4.live_stock, t2.item as title, t3.name as category, IF(t5.id IS NULL, FALSE, TRUE) as cart, t5.
+app/Http/Controllers/HomeController.php:1011:                    ->decrement('live_stock', $item->quantity);
+app/Http/Controllers/Api/Buyer/CatalogController.php:224:                ->get(['product_id', 'live_stock'])->unique('product_id')->pluck('live_stock', 'product_id'),
+app/Http/Controllers/ProductionController.php:199:                    'inv.stock as inventory_stock','inv.live_stock','inv.fresh_stock','inv.variance')
+app/Services/ProductionConsole/ProductionPlan.php:179:                $out[$h][$code] = ['inv_id' => (int) $r->id, 'live' => max(0, (float) $r->live_stock), 'fresh' => ma
+app/Services/ProductionConsole/ProductionDispatch.php:73:                    $ins = ['product_id' => $l['code'], 'hub_id' => $l['hub_id'], 'stock' => (int) $l['qty'], 'li
+app/Services/Storefront/HomeV2Data.php:219:                ->get(['product_id', 'live_stock', 'fresh_stock'])
+app/Services/Storefront/HomeV2Data.php:236:            $live = (int) $row->live_stock;
+app/Services/AdminConsole/AdminReports.php:38:        if (self::h('inventory')) foreach (array_chunk($ids, 500) as $c) foreach (DB::table('inventory')->whereIn('hub_id', 
+app/Services/AdminConsole/AdminCatalog.php:28:        foreach (DB::table('inventory')->select(DB::raw('UPPER(TRIM(product_id)) AS c'), DB::raw('SUM(live_stock) AS live'),
+app/Services/AdminConsole/AdminCatalog.php:110:            foreach (DB::table('inventory')->whereRaw('UPPER(TRIM(product_id)) = ?', [strtoupper(trim((string) $p->product_
+app/Services/AdminConsole/AdminCatalog.php:111:                $hubs[] = ['hub' => $hn[(int) $r->hub_id]['name'] ?? ('Hub ' . $r->hub_id), 'live' => (float) $r->live_stoc
+app/Services/AdminConsole/AdminCatalog.php:268:        $st = self::h('inventory') ? DB::table('inventory')->whereRaw('UPPER(TRIM(product_id)) = ?', [strtoupper(trim((stri
+app/Services/AdminConsole/AdminCatalog.php:303:        foreach (DB::table('inventory')->select('product_id', 'hub_id', 'live_stock', 'stock', 'updated_at')->get() as $r) 
+app/Services/AdminConsole/AdminCatalog.php:307:            $rows[$k]['live'] += (float) $r->live_stock; $rows[$k]['incoming'] += (float) $r->stock; $rows[$k]['rows']++;
+app/Services/AdminConsole/AdminCatalog.php:308:            if ((float) $r->live_stock > 0) $rows[$k]['hubs']++;
+app/Services/AdminConsole/AdminCatalog.php:310:            if ((float) $r->live_stock || (float) $r->stock) $rows[$k]['by_hub'][] = ['hub' => $hn[(int) $r->hub_id]['name'
+app/Services/CountryConsole/CountryStock.php:94:        $cols = ['id', 'hub_id', 'product_id', 'stock', 'live_stock', 'fresh_stock', 'variance'];
+app/Services/CountryConsole/CountryStock.php:109:                $live = (float) $r->live_stock;
+app/Services/CountryConsole/CountryStock.php:162:                $live = (float) $i->live_stock;
+app/Services/CountryConsole/CountryStock.php:204:            $live = $i ? (float) $i->live_stock : 0.0;
+app/Services/CountryConsole/CountryStock.php:235:                $r['skus']++; $live = (float) $i->live_stock;
+app/Services/CountryConsole/CountryStock.php:262:            $rows[] = ['id' => $p['id'], 'code' => $code, 'name' => $p['name'], 'pack' => $p['pack'], 'price' => $p['pric
+app/Services/CountryConsole/CountryStock.php:453:                'value' => round((float) $i->stock * ($p['price'] ?? 0), 2), 'live' => (float) $i->live_stock, 'since' =>
+app/Services/CountryConsole/CountryInventory.php:12: * Today: live = inventory.live_stock now; fresh / danger / expired from the stock batches (exact);
+app/Services/CountryConsole/CountryInventory.php:52:        foreach (array_chunk($ids, 500) as $c) foreach (DB::table('inventory')->whereIn('hub_id', $c)->orderBy('id')->
+app/Services/CountryConsole/CountryInventory.php:54:            if (isset($live[$code][$h])) { $dupes++; $dupeLive += (float) $r->live_stock; continue; }
+app/Services/CountryConsole/CountryInventory.php:55:            $live[$code][$h] = (float) $r->live_stock;
+app/Services/HubConsole/HubConsoleService.php:17: * accepting moves it into live_stock / fresh_stock and records the difference as variance.
+app/Services/HubConsole/HubConsoleService.php:291:                'p.id AS pid', 'p.product_id AS code', 'p.product_name', 'p.unit_quantity', 'p.product_unit', 'i.item', 
+app/Services/HubConsole/HubConsoleService.php:299:                    'live' => (float) ($l->live_stock ?? 0), 'reserved' => 0.0, 'packed' => 0.0, 'out' => 0.0, 'orders' 
+app/Services/HubConsole/HubConsoleService.php:366:                'p.id AS pid', 'p.product_id AS code', 'p.product_name', 'p.product_unit', 'p.unit_quantity', 'p.product
+app/Services/HubConsole/HubConsoleService.php:378:                    'pack_g' => $packG, 'qty' => 0.0, 'grams' => 0.0, 'orders' => [], 'slots' => [], 'live' => (float) (
+app/Services/HubConsole/HubConsoleService.php:424:            'inv.id AS inv_id', 'inv.stock', 'inv.live_stock', 'inv.fresh_stock', 'inv.variance', 'inv.updated_at AS inv
+app/Services/HubConsole/HubConsoleService.php:438:            $live = (float) ($r->live_stock ?? 0);
+app/Services/HubConsole/HubConsoleService.php:486:            $before = (float) $row->live_stock;
+app/Services/HubConsole/HubConsoleService.php:505:            $before = (float) (DB::table('inventory')->where('product_id', $p->product_id)->where('hub_id', $this->hubId
+app/Services/HubConsole/HubTransferService.php:262:                $live = (float) (DB::table('inventory')->where('product_id', $prods[$pid]['code'])->where('hub_id', $th
+app/Services/HubConsole/HubTransferService.php:315:                $live = (float) (DB::table('inventory')->where('product_id', $i->product_code)->where('hub_id', $this->
+app/Services/HubConsole/HubStock.php:21: *   inventory.live_stock stays the total that the rest of the system reads; inventory.fresh_stock is kept equal to
+app/Services/HubConsole/HubStock.php:23: *   If anything outside this class changes live_stock, the lots are reconciled on the next read (extra stock is
+app/Services/HubConsole/HubStock.php:131:            $inv = DB::table('inventory')->where('hub_id', $hubId)->get(['product_id', 'live_stock', 'fresh_stock']);
+app/Services/HubConsole/HubStock.php:135:                if ($s && abs((float) $s->s - max(0, (float) $r->live_stock)) < 0.0005) continue;
+app/Services/HubConsole/HubStock.php:136:                if (!$s && (float) $r->live_stock <= 0) continue;
+app/Services/HubConsole/HubStock.php:137:                self::syncLots($hubId, (string) $r->product_id, (float) $r->live_stock, (float) $r->fresh_stock);
+app/Services/HubConsole/HubStock.php:162:        $before = $row ? (float) $row->live_stock : 0.0;
+app/Services/HubConsole/HubStock.php:172:            $upd = ['live_stock' => $after, 'fresh_stock' => round($fresh, 3)];
+app/Services/HubConsole/HubStock.php:176:            $ins = ['product_id' => $code, 'hub_id' => $hubId, 'stock' => 0, 'live_stock' => $after, 'fresh_stock' => round($fres
+app/Services/HubConsole/HubDangerService.php:107:        $live = $codes && $near ? DB::table('inventory')->whereIn('hub_id', array_column($near, 'id'))->whereIn('product_
+app/Services/HubConsole/HubDangerService.php:108:            ->groupBy('product_id')->map(fn ($g) => $g->pluck('live_stock', 'hub_id')->map(fn ($v) => (float) $v)->all())
+app/Services/HubConsole/HubDangerService.php:194:            $live = (float) (DB::table('inventory')->where('product_id', $code)->where('hub_id', $this->hubId)->lockForUp
+app/Models/inventory.php:13:        'live_stock',
+
+== HubStock public methods
+app/Services/HubConsole/HubStock.php:30:    public static function has(string $t, ?string $col = null): bool
+app/Services/HubConsole/HubStock.php:39:    public static function enabled(): bool
+app/Services/HubConsole/HubStock.php:44:    public static function lotsOn(): bool
+app/Services/HubConsole/HubStock.php:127:    public static function ages(int $hubId): array
+app/Services/HubConsole/HubStock.php:159:    public static function adjust(int $hubId, string $code, float $delta, string $type, ?string $ref, string $note, array $actor, ?float $expected = null, ?arr
+app/Services/HubConsole/HubStock.php:184:    public static function log(int $hubId, string $code, string $type, float $before, float $after, ?float $expected, string $note, array $actor, ?string $ref 
+app/Services/HubConsole/HubStock.php:235:    public static function takeForOrder(int $hubId, string $orderId, array $actor): void
+app/Services/HubConsole/HubStock.php:245:    public static function returnForOrder(int $hubId, string $orderId, array $actor, string $why): void
+
+== routes that place or change orders and carts
+  POST       add-cart .................................................................................................. add-cart › HomeController@addCart
+  GET|POST|HEAD api/add_cart .............................................................................................. Api\Buyer\CartController@store
+  GET|POST|HEAD api/cart .................................................................................................. Api\Buyer\CartController@index
+  GET|POST|HEAD api/empty_cart .......................................................................................... Api\Buyer\CartController@destroy
+  GET|HEAD   checkout ................................................................................................. checkout › HomeController@checkout
+  GET|HEAD   get-cart ..................................................................................................... get-cart › HomeController@cart
+
+== files that insert into orders
+app/Http/Controllers/HomeController.php.bak-cod-fields-20261019-175758
+app/Http/Controllers/HomeController.php.bak-v34
+app/Http/Controllers/HomeController.php.bak-locv2
+app/Http/Controllers/HomeController.php.bak-20261021-152805
+app/Http/Controllers/HomeController.php.bak-20261021-152435
+app/Http/Controllers/HomeController.php.bak-addrtype
+app/Http/Controllers/HomeController.php.bak-20261021-093109
+app/Http/Controllers/HomeController.php.bak-20261019-164745
+app/Http/Controllers/HomeController.php
+app/Http/Controllers/HomeController.php.bak-20261021-091958
+
+== barcode columns / words in products code
+app/Http/Controllers/HrManagerController.php:338:    public function skuReport(Request $request)
+app/Http/Controllers/HrManagerController.php:354:        return view('hr_manager.sku_report', compact('rows'));
+app/Http/Controllers/MarketingManagerController.php:323:    public function skuReport(Request $request)
+app/Http/Controllers/MarketingManagerController.php:350:    return view('marketing_manager.sku_report', compact('rows'));
+app/Http/Controllers/ProductionConsole/ProductionConsoleController.php:34:        return $this->out(ProductionPlan::build($this->sc($r), (string) $r->input('dat
+app/Http/Controllers/Storefront/HomeSettingsController.php:49:            'embed' => $request->header('Sec-Fetch-Dest') === 'iframe' || $request->boolean('embed
+app/Http/Controllers/Storefront/HomeSettingsController.php:108:            $values[$flag] = $request->boolean($flag) ? '1' : '0';
+app/Http/Controllers/OperationManagerController.php:258:    public function skuWastage(Request $request)
+app/Http/Controllers/OperationManagerController.php:268:        return view('operation_manager.sku_wastage', compact('rows'));
+app/Http/Controllers/OperationManagerController.php:349:    public function skuReport(Request $request)
+app/Http/Controllers/OperationManagerController.php:359:        return view('operation_manager.sku_report', compact('rows'));
+app/Http/Controllers/PlanningManagerController.php:310:    public function skuWastage()
+app/Http/Controllers/PlanningManagerController.php:314:        if (Schema::hasTable('sku_wastage')) {
+app/Http/Controllers/PlanningManagerController.php:315:            $q = DB::table('sku_wastage')
+app/Http/Controllers/PlanningManagerController.php:316:                ->leftJoin('products', 'products.product_id', '=', 'sku_wastage.product_id')
+app/Http/Controllers/PlanningManagerController.php:318:                ->leftJoin('hubs', 'hubs.id', '=', 'sku_wastage.hub_id')
+app/Http/Controllers/PlanningManagerController.php:319:                ->select('sku_wastage.*', 'items.item as product_name', 'hubs.name as hub_name');
+app/Http/Controllers/PlanningManagerController.php:320:            if (request('hub_id'))    $q->where('sku_wastage.hub_id', request('hub_id'));
+app/Http/Controllers/PlanningManagerController.php:321:            if (request('from_date')) $q->whereDate('sku_wastage.created_at', '>=', request('from_date'))
+app/Http/Controllers/PlanningManagerController.php:322:            if (request('to_date'))   $q->whereDate('sku_wastage.created_at', '<=', request('to_date'));

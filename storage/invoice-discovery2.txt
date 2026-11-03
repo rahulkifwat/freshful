@@ -1,0 +1,111 @@
+== where product / item images live
+/home/u182416408/domains/freshful.in/public_html/uploads/images/products/EQ8jG1666027805.jpeg
+item 102: {"id":102,"cat_id":5,"item":"Premium Goat Curry Cut","image":"noimage.jpg","status":"active"}
+categories: [{"id":2,"image":"bKBAd1713773782.png","name":"Fruits & Vegetables","status":"disabled"},{"id":3,"image":"2gGaP1713773805.png","name":"Fresh Dairy","status":"disabled"},{"id":36,"image":"zNaRp1792692684.png","name":"Meat & Seafoods","status":"disabled"}]
+reviews sample: [{"id":3,"buyer_id":1,"product_id":9,"rating":"4","feedback":"Happy with the quality","date_added":"2020-11-02 13:41:09"},{"id":4,"buyer_id":1,"product_id":3,"rating":"4","feedback":"Good One","date_added":"2020-11-06 11:28:10"}]
+== session keys used for the logged-in buyer
+== myAccount() and addReview() in HomeController
+-- myAccount at line 349
+    public function myAccount()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('home')->with('error', 'Please login first');
+        }
+
+        $user_id = Auth::id();
+        $buyer = Buyer::find($user_id);
+        if (!$buyer) return redirect()->route('home')->with('error', 'Please login first');
+
+        $referralCode = app(\App\Services\BuyerReferralService::class)->ensureCode((int) $user_id);
+        $orders = DB::table('orders')->where('buyer_id', $user_id)
+            ->select('order_id', DB::raw('MAX(id) as id'), DB::raw('MAX(date_added) as date_added'),
+                DB::raw('MAX(order_status) as order_status'), DB::raw('MAX(delivery_type) as delivery_type'),
+                DB::raw('MAX(schedule_time) as schedule_time'), DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(delivery_charge) as delivery_charge'), DB::raw('COUNT(*) as order_count'))
+            ->groupBy('order_id')->orderByDesc('id')->get();
+        $addresses = BuyersAddress::where('buyer_id', $user_id)->get();
+        $walletTransactions = DB::table('buyer_wallet_ledger')->where('buyer_id', $user_id)->orderByDesc('id')->limit(30)->get();
+        if ($walletTransactions->isEmpty()) {
+            foreach (['wallet_transaction_history', 'wallet_history'] as $legacyTable) {
+                if (!\Illuminate\Support\Facades\Schema::hasTable($legacyTable) || !\Illuminate\Support\Facades\Schema::hasColumn($legacyTable, 'buyer_id')) continue;
+                $legacyQuery = DB::table($legacyTable)->where('buyer_id', $user_id);
+                if (\Illuminate\Support\Facades\Schema::hasColumn($legacyTable, 'id')) $legacyQuery->orderByDesc('id');
+                $walletTransactions = $legacyQuery->limit(30)->get();
+                break;
+            }
+        }
+
+        return view('myaccount', compact('buyer', 'orders', 'addresses', 'walletTransactions', 'referralCode'));
+    }
+    public function trackOrder($order_id)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('home')->with('error', 'Please login first');
+        }
+
+        $user_id = Auth::id();
+
+        $order_items = DB::table('orders as t1')
+            ->join('products as t2', 't2.id', '=', 't1.product_id')
+            ->join('items as t3', 't3.id', '=', 't2.item_id')
+            ->where('t1.order_id', $order_id)
+            ->where('t1.buyer_id', $user_id)
+            ->select('t1.*', 't2.main_price', 't2.product_unit', 't2.unit_quantity', 't2.product_image', 't3.item as item_name')
+            ->get();
+-- addReview at line 453
+    public function addReview(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['result' => false, 'message' => 'Please login first']);
+        }
+
+        $user_id    = Auth::id();
+        $product_id = $request->product_id;
+        $rating     = $request->rating;
+        $feedback   = $request->feedback;
+
+        if (!$product_id) {
+            return response()->json(['result' => false, 'message' => 'Please define product id']);
+        }
+
+        $existing = DB::table('reviews')
+            ->where('buyer_id', $user_id)
+            ->where('product_id', $product_id)
+            ->first();
+
+        if ($existing) {
+            DB::table('reviews')->where('id', $existing->id)->update([
+                'rating'   => $rating,
+                'feedback' => $feedback,
+            ]);
+            return response()->json(['result' => true, 'message' => 'Rating Updated Successfully']);
+        }
+
+        DB::table('reviews')->insert([
+            'buyer_id'   => $user_id,
+            'product_id' => $product_id,
+            'rating'     => $rating,
+            'feedback'   => $feedback,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['result' => true, 'message' => 'Rating Added Successfully']);
+    }
+
+    /** Address type as the buyer_address.type column accepts it (enum or short text). Fix 21 Oct 2026. */
+    private function fitAddressType(string $type): string
+    {
+        $type = trim($type) !== '' ? trim($type) : 'Home';
+        try {
+            $col = DB::selectOne("SELECT DATA_TYPE AS dt, COLUMN_TYPE AS ct, CHARACTER_MAXIMUM_LENGTH AS len FROM information_schema.columns WHERE table_schema = DATABASE
+== myaccount.blade.php: lines with order, rating, review, invoice
+1:@extends('layout.master')
+2:@section('content')
+65:                                    <div class="flex-grow-1 min-w-0"><div class="fw-bold">Order #{{ $order->order_id }}</div><div class="small text-muted">{{
+86:                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3"><div><span class="small text-muted">O
+88:                                    <div class="ff-order-actions"><a href="{{ route('track-order', $order->order_id) }}" class="btn btn-success btn-sm rounde
+172:   const checkout=new Razorpay({key:order.key,amount:order.amount,currency:order.currency,name:order.name,description:'Wallet top-up',order_id:order.order_i
+== hub details on file (for invoice header)
+cities: id,city,state_id,status
+hub rows: [{"id":1,"city_id":35,"hub":"INE"},{"id":2,"city_id":9,"hub":"NCC"},{"id":3,"city_id":3,"hub":"AMB"}]

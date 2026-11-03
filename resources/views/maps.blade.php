@@ -103,7 +103,7 @@ function getLocation() {
                 position: latlng,
                 map: map,
                 title: 'Your Location',
-                icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
             });
         });
     } else {
@@ -111,7 +111,26 @@ function getLocation() {
     }
 }
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOZz0ZH-6fFQg8vixFsEtvrq006HXoZwA&callback=initMap" async defer></script>
+<script>window.__ffMapsCb=(window.__ffMapsCb||[]).concat(['initMap']);</script>
+<script>/* ff-stores-center: open the Stores map on Vaniyambadi and Ambur */
+(function () {
+    var original = window.initMap;
+    window.initMap = function () {
+        if (typeof original === 'function') { original.apply(this, arguments); }
+        try { if (window.map) { window.map.setCenter({ lat: 12.74, lng: 78.67 }); window.map.setZoom(11); } } catch (e) {}
+    };
+})();
+</script>
+<script>/* ff-maps-home: open the stores map on Vaniyambadi and Ambur */
+(function () {
+    if (typeof initMap !== 'function') return;
+    var original = initMap;
+    window.initMap = initMap = function () {
+        original.apply(this, arguments);
+        if (window.map && map.setCenter) { map.setCenter({ lat: 12.74, lng: 78.67 }); map.setZoom(11); }
+    };
+})();
+</script>
 @endpush
 
 @endsection

@@ -1,0 +1,25 @@
+Freshful Digital Menu - additive animation upgrade
+
+Files included:
+app/Services/DigitalMenu/DigitalMenu.php
+resources/views/digital_menu/player.blade.php
+resources/views/digital_menu/admin.blade.php
+
+New: 12 optional picture entrance presets and 12 optional ambient image motion presets, plus a selection gallery.
+No database migration. No controller or playlist changes. Current selections remain valid.
+
+DEPLOY SAFELY
+1. Take a backup of the three current production files.
+2. Upload the three replacement files to the exact matching relative paths under laravelapp.
+3. Run php artisan view:clear
+4. Test draft preview of both screens, then test new options on a duplicate screen first.
+5. Existing screen configurations are unchanged until you explicitly select and publish a new effect.
+
+ROLLBACK
+Restore all three backed-up originals and run php artisan view:clear.
+
+NOTES
+The mini gallery provides lightweight illustrative motion previews, not an exact full-TV preview.
+Use Save draft and Refresh for exact TV rendering. New motions animate product images after entrance settles.
+The new motions do not replace existing particle/canvas ambient effects.
+Check on real TV browsers before rolling out to all screens.

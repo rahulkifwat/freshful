@@ -1,0 +1,129 @@
+== logo / image candidates (public)
+public/favicon.ico
+public/assets/image/logo.png
+public/assets/images/logo2.png
+public/assets/images/logo.png
+public/assets/images/favicon.png
+/home/u182416408/domains/freshful.in/public_html/favicon.ico
+/home/u182416408/domains/freshful.in/public_html/assets/image/logo.png
+/home/u182416408/domains/freshful.in/public_html/assets/images/logo2.png
+/home/u182416408/domains/freshful.in/public_html/assets/images/logo.png
+/home/u182416408/domains/freshful.in/public_html/assets/images/favicon.png
+== web routes: account, order, invoice, rating
+16:use App\Http\Controllers\AccountManagerAuthController;
+17:use App\Http\Controllers\AccountManagerController;
+100:        // Orders / products / buyers
+101:        Route::get('/all_orders', [AdminController::class, 'all_orders'])->name('admin.all_orders');
+108:        Route::get('/profile',           [AdminController::class, 'profile'])->name('admin.profile');
+109:        Route::get('/edit_profile',      [AdminController::class, 'edit_profile'])->name('admin.edit_profile');
+110:        Route::post('/edit_profile',     [AdminController::class, 'update_profile'])->name('admin.update_profile');
+115:        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('admin.ajax.change_order_status');
+132:            'account_managers'       => ['list' => 'account_managers',       'add' => 'add_account_manager',       'view' => 'view_account_manager'],
+244:        // Setting → mirror of edit_profile (legacy "Change Password" page).
+245:        Route::get('/setting', fn () => redirect()->route('admin.edit_profile'));
+256:    Route::get('/myaccount', [HomeController::class, 'myAccount'])->name('myaccount');
+260:    Route::post('/ajax/add-review', [HomeController::class, 'addReview'])->name('add-review');
+263:    Route::post('updateAccount', [HomeController::class, 'updateAccount'])->name('updateAccount');
+273:Route::prefix('account_manager')->group(function () {
+275:    Route::middleware(['account_manager_redirect'])->group(function () {
+276:        Route::get('/login',  [AccountManagerAuthController::class, 'login'])->name('account_manager.login');
+277:        Route::post('/login', [AccountManagerAuthController::class, 'loginSubmit'])->name('account_manager.loginSubmit');
+280:    Route::middleware(['account_manager'])->group(function () {
+281:        Route::get('/logout',   [AccountManagerAuthController::class, 'logout'])->name('account_manager.logout');
+283:        Route::get('/',          [AccountManagerController::class, 'dashboard'])->name('account_manager.dashboard');
+284:        Route::get('/dashboard', [AccountManagerController::class, 'dashboard']);
+286:        Route::get('/all_customers',  [AccountManagerController::class, 'allCustomers'])->name('account_manager.all_customers');
+287:        Route::get('/all_orders',     [AccountManagerController::class, 'allOrders'])->name('account_manager.all_orders');
+288:        Route::get('/products',       [AccountManagerController::class, 'products'])->name('account_manager.products');
+289:        Route::get('/grievance',      [AccountManagerController::class, 'grievance'])->name('account_manager.grievance');
+290:        Route::get('/delivery_boy',   [AccountManagerController::class, 'deliveryBoy'])->name('account_manager.delivery_boy');
+291:        Route::get('/wallet_history', [AccountManagerController::class, 'walletHistory'])->name('account_manager.wallet_history');
+292:        Route::get('/hub_inventory',  [AccountManagerController::class, 'hubInventory'])->name('account_manager.hub_inventory');
+293:        Route::get('/danger_stock',   [AccountManagerController::class, 'dangerStock'])->name('account_manager.danger_stock');
+294:        Route::get('/wastage_reports',[AccountManagerController::class, 'wastageReports'])->name('account_manager.wastage_reports');
+295:        Route::get('/pending_inward', [AccountManagerController::class, 'pendingInward'])->name('account_manager.pending_inward');
+296:        Route::get('/cash_deposit',   [AccountManagerController::class, 'cashDeposit'])->name('account_manager.cash_deposit');
+297:        Route::get('/sales_report',   [AccountManagerController::class, 'salesReport'])->name('account_manager.sales_report');
+299:        // AJAX endpoints (reuse AdminAjaxController, protected by account_manager middleware)
+300:        Route::post('/ajax/change-status',       [AdminAjaxController::class, 'changeStatus'])->name('account_manager.ajax.change_status');
+301:        Route::post('/ajax/delete-record',       [AdminAjaxController::class, 'deleteRecord'])->name('account_manager.ajax.delete_record');
+302:        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('account_manager.ajax.change_order_status');
+320:        Route::get('/all_orders',           [AreaManagerController::class, 'allOrders'])->name('area_manager.all_orders');
+322:        Route::get('/scheduled_orders',     [AreaManagerController::class, 'scheduledOrders'])->name('area_manager.scheduled_orders');
+323:        Route::get('/interhub_orders',      [AreaManagerController::class, 'interhubOrders'])->name('area_manager.interhub_orders');
+335:        Route::get('/rating_reviews',       [AreaManagerController::class, 'ratingReviews'])->name('area_manager.rating_reviews');
+337:        Route::get('/profile',              [AreaManagerController::class, 'profile'])->name('area_manager.profile');
+338:        Route::get('/edit_profile',         [AreaManagerController::class, 'editProfile'])->name('area_manager.edit_profile');
+339:        Route::post('/edit_profile',        [AreaManagerController::class, 'updateProfile'])->name('area_manager.update_profile');
+343:        Route::post('/ajax/change-order-status', [AdminAjaxController::class, 'changeOrderStatus'])->name('area_manager.ajax.change_order_status');
+361:        Route::get('/all_orders',             [CountryManagerController::class, 'allOrders'])->name('country_manager.all_orders');
+363:        Route::get('/scheduled_orders',       [CountryManagerController::class, 'scheduledOrders'])->name('country_manager.scheduled_orders');
+364:        Route::get('/pending_orders',         [CountryManagerController::class, 'pendingOrders'])->name('country_manager.pending_orders');
+365:        Route::get('/interhub_orders',        [CountryManagerController::class, 'interhubOrders'])->name('country_manager.interhub_orders');
+== views: account / orders / invoice / rating
+resources/views/myaccount.blade.php
+resources/views/track_order.blade.php
+resources/views/pos/settle_order.blade.php
+resources/views/pos/completed_orders.blade.php
+resources/views/pos/cancelled_orders.blade.php
+resources/views/pos/accepted_orders.blade.php
+resources/views/pos/invoice.blade.php
+resources/views/pos/processing_order_view.blade.php
+resources/views/pos/ongoing_orders.blade.php
+resources/views/pos/print_invoice.blade.php
+resources/views/pos/new_orders.blade.php
+resources/views/pos/unsettled_invoices.blade.php
+resources/views/cancel_order.blade.php
+resources/views/myaccount.blade.php.bak-20261019-170213
+resources/views/hub/customer_order.blade.php
+resources/views/hub/profile.blade.php
+resources/views/hub/scheduled_orders.blade.php
+resources/views/hub/my_today_order.blade.php
+resources/views/hub/interhub_orders.blade.php
+resources/views/hub/edit_profile.blade.php
+resources/views/hub/today_cancel_orders.blade.php
+resources/views/hub/view_order.blade.php
+resources/views/country_manager/rating_reviews.blade.php
+resources/views/country_manager/pending_orders.blade.php
+resources/views/country_manager/profile.blade.php
+resources/views/country_manager/scheduled_orders.blade.php
+resources/views/country_manager/interhub_orders.blade.php
+resources/views/country_manager/all_orders.blade.php
+resources/views/country_manager/edit_profile.blade.php
+resources/views/country_manager/view_order.blade.php
+== api routes: invoice, rating, order detail
+8:use App\Http\Controllers\Api\Buyer\OrderController as BuyerOrderController;
+12:use App\Http\Controllers\Api\Driver\OrderController as DriverOrderController;
+64:    Route::match($any, 'add_order', [BuyerOrderController::class, 'store']);
+65:    Route::match($any, 'get_my_orders', [BuyerOrderController::class, 'index']);
+66:    Route::match($any, 'get_order_details', [BuyerOrderController::class, 'show']);
+85:            Route::get('assignable-orders', [DriverAdminController::class, 'assignableOrders']);
+87:            Route::post('assign-order', [DriverAdminController::class, 'assignOrder']);
+113:        Route::match($any, 'orders/driver-orders', [DriverOrderController::class, 'index']);
+114:        Route::match($any, 'orders/order-details', [DriverOrderController::class, 'show']);
+115:        Route::match($any, 'orders/orders-by-status', [DriverOrderController::class, 'byStatus']);
+116:        Route::get('orders/assigned-orders', [DriverOrderController::class, 'assigned']);
+117:        Route::post('orders/deliver', [DriverOrderController::class, 'deliver']);
+118:        Route::post('orders/accept', [DriverOrderController::class, 'accept']);
+== DB
+orders [170 rows]: id,order_id,product_id,buyer_id,address_id,hub_id,rider_id,total_amount,amount_to_collect,amount_to_return,quantity,order_status,reason_for_order_cancel,order_complete_time,processing_complete_time,shipping_complete_time,delivery_complete_time,payment_status,payment_type,payment_id,delivery_type,delivery_charge,schedule_date,schedule_time,txn_id,date_added,updated_at,status
+hubs [19 rows]: id,city_id,hub,hub_lat,hub_lng,type,all_latlng,status
+products [133 rows]: id,ranking,product_id,category_id,item_id,product_image,product_name,product_unit,unit_quantity,gross_quantity,MRP,cost_price,main_price,stock,off,description,property,tag,pieces,serves,cooking_time,status,date_added
+buyers [134 rows]: id,name,email,gender,phone,password,otp,email_verify,phone_verify,status,date_added,wallet_amount,cart_count,fcm_id,auth_id,provider,regId,f_otp,new_user,referral_code,referred_by_buyer_id,created_at,updated_at
+buyer_address [59 rows]: id,buyer_id,hub_id,user_lat,user_lng,name,phone,city,street_name,locality,landmark,type,status,date_added,latitude,longitude
+order_ratings: (no table)
+ratings: (no table)
+product_ratings: (no table)
+reviews [26 rows]: id,buyer_id,product_id,rating,feedback,date_added
+order_reviews: (no table)
+items [2153 rows]: id,cat_id,item,image,status
+settings: (no table)
+site_settings: (no table)
+categories [3 rows]: id,image,name,status
+sub_categories: (no table)
+invoices: (no table)
+order_invoices: (no table)
+delivery_boy [16 rows]: id,name,phone,gender,employee_id,password,hub_id,status,regid,date_added
+hub sample: {"id":1,"city_id":35,"hub":"INE","hub_lat":"22.717227262179776","hub_lng":"75.8585096181389","type":null,"all_latlng":null,"status":"active"}
+order sample: {"id":170,"order_id":"ORD200144","product_id":2055,"buyer_id":271,"address_id":426,"hub_id":1,"rider_id":10,"total_amount":"85","amount_to_collect":"0","amount_to_return":"0","quantity":"1","order_status":"Order Placed","reason_for_order_cancel":"","order_complete_time":"","processing_complete_time":"","shipping_complete_time":"","delivery_complete_time":"","payment_status":"Pending","payment_type":"Cash","payment_id":null,"delivery_type":"Scheduled","delivery_charge":0,"schedule_date":"2026-10-30","schedule_time":"9 PM \u2013 11 PM","txn_id":"","date_added":"2026-10-30 18:07:35","updated_at":"2026-10-30 18:07:35","status":"0"}
+product sample: {"id":102,"ranking":45,"product_id":"PRD00126","category_id":"60","item_id":102,"product_image":"EQ8jG1666027805.jpeg","product_name":"Chicken Liver","product_unit":"Gram","unit_quantity":"350","gross_quantity":"350","MRP":"70.00","cost_price":null,"main_price":"60.00","stock":"100","off":null,"description":"The Chicken Liver is fresh and thoroughly cleaned and cut into pieces. The chicken liver has a strong flavour and a smooth texture when raw which turns to being dense when cooked. Obtained from farm-raised, healthy chickens, the chicken liver is a rich source of vitamins, protein, and iron.","property":"Cleaned,Fresh,Offal Cuts","tag":"Meat & Seafoods","pieces":"7-9","serves":"2-3","cooking_time":"30 min","status":"active","date_added":"2022-10-17 17:30:05"}

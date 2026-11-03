@@ -26,4 +26,14 @@ Route::prefix('drivers')->group(function () {
     Route::post('/{id}/reject', [D::class, 'reject'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.drivers.reject');
     Route::post('/{id}/toggle', [D::class, 'toggle'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.drivers.toggle');
     Route::post('/{id}/wallet', [D::class, 'walletMove'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.drivers.wallet');
+    Route::get('/{id}/edit-data', [\App\Http\Controllers\AdminConsole\AdminDriverEditController::class, 'data'])->whereNumber('id')->name('adc.ad.drivers.editdata');
+    Route::post('/{id}/edit', [\App\Http\Controllers\AdminConsole\AdminDriverEditController::class, 'save'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.drivers.edit');
+    Route::post('/{id}/delete', [\App\Http\Controllers\AdminConsole\AdminDriverEditController::class, 'destroy'])->whereNumber('id')->middleware('throttle:10,1')->name('adc.ad.drivers.delete');
+});
+
+/* Dashboard 2 and hub / delivery boy drawer (30 Oct 2026) */
+Route::prefix('dash2')->group(function () {
+    Route::get('/home', [\App\Http\Controllers\AdminConsole\AdminDashProController::class, 'home'])->middleware('throttle:60,1')->name('adc.ad.dash2.home');
+    Route::get('/hub/{id}', [\App\Http\Controllers\AdminConsole\AdminDashProController::class, 'hub'])->whereNumber('id')->middleware('throttle:60,1')->name('adc.ad.dash2.hub');
+    Route::get('/rider/{id}', [\App\Http\Controllers\AdminConsole\AdminDashProController::class, 'rider'])->whereNumber('id')->middleware('throttle:60,1')->name('adc.ad.dash2.rider');
 });

@@ -10,6 +10,13 @@
             <a href="{{ route('certificate') }}">Certificate</a>
             <a href="{{ url('/refer_earn') }}">Refer &amp; Earn</a>
             <a href="{{ url('/contact_us') }}">Contact Us</a>
+            <span class="ff-utility-social" aria-label="Follow Freshful on social media">
+                <a href="https://www.facebook.com/freshfulfood/" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on Facebook" title="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a>
+                <a href="https://www.instagram.com/freshfulfood" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on Instagram" title="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
+                <a href="https://x.com/Freshfullfoods" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on X" title="X"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
+                <a href="https://www.youtube.com/@Freshfulfoods" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on YouTube" title="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a>
+                <a href="https://www.linkedin.com/company/freshfulfoods/home/" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on LinkedIn" title="LinkedIn"><i class="bi bi-linkedin" aria-hidden="true"></i></a>
+            </span>
         </div>
     </div>
 </nav>
@@ -49,7 +56,6 @@
                 @else
                     <a data-bs-toggle="modal" href="#loginoffcanvas" role="button" aria-controls="loginoffcanvas" class="header-btn top-login-btn"><i class="bi bi-person-circle" aria-hidden="true"></i><span>Login</span></a>
                 @endif
-                <a href="{{ route('compare_product') }}" id="compare-page-link" class="header-btn" aria-label="Compare products"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><span>Compare</span><span id="compare-badge" class="badge rounded-pill text-bg-danger" hidden>0</span></a>
                 <a data-bs-toggle="offcanvas" href="#cardoffcanvas" role="button" aria-controls="cardoffcanvas" class="header-btn ff-cart-link"><i class="bi bi-cart3" aria-hidden="true"></i><span>Cart</span><span id="cart-badge-count" class="ff-cart-badge" aria-label="Items in cart" aria-live="polite" style="display:none"></span></a>
             </div>
         </div>

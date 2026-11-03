@@ -799,7 +799,7 @@ class PosConsoleService
             if (!$move['ok']) return $move;
             if (class_exists(\App\Services\HubConsole\HubStock::class)) \App\Services\HubConsole\HubStock::returnForOrder($this->hubId, $orderId, $actor, 'moved to another hub');
             $upd = ['hub_id' => $toHub, 'order_status' => OrderFlow::PENDING];
-            if (self::has('orders', 'rider_id')) $upd['rider_id'] = null;
+            if (self::has('orders', 'rider_id')) $upd['rider_id'] = 0;
             if (self::has('orders', 'updated_at')) $upd['updated_at'] = now();
             DB::table('orders')->where('order_id', $orderId)->where('hub_id', $this->hubId)->update($upd);
             if (self::table('pos_order_weights')) DB::table('pos_order_weights')->where('order_id', $orderId)->delete();

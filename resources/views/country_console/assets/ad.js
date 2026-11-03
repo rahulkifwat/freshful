@@ -680,7 +680,7 @@ window.CCX = function (K) {
     o = o || {}; var col = h.active === false ? '#94A3B8' : (o.color || '#EA4A1F'), pts = [];
     if (h.kind === 'polygon' && h.points && h.points.length >= 3) { m.poly(h.points, { color: col, opacity: o.opacity == null ? .06 : o.opacity, weight: 1.5 }); pts = pts.concat(h.points); }
     else if (h.kind === 'circle' && (h.lat != null || (h.points && h.points[0]))) { var c = h.lat != null ? [h.lat, h.lng] : h.points[0]; m.circle(c, h.radius_m || C.circleKm * 1000, { color: col, opacity: o.opacity == null ? .05 : o.opacity, weight: 1.5 }); pts.push(c); }
-    if (h.lat != null && h.lng != null) { m.marker([h.lat, h.lng], { pin: true, color: col, title: h.name }); pts.push([h.lat, h.lng]); }
+    if (h.lat != null && h.lng != null) { m.marker([h.lat, h.lng], { pin: true, color: col, title: h.name, onclick: function () { if (K.hubDrawer) K.hubDrawer(h); } }); pts.push([h.lat, h.lng]); }
     return pts;
   }
 
@@ -866,7 +866,7 @@ window.CCX = function (K) {
       mount(root, 't', T([{ k: 'name', t: 'Name', f: function (r) { return '<b>' + esc(r.name) + '</b><small>' + esc(r.phone) + '</small>'; } }, { k: 'hub_name', t: 'Hub' },
         { k: 'seen', t: 'Last seen', n: 1, f: function (r) { return r.seen ? K.ago(r.seen) : (r.lat != null ? 'yes' : '<span class="muted">never</span>'); } },
         { k: 'orders', t: 'Carrying', v: function (r) { return r.orders.length; }, f: function (r) { return r.orders.length ? esc(r.orders.join(', ')) : '<span class="muted">nothing</span>'; } },
-        { k: 'active', t: 'Status', v: function (r) { return r.active ? 1 : 0; }, f: function (r) { return r.active ? pill('Active', 'p-ok') : pill('Off'); } }], d.riders, { csv: 'freshful-riders-live.csv', click: function (r) { if (r.lat != null && S.p.rlMap) S.p.rlMap.center([r.lat, r.lng], 16); } }));
+        { k: 'active', t: 'Status', v: function (r) { return r.active ? 1 : 0; }, f: function (r) { return r.active ? pill('Active', 'p-ok') : pill('Off'); } }], d.riders, { csv: 'freshful-riders-live.csv', click: function (r) { if (K.riderDrawer) K.riderDrawer(r.id); if (r.lat != null && S.p.rlMap) S.p.rlMap.center([r.lat, r.lng], 16); } }));
       return makeMap(root.querySelector('#rlMap'), [12.97, 77.59], 11).then(function (m) {
         S.p.rlMap = m; var pts = [];
         d.hubs.forEach(function (h) { pts = pts.concat(drawHubShape(m, h, { opacity: .04 })); });
@@ -1157,6 +1157,14 @@ window.CCX = function (K) {
   } };
 
   /* ------------------------------------------------------------------ my profile */
+  V['ad-homesettings'] = { t: 'Home page settings', dates: false, nofilter: true, run: function (root) {
+    root.innerHTML = '<iframe src="/admin/home-settings?embed=1" title="Home page settings" style="width:100%;height:calc(100vh - 160px);min-height:640px;border:0;border-radius:14px;background:#fff"></iframe>';
+  } };
+
+  V['ad-digitalmenu'] = { t: 'Digital Menu', dates: false, nofilter: true, run: function (root) {
+    root.innerHTML = '<iframe src="/admin/digital-menu?embed=1" title="Digital Menu" style="width:100%;height:calc(100vh - 160px);min-height:700px;border:0;border-radius:14px;background:#fff"></iframe>';
+  } };
+
   V['ad-profile'] = { t: 'My profile & password', dates: false, nofilter: true, run: function (root) {
     return api('/ad/profile', {}, false).then(function (d) {
       if (!d.ok) { root.innerHTML = card('Profile', '<div class="cc-empty">' + esc(d.message) + '</div>'); return; }

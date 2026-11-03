@@ -1,0 +1,266 @@
+<?php
+
+namespace App\Http\Controllers\Api\Driver;
+
+use App\Exceptions\ApiException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class OrderController extends DriverController
+{
+    private const STATUSES = ['Order Pending', 'Order Cancel', 'Order Placed', 'Order Processed', 'Order Shipped', 'Order Delivered', 'Order Dispatched'];
+
+    /** /api/driver/orders/driver-orders — rider's orders grouped into today / weekly / monthly */
+    public function index(Request $request): JsonResponse
+    {
+        $orders = DB::table('orders')->whereIn("rider_id", $this->rb($request))->orderByDesc('date_added')->get();
+
+        $now = Carbon::now(self::TZ);
+        $today = $now->toDateString();
+        $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+
+        $grouped = ['today' => [], 'weekly' => [], 'monthly' => []];
+        foreach ($orders as $order) {
+            if (! $order->date_added) {
+                continue;
+            }
+            $date = Carbon::parse($order->date_added)->toDateString();
+            if ($date === $today) {
+                $grouped['today'][] = (array) $order;
+            }
+            if ($date >= $weekStart) {
+                $grouped['weekly'][] = (array) $order;
+            }
+            if ($date >= $monthStart) {
+                $grouped['monthly'][] = (array) $order;
+            }
+        }
+
+        return $this->respond(['result' => true, 'message' => 'success', 'orders' => $grouped]);
+    }
+
+    /** /api/driver/orders/order-details?order_id= */
+    public function show(Request $request): JsonResponse
+    {
+        $orderId = $this->requireFilled($request, '');
+        $order = $this->ordersWithDetails()
+            ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
+            ->addSelect('p.product_name', 'p.product_image', 'p.product_unit', 'p.main_price', 'p.MRP')
+            ->where('o.order_id', $orderId)
+            ->first();
+
+        if (! $order) {
+            throw new ApiException('Order not found');
+        }
+
+        return $this->respond([
+            'result'  => true,
+            'message' => 'success',
+            'order'   => [
+                'order_id'          => $order->order_id,
+                'total_amount'      => $order->total_amount,
+                'amount_to_collect' => $order->amount_to_collect,
+                'payment_type'      => $order->payment_type,
+                'payment_status'    => $order->payment_status,
+                'order_status'      => $order->order_status,
+                'schedule_date'     => $order->schedule_date,
+                'schedule_time'     => $order->schedule_time,
+                'quantity'          => $order->quantity,
+                'date_added'        => $order->date_added,
+                'buyer'             => ['name' => $order->buyer_name, 'phone' => $order->buyer_phone],
+                'address'           => [
+                    'name'        => $order->address_name,
+                    'phone'       => $order->address_phone,
+                    'street_name' => $order->street_name,
+                    'locality'    => $order->locality,
+                    'landmark'    => $order->landmark,
+                    'city'        => $order->city,
+                    'user_lat'    => $order->user_lat,
+                    'user_lng'    => $order->user_lng,
+                ],
+                'hub'     => ['hub' => $order->hub_name, 'hub_lat' => $order->hub_lat, 'hub_lng' => $order->hub_lng],
+                'product' => [
+                    'product_name'  => $order->product_name,
+                    'product_image' => $this->uploadsUrl('images/products', $order->product_image),
+                    'product_unit'  => $order->product_unit,
+                    'main_price'    => $order->main_price,
+                    'MRP'           => $order->MRP,
+                ],
+            ],
+        ]);
+    }
+
+    /** /api/driver/orders/orders-by-status?status= */
+    public function byStatus(Request $request): JsonResponse
+    {
+        $status = $this->requireFilled($request, 'status');
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new ApiException('Invalid status. Allowed: '.implode(', ', self::STATUSES));
+        }
+
+        $orders = $this->rows($this->ordersWithDetails()
+            ->whereIn("o.rider_id", $this->rb($request))
+            ->where('o.order_status', $status)
+            ->orderByDesc('o.date_added')
+            ->get());
+
+        return $this->respond(['result' => true, 'message' => 'success', 'orders' => $orders, 'count' => count($orders)]);
+    }
+
+    /**
+     * /api/driver/orders/assigned-orders?filter=all|pending|in_progress
+     * Unfinished orders assigned to the logged-in driver, one entry per order (orders are stored one
+     * row per product), oldest first so the driver works through them in order.
+     * pending = not picked up yet (Placed/Processed); in_progress = Dispatched/Shipped.
+     */
+    public function assigned(Request $request): JsonResponse
+    {
+        $groups = [
+            'pending'     => ['Order Placed', 'Order Processed'],
+            'in_progress' => ['Order Dispatched', 'Order Shipped'],
+        ];
+        $filter = $request->input('filter', 'all');
+        if (! in_array($filter, ['all', 'pending', 'in_progress'], true)) {
+            throw new ApiException('Invalid filter. Allowed: all, pending, in_progress');
+        }
+        $statuses = $groups[$filter] ?? array_merge($groups['pending'], $groups['in_progress']);
+
+        $rows = $this->ordersWithDetails()
+            ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
+            ->addSelect('p.product_name', 'p.product_image', 'p.product_unit')
+            ->whereIn("o.rider_id", $this->rb($request))
+            ->whereIn('o.order_status', $statuses)
+            ->orderBy('o.date_added')
+            ->orderBy('o.id')
+            ->get();
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $order = &$orders[$row->order_id];
+            $order ??= [
+                'order_id'          => $row->order_id,
+                'order_status'      => $row->order_status,
+                'stage'             => in_array($row->order_status, $groups['pending'], true) ? 'pending' : 'in_progress',
+                'total_amount'      => $row->total_amount,
+                'amount_to_collect' => $row->amount_to_collect,
+                'payment_type'      => $row->payment_type,
+                'payment_status'    => $row->payment_status,
+                'delivery_type'     => $row->delivery_type,
+                'schedule_date'     => $row->schedule_date,
+                'schedule_time'     => $row->schedule_time,
+                'date_added'        => $row->date_added,
+                'buyer'             => ['name' => $row->buyer_name, 'phone' => $row->buyer_phone],
+                'address'           => [
+                    'name'        => $row->address_name,
+                    'phone'       => $row->address_phone,
+                    'street_name' => $row->street_name,
+                    'locality'    => $row->locality,
+                    'landmark'    => $row->landmark,
+                    'city'        => $row->city,
+                    'user_lat'    => $row->user_lat,
+                    'user_lng'    => $row->user_lng,
+                ],
+                'hub'               => ['hub' => $row->hub_name, 'hub_lat' => $row->hub_lat, 'hub_lng' => $row->hub_lng],
+                'items'             => [],
+            ];
+            $order['items'][] = [
+                'product_id'    => $row->product_id,
+                'product_name'  => $row->product_name,
+                'product_image' => $this->uploadsUrl('images/products', $row->product_image),
+                'product_unit'  => $row->product_unit,
+                'quantity'      => $row->quantity,
+            ];
+            unset($order);
+        }
+        $orders = array_values($orders);
+
+        return $this->respond([
+            'result'  => true,
+            'message' => $orders ? 'success' : 'No assigned orders',
+            'orders'  => $orders,
+            'count'   => count($orders),
+            'summary' => [
+                'pending'     => count(array_filter($orders, fn ($o) => $o['stage'] === 'pending')),
+                'in_progress' => count(array_filter($orders, fn ($o) => $o['stage'] === 'in_progress')),
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/driver/orders/deliver — order_id
+     * The assigned driver marks the order delivered (every product row of the order).
+     * Allowed from any open status (the app delivers straight from "Order Placed").
+     * payment_status is not changed: nothing in the system updates it today.
+     */
+    public function deliver(Request $request): JsonResponse
+    {
+        $orderId = trim((string) $this->requireFilled($request, 'order_id'));
+        $driverId = (int) $this->rb($request)->value("id");
+        $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
+
+        $result = DB::transaction(function () use ($orderId, $driverId, $deliverable) {
+            $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
+                ->get(['order_status', 'rider_id', 'total_amount', 'amount_to_collect', 'payment_type']);
+
+            if ($rows->isEmpty()) {
+                throw new ApiException('Order not found');
+            }
+            if ($rows->contains(fn ($r) => (int) $r->rider_id !== $driverId)) {
+                throw new ApiException('This order is not assigned to you');
+            }
+
+            $statuses = $rows->pluck('order_status')->unique();
+            if ($statuses->every(fn ($s) => $s === 'Order Delivered')) {
+                throw new ApiException('Order is already delivered');
+            }
+            if ($statuses->contains('Order Cancel')) {
+                throw new ApiException('This order was cancelled');
+            }
+            if ($statuses->diff($deliverable)->isNotEmpty()) {
+                throw new ApiException('Order cannot be delivered in status "'.$statuses->implode(', ').'"');
+            }
+
+            $now = $this->now();
+            // Status is part of the WHERE, so a double tap can't deliver twice.
+            $updated = DB::table('orders')
+                ->where('order_id', $orderId)
+                ->where('rider_id', $driverId)
+                ->whereIn('order_status', $deliverable)
+                ->update(['order_status' => 'Order Delivered', 'delivery_complete_time' => $now, 'updated_at' => $now]);
+
+            if ($updated !== $rows->count()) {
+                throw new ApiException('Order was just changed. Please refresh and try again.');
+            }
+
+            return ['first' => $rows->first(), 'delivered_at' => $now];
+        });
+
+        return $this->respond([
+            'result'            => true,
+            'message'           => 'Order delivered successfully',
+            'order_id'          => $orderId,
+            'order_status'      => 'Order Delivered',
+            'delivered_at'      => $result['delivered_at'],
+            'payment_type'      => $result['first']->payment_type,
+            'amount_to_collect' => $result['first']->amount_to_collect,
+        ]);
+    }
+
+private function rb($r){return DB::table("delivery_boy")->where("regid",$r->attributes->get("driver")["id"])->select("id");}     private function ordersWithDetails()
+    {
+        return DB::table('orders as o')
+            ->leftJoin('buyers as b', 'b.id', '=', 'o.buyer_id')
+            ->leftJoin('buyer_address as ba', 'ba.id', '=', 'o.address_id')
+            ->leftJoin('hubs as h', 'h.id', '=', 'o.hub_id')
+            ->select(
+                'o.*',
+                'b.name as buyer_name', 'b.phone as buyer_phone',
+                'ba.name as address_name', 'ba.phone as address_phone', 'ba.street_name', 'ba.locality',
+                'ba.landmark', 'ba.city', 'ba.user_lat', 'ba.user_lng',
+                'h.hub as hub_name', 'h.hub_lat', 'h.hub_lng'
+            );
+    }
+}

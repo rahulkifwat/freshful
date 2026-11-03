@@ -70,7 +70,7 @@
       'Delivery boy' => array_merge($nav['Delivery boy'], [['ad-riders-live', 'Live locations', 'map']]),
       'Staff & roles' => [['ad-staff', 'Staff users', 'users'], ['ad-roles', 'Roles & permissions', 'shield']],
       'Locations' => [['ad-hubs', 'Hubs & delivery areas', 'map'], ['ad-cities', 'Cities', 'map'], ['ad-delivery', 'Delivery charges', 'truck']],
-      'Marketing' => [['ad-banners', 'Website banners', 'image'], ['ad-appbanners', 'App banners', 'image'], ['ad-slider', 'Side slider', 'image'], ['ad-offers', 'Home offers', 'tag'], ['ad-promos', 'Promo codes', 'tag'], ['ad-coupons', 'Coupons & deals', 'tag'], ['ad-certs', 'Certificates', 'shield'], ['ad-push', 'Push notifications', 'bell']],
+      'Marketing' => [['ad-banners', 'Website banners', 'image'], ['ad-homesettings', 'Home page settings', 'store'], ['ad-digitalmenu', 'Digital Menu', 'image'], ['ad-appbanners', 'App banners', 'image'], ['ad-slider', 'Side slider', 'image'], ['ad-offers', 'Home offers', 'tag'], ['ad-promos', 'Promo codes', 'tag'], ['ad-coupons', 'Coupons & deals', 'tag'], ['ad-certs', 'Certificates', 'shield'], ['ad-push', 'Push notifications', 'bell']],
       'Enquiries' => [['ad-contact', 'Contact us', 'mail'], ['ad-franchise', 'Franchise enquiries', 'store'], ['ad-newsletter', 'Newsletter', 'mail']],
       'Content' => [['ad-policies', 'Policies & pages', 'file'], ['ad-grievcat', 'Grievance categories', 'alert']],
       'Reports' => [['targets', 'Targets', 'target'], ['ad-audit', 'Change log (who changed what)', 'history']],
@@ -225,6 +225,9 @@ window.CCC = {!! json_encode([
 @endif
 @if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/dr.js')))
 {{-- drivers update 1 --}}<script>{!! file_get_contents(resource_path('views/country_console/assets/dr.js')) !!}</script>
+@endif
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/ad2.js')))
+<script>{!! file_get_contents(resource_path('views/country_console/assets/ad2.js')) !!}</script>
 @endif
 @if ($role === 'production' && $prc && file_exists(resource_path('views/country_console/assets/pr.js')))
 {{-- production update 1 --}}<script>window.PRC = {!! json_encode($prc, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};</script>

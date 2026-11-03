@@ -1,63 +1,78 @@
-<footer id="footer" class="footer mt-5">
-    <div class="container-fluid container-xl">
-        <div class="row row-cols-lg-4 row-cols-md-4 row-cols-1">
+<footer id="footer" class="footer ff-footer">
+    <div class="ff-foot-main">
+        <div class="container-fluid container-xl">
+            <div class="ff-foot-grid">
 
-            <div class="col-lg-4 col-md-4 col-sm-12 col-12">
-                <div class="mb-2">
-                    <img src="{{ asset('assets/image/logo.png') }}" alt="Logo" class="img-fluid logo-footer">
+                <div class="ff-foot-brand">
+                    <a class="ff-foot-logo" href="{{ url('/') }}" aria-label="Freshful home">
+                        <img src="{{ asset('assets/image/logo.png') }}" alt="Freshful" class="logo-footer" loading="lazy">
+                    </a>
+                    <h6 class="ff-foot-legal">FRESHFUL DIGITAL FOODS (OPC) PRIVATE LIMITED</h6>
+                    <p class="ff-foot-about">Freshful means &lsquo;freshness&rsquo;. We measure ourselves in terms of the customer delight delivered, staying true to our values of quality, compassion, and innovation.</p>
+                    <ul class="ff-foot-contact">
+                        <li><i class="bi bi-telephone-fill" aria-hidden="true"></i><a href="tel:+918124200242">+91 8124200242</a></li>
+                        <li><i class="bi bi-envelope-fill" aria-hidden="true"></i><a href="mailto:talktous@freshful.in">talktous@freshful.in</a></li>
+                    </ul>
+                    <div class="ff-social" aria-label="Follow Freshful on social media">
+                        <a class="is-facebook" href="https://www.facebook.com/freshfulfood/" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on Facebook" title="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a>
+                        <a class="is-instagram" href="https://www.instagram.com/freshfulfood" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on Instagram" title="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
+                        <a class="is-x" href="https://x.com/Freshfullfoods" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on X" title="X"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
+                        <a class="is-youtube" href="https://www.youtube.com/@Freshfulfoods" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on YouTube" title="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a>
+                        <a class="is-linkedin" href="https://www.linkedin.com/company/freshfulfoods/home/" target="_blank" rel="noopener noreferrer me" aria-label="Freshful on LinkedIn" title="LinkedIn"><i class="bi bi-linkedin" aria-hidden="true"></i></a>
+                    </div>
                 </div>
-                <div style="max-width: 80%;">
-                    <h6 class="fw-bolder mb-2 fs-6">FRESHFUL DIGITAL FOODS (OPC) PRIVATE LIMITED</h6>
-                    <p class="text-left fs-7 lh-1">Freshful means ‘freshness’. We measure ourselves in terms of the customer delight delivered, staying true to our values of quality, compassion, and innovation .</p>
-                </div>
-            </div>
-            <div class="col-lg-8 col-md-8 col-sm-12 col-12 mt-5">
-                <div class="row row-cols-lg-3 row-cols-md-3 row-cols-1">
-                    <div class="col ps-lg-4">
-                        <div class="mb-2">
-                            <h6 class="fw-bolder fs-6 mb-2">Navigation</h6>
-                            <ul class="list-unstyled">
-                                <li class="mb-1"><a class="fs-7" href="{{ url('/') }}">Home</a></li>
-                                <li class="mb-1"><a class="fs-7" href="{{ url('/why-freshful') }}">Why us?</a></li>
-                                <li class="mb-1"><a class="fs-7" href="{{ route('certificate') }}">Certificate</a></li>
-                                <li class="mb-1"><a class="fs-7" href="{{ url('/franchisee') }}">Franchise</a></li>
-                                <li class="mb-1"><a class="fs-7" href="{{ url('/about') }}">About us</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <h6 class="fw-bolder fs-6 mb-2">Policies</h6>
-                        <ul class="list-unstyled">
-                            <li class="mb-1"><a class="fs-7" href="{{ url('/privacypolicy') }}">Privacy policy</a></li>
-                            <li class="mb-1"><a class="fs-7" href="{{ url('/shipping-policy') }}">Shipping policy</a></li>
-                            <li class="mb-1"><a class="fs-7" href="{{ url('/terms') }}">Terms & Condition</a></li>
-                            <li class="mb-1"><a class="fs-7" href="{{ url('/refund_policy') }}">Refund Policy</a></li>
-                            <li class="mb-1"><a class="fs-7" href="{{ url('/faq') }}">FAQs</a></li>
-                        </ul>
-                    </div>
-                    <div class="col">
-                        <h6 class="fw-bolder fs-6 mb-3">Follow us on social media</h6>
-                        <div class="d-flex gap-lg-2 gap-1">
-                            <a href="{{ url('/') }}" class="btn btn-outline-primary rounded-1"><i class="bi bi-facebook fs-5"></i></a>
-                            <a href="{{ url('/') }}" class="btn btn-outline-primary rounded-1"><i class="bi bi-twitter fs-5"></i></a>
-                            <a href="{{ url('/') }}" class="btn btn-outline-primary rounded-1"><i class="bi bi-instagram fs-5"></i></a>
-                            <a href="{{ url('/') }}" class="btn btn-outline-primary rounded-1"><i class="bi bi-youtube fs-5"></i></a>
-                        </div>
-                        <h6 class="fw-bolder fs-6 mt-3 mb-1">Service center helpline time</h6>
-                        <p class="fs-7">Sat-Friday, 10:00 AM-9:00 PM</p>
-                    </div>
 
-                </div>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-12">
-                <p class="text-end fs-8 text-muted mb-0">© {{ date('Y') }} Freshful Digital Foods (OPC) Private Limited, Copyright, All rights reserved.</p>
+                <nav class="ff-foot-col" aria-label="Navigation">
+                    <h6 class="ff-foot-title">Navigation</h6>
+                    <ul class="ff-foot-list">
+                        <li><a href="{{ url('/') }}">Home</a></li>
+                        <li><a href="{{ url('/why-freshful') }}">Why us?</a></li>
+                        <li><a href="{{ route('certificate') }}">Certificate</a></li>
+                        <li><a href="{{ url('/franchisee') }}">Franchise</a></li>
+                        <li><a href="{{ url('/about') }}">About us</a></li>
+                    </ul>
+                </nav>
+
+                <nav class="ff-foot-col" aria-label="Policies">
+                    <h6 class="ff-foot-title">Policies</h6>
+                    <ul class="ff-foot-list">
+                        <li><a href="{{ url('/privacypolicy') }}">Privacy policy</a></li>
+                        <li><a href="{{ url('/shipping-policy') }}">Shipping policy</a></li>
+                        <li><a href="{{ url('/terms') }}">Terms &amp; Condition</a></li>
+                        <li><a href="{{ url('/refund_policy') }}">Refund Policy</a></li>
+                        <li><a href="{{ url('/faq') }}">FAQs</a></li>
+                    </ul>
+                </nav>
+
+                <nav class="ff-foot-col" aria-label="Shop and help">
+                    <h6 class="ff-foot-title">Shop &amp; help</h6>
+                    <ul class="ff-foot-list">
+                        <li><a href="{{ url('/view_product/all') }}">Shop all</a></li>
+                        <li><a href="{{ route('categories') }}">Categories</a></li>
+                        <li><a href="{{ route('maps') }}">Our stores</a></li>
+                        <li><a href="{{ url('/refer_earn') }}">Refer &amp; Earn</a></li>
+                        <li><a href="{{ url('/contact_us') }}">Contact us</a></li>
+                    </ul>
+                </nav>
+
+                <aside class="ff-foot-care" aria-label="Customer care">
+                    <div>
+                        <h3>We are here to help</h3>
+                        <p>Service center helpline time</p>
+                        <p class="ff-foot-hours"><i class="bi bi-clock-fill" aria-hidden="true"></i><span>Sat &ndash; Friday<br>10:00 AM &ndash; 9:00 PM</span></p>
+                    </div>
+                    <a class="ff-foot-call" href="tel:+918124200242"><i class="bi bi-telephone-fill" aria-hidden="true"></i> Call +91 8124200242</a>
+                </aside>
             </div>
         </div>
     </div>
 
+    <div class="ff-foot-bottom">
+        <div class="container-fluid container-xl">
+            <p>&copy; {{ date('Y') }} Freshful Digital Foods (OPC) Private Limited, Copyright, All rights reserved.</p>
+            <div class="ff-foot-badges"><span><i class="bi bi-patch-check-fill" aria-hidden="true"></i> FSSAI Lic. No. 12422999001815</span></div>
+        </div>
+    </div>
 </footer>
 
 <!-- Scroll Top -->
@@ -140,45 +155,6 @@
                 header.classList.remove('sticky');
             }
         }
-    });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const compareLink = document.getElementById('compare-page-link');
-        const compareBadge = document.getElementById('compare-badge');
-        let compareIds = [];
-        try { compareIds = JSON.parse(localStorage.getItem('freshfulCompare') || '[]').map(Number).filter(Boolean); } catch (_) {}
-        if (compareLink) compareLink.href = compareLink.href.split('?')[0] + (compareIds.length ? '?ids=' + compareIds.join(',') : '');
-        if (compareBadge) { compareBadge.textContent = compareIds.length; compareBadge.hidden = compareIds.length === 0; }
-    });
-</script>
-<script>
-    const sendOtpButton = document.getElementById("sendOtpBtn");
-    if (sendOtpButton) sendOtpButton.addEventListener("click", function() {
-        console.log("Send OTP button clicked");
-        const phone = document.getElementById("phoneLogin").value;
-            fetch("{{ route('send-otp') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    phone: phone
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    notify(data.message, 'success');
-                } else {
-                    notify(data.message || 'Failed to send OTP', 'error');
-                }
-            })
-            .catch(error => {
-                notify("Something went wrong", 'error');
-            });
-
     });
 </script>
 <script>
@@ -408,17 +384,8 @@ function addSelectedProductQuantity(productId) {
     addToCart(productId, current + selected);
 }
 
-function addProductToCompare(productId) {
-    let ids = [];
-    try { ids = JSON.parse(localStorage.getItem('freshfulCompare') || '[]').map(Number).filter(Boolean); } catch (_) {}
-    productId = Number(productId);
-    if (!ids.includes(productId)) ids.push(productId);
-    localStorage.setItem('freshfulCompare', JSON.stringify(ids.slice(-4)));
-    const link = document.getElementById('compare-page-link');
-    const badge = document.getElementById('compare-badge');
-    if (link) link.href = link.href.split('?')[0] + '?ids=' + ids.slice(-4).join(',');
-    if (badge) { badge.textContent = Math.min(ids.length, 4); badge.hidden = false; }
-    notify('Product added to comparison', 'success');
+function addProductToCompare() {
+    /* The compare feature was removed from Freshful. Kept as an empty function so older pages do not raise an error. */
 }
 </script>
 <script>
@@ -475,7 +442,7 @@ function ffLocSetupMap() {
         FF_LOC.marker.addListener('dragend', function (e) { ffLocMove(e.latLng, false); });
     }
     google.maps.event.trigger(FF_LOC.map, 'resize');
-    if (input && !input.dataset.autocompleteReady) {
+    if (input && !input.dataset.autocompleteReady && google.maps.places) {
         FF_LOC.ac = new google.maps.places.Autocomplete(input, { types: ['geocode'], componentRestrictions: { country: 'in' }, fields: ['geometry', 'formatted_address', 'address_components', 'name'] });
         FF_LOC.ac.addListener('place_changed', function () {
             var place = FF_LOC.ac.getPlace();
@@ -567,7 +534,60 @@ function useMyLocation() {
 function checkHubLocation(lat, lng, address, city) { ffLocPreview(lat, lng, null); }
 function freshfulResolveHeaderPin(position) { ffLocMove(position, false); }
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&callback=initLocationSearch&libraries=places" async defer></script>
+<script>
+/* One Google Maps loader for the whole site (v3). The API is never loaded twice:
+   - if a page already loads it with its own script tag, we wait for that one;
+   - otherwise we load it once, with the site key and the places library.
+   Page callbacks: initLocationSearch (delivery area) always runs; names in window.__ffMapsCb run too;
+   any page can also call ffMapsReady(function () { ... }). */
+(function () {
+    if (window.ffMaps) return;
+    var KEY = {!! json_encode((string) config('services.google_maps.key')) !!};
+    var S = window.ffMaps = { done: false, queue: [] };
+    function ok() { return !!(window.google && google.maps && google.maps.Map); }
+    function call(name) {
+        if (typeof window[name] !== 'function') return;
+        try { window[name](); } catch (e) { if (window.console) console.error('Google Maps start-up "' + name + '" failed', e); }
+    }
+    function finish(own) {
+        if (S.done) return; S.done = true;
+        var extra = window.__ffMapsCb || [];
+        call('initLocationSearch');
+        extra.forEach(call);
+        if (own) ['initMap', 'initStoresMap', 'initStoreMap', 'initStores'].forEach(function (n) { if (extra.indexOf(n) < 0) call(n); });
+        S.queue.splice(0).forEach(function (fn) { try { fn(); } catch (e) { if (window.console) console.error(e); } });
+    }
+    window.ffMapsBoot = function () { finish(true); };
+    window.ffMapsReady = function (fn) { if (S.done) { try { fn(); } catch (e) { if (window.console) console.error(e); } } else { S.queue.push(fn); } };
+    if (!window.gm_authFailure) window.gm_authFailure = function () {
+        if (window.console) console.error('Google Maps refused the site key (check billing, allowed websites and enabled APIs).');
+        var s = document.getElementById('location-status');
+        if (s) s.textContent = 'The map is temporarily unavailable. You can still type your address.';
+    };
+    function foreign() {
+        var all = document.querySelectorAll('script[src*="maps.googleapis.com/maps/api/js"]');
+        for (var i = 0; i < all.length; i++) { if (all[i].id !== 'ff-gmaps') return all[i]; }
+        return null;
+    }
+    function load() {
+        if (document.getElementById('ff-gmaps')) return;
+        var s = document.createElement('script');
+        s.id = 'ff-gmaps'; s.async = true; s.defer = true;
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(KEY) + '&libraries=places&callback=ffMapsBoot';
+        document.head.appendChild(s);
+    }
+    function wait(left) {
+        if (ok()) { finish(false); return; }
+        if (left > 0) { setTimeout(function () { wait(left - 1); }, 150); } else { load(); }
+    }
+    function start() {
+        if (ok()) { finish(false); }
+        else if (foreign()) { wait(135); }
+        else { load(); }
+    }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
+})();
+</script>
 
 <script>
 (function () {

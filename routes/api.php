@@ -115,8 +115,17 @@ Route::prefix('driver')->group(function () use ($any) {
         Route::match($any, 'orders/orders-by-status', [DriverOrderController::class, 'byStatus']);
         Route::get('orders/assigned-orders', [DriverOrderController::class, 'assigned']);
         Route::post('orders/deliver', [DriverOrderController::class, 'deliver']);
+        Route::post('orders/accept', [DriverOrderController::class, 'accept']);
 
         Route::get('wallet/balance', [WalletController::class, 'balance']);
         Route::get('wallet/transactions', [WalletController::class, 'transactions']);
     });
 });
+
+// Legacy Freshful Buyer App compatibility.
+// Do not modify Driver App authentication.
+Route::match(['GET', 'POST'], 'api/login.php', [\App\Http\Controllers\Api\Buyer\AuthController::class, 'login'])
+    ->middleware('throttle:otp-send');
+
+Route::match(['GET', 'POST'], 'api/otp.php', [\App\Http\Controllers\Api\Buyer\AuthController::class, 'otp'])
+    ->middleware('throttle:otp-verify');

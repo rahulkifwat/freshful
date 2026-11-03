@@ -1,0 +1,409 @@
+@extends('layout.master')
+
+@section('title', 'Freshful | Fresh food for every day')
+@section('meta_description', 'Shop fresh meat, seafood, fruits, vegetables and everyday groceries from Freshful. Find your favourites and order online.')
+
+@push('styles')
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&display=swap" rel="stylesheet">
+<style>
+/* Freshful home v2. Everything is scoped to .ffh except the floating cart restyle at the end. */
+.ffh{--ink:#1c1c1e;--muted:#5f5f63;--line:#ece7e3;--bg:#f7f6f4;--accent:linear-gradient(110deg,#F70202 0%,#FF5500 100%);font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);padding-bottom:40px}
+.ffh *{box-sizing:border-box}
+.ffh a{text-decoration:none}
+.ffh .ffh-wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+.ffh .ffh-section{margin-top:44px}
+.ffh .ffh-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.ffh .ffh-head h2{margin:0;font-size:clamp(1.45rem,2.4vw,1.9rem);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.ffh .ffh-head p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.ffh .ffh-link{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:700;font-size:15px;border:1px solid #e3dfdb;border-radius:999px;padding:9px 16px;background:#fff}
+.ffh .ffh-link:hover{border-color:var(--ink)}
+
+/* Banners: admin banners at their own shape so the text inside them is never cut. */
+.ffh .ffh-banner{position:relative;margin-top:20px;border-radius:24px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+.ffh .ffh-banner-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
+.ffh .ffh-banner-track::-webkit-scrollbar{display:none}
+.ffh .ffh-banner-slide{flex:0 0 100%;scroll-snap-align:start;display:block}
+.ffh .ffh-banner-slide img{display:block;width:100%;height:clamp(150px,19vw,270px);object-fit:cover}
+.ffh .ffh-banner-arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.16);display:grid;place-items:center;z-index:2}
+.ffh .ffh-banner-arrow.prev{left:14px}.ffh .ffh-banner-arrow.next{right:14px}
+.ffh .ffh-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;z-index:2}
+.ffh .ffh-dots button{width:8px;height:8px;border-radius:999px;border:0;background:rgba(255,255,255,.65);padding:0;transition:width .25s}
+.ffh .ffh-dots button.on{width:22px;background:#fff}
+
+/* Info tiles */
+.ffh .ffh-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.ffh .ffh-tile{border-radius:20px;padding:20px 22px;display:flex;gap:16px;align-items:center;min-height:118px}
+.ffh .ffh-tile h3{margin:0;font-size:19px;font-weight:800}
+.ffh .ffh-tile p{margin:4px 0 0;font-size:14px}
+.ffh .ffh-tile-icon{width:48px;height:48px;flex:none;border-radius:14px;display:grid;place-items:center}
+.ffh .ffh-tile-white{background:#fff;border:1px solid var(--line)}
+.ffh .ffh-tile-white p{color:var(--muted)}
+.ffh .ffh-tile-navy{background:#1f2a44;color:#fff}
+.ffh .ffh-tile-navy p{color:#c9d3ea}
+.ffh .ffh-tile-indigo{background:#2d2a6e;color:#fff}
+.ffh .ffh-tile-indigo p{color:#dcdaf5}
+.ffh .ffh-code{display:inline-flex;align-items:center;gap:8px;margin-top:10px;border:1.5px dashed #9fb0d6;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:800;font-size:14px;letter-spacing:.06em;padding:0 14px;height:40px;border-radius:10px;cursor:pointer}
+.ffh .ffh-tile-btn{display:inline-block;margin-top:10px;background:#f5c451;color:#2d2a6e;font-weight:800;font-size:14px;padding:9px 16px;border-radius:999px}
+
+/* Trust strip */
+.ffh .ffh-trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.ffh .ffh-trust-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 16px}
+.ffh .ffh-trust-item span.ic{width:40px;height:40px;flex:none;border-radius:12px;background:#f2f0ed;display:grid;place-items:center;color:var(--ink)}
+.ffh .ffh-trust-item strong{display:block;font-size:15px;font-weight:700}
+.ffh .ffh-trust-item small{display:block;font-size:13px;color:var(--muted)}
+
+/* Shop by category: round photos with a soft shadow, no boxes */
+.ffh .ffh-cat-panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:28px 28px 26px}
+.ffh .ffh-cats{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:26px 12px}
+.ffh .ffh-cat{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--ink);text-align:center}
+.ffh .ffh-cat img{width:min(116px,100%);aspect-ratio:1;border-radius:50%;object-fit:cover;display:block;background:#f4f2ef;filter:drop-shadow(0 12px 14px rgba(40,25,15,.26));transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+.ffh .ffh-cat:hover img{transform:translateY(-6px) rotate(-6deg) scale(1.04);filter:drop-shadow(0 20px 18px rgba(40,25,15,.32))}
+.ffh .ffh-cat span{font-size:15px;font-weight:600;line-height:1.25}
+.ffh .ffh-cat:hover span{text-decoration:underline;text-underline-offset:4px}
+
+/* Sticky category chips (appear after the category section scrolls away) */
+.ffh-chipbar{position:fixed;left:0;right:0;top:var(--ffh-top,0px);z-index:1029;background:#fff;border-bottom:1px solid #ebe8e4;box-shadow:0 10px 24px -16px rgba(0,0,0,.35);transform:translateY(-120%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility .28s;font-family:'Outfit',system-ui,sans-serif}
+.ffh-chipbar.on{transform:none;visibility:visible}
+.ffh-chipbar .ffh-chip-track{max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.ffh-chipbar .ffh-chip-track::-webkit-scrollbar{display:none}
+.ffh-chipbar a{flex:none;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 6px;border-radius:999px;border:1px solid #e3dfdb;background:#fff;color:#1c1c1e;font-size:14px;font-weight:600;white-space:nowrap;text-decoration:none}
+.ffh-chipbar a:hover{border-color:#1c1c1e}
+.ffh-chipbar a.all{padding:0 18px;background:#1c1c1e;border-color:#1c1c1e;color:#fff}
+.ffh-chipbar img{width:28px;height:28px;border-radius:50%;object-fit:cover}
+
+/* Buy again */
+.ffh .ffh-again{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px 22px}
+.ffh .ffh-again-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ffh .ffh-again-item{display:flex;align-items:center;gap:12px;border:1px solid #f0ece8;border-radius:16px;padding:10px}
+.ffh .ffh-again-item img{width:60px;height:60px;border-radius:12px;object-fit:cover;flex:none;background:#f4f2ef}
+.ffh .ffh-again-item .t{flex:1;min-width:0}
+.ffh .ffh-again-item .t a{display:block;color:var(--ink);font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ffh .ffh-again-item .t small{color:var(--muted);font-size:13px}
+
+/* Product grid and card */
+.ffh .ffh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;perspective:1200px}
+.ffh .ffv-card{display:flex;flex-direction:column;background:#fff;border-radius:20px;overflow:hidden;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s;box-shadow:0 1px 2px rgba(30,20,10,.04),0 10px 24px -10px rgba(30,20,10,.14)}
+.ffh .ffv-card:hover{transform:translateY(-10px) rotateX(6deg) rotateY(-6deg);box-shadow:0 34px 50px -18px rgba(30,20,10,.30),0 4px 10px rgba(30,20,10,.06)}
+.ffh .ffv-photo{position:relative;display:block;aspect-ratio:1.5;overflow:hidden;background:#f4f2ef}
+.ffh .ffv-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.ffh .ffv-card:hover .ffv-photo img{transform:scale(1.07)}
+.ffh .ffv-off{position:absolute;top:0;left:0;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:6px 12px;border-radius:20px 0 14px 0}
+.ffh .ffv-photo-label{position:absolute;bottom:0;right:0;background:#2b2b2d;color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:12px 0 0 0}
+.ffh .ffv-out-band{position:absolute;top:0;left:0;right:0;background:rgba(38,38,40,.86);color:#fff;text-align:center;font-size:15px;font-weight:600;padding:9px 0}
+.ffh .ffv-card.is-out .ffv-photo img{filter:grayscale(1);opacity:.85}
+.ffh .ffv-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.ffh .ffv-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ffh .ffv-chip{font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;line-height:1.1}
+.ffh .ffv-chip-fresh{background:#e4f4e8;color:#1e6b36}
+.ffh .ffv-chip-low{background:#fff1d6;color:#8a4b00}
+.ffh .ffv-name{color:var(--ink);font-size:17px;font-weight:600;line-height:1.3}
+.ffh .ffv-name:hover{text-decoration:underline}
+.ffh .ffv-weight{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.ffh .ffv-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;border-top:1px dashed #ece6e1;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.ffh .ffv-card:hover .ffv-foot{transform:translateZ(30px)}
+.ffh .ffv-prices{display:flex;align-items:flex-end;gap:10px}
+.ffh .ffv-mrp{line-height:1.1;color:#8a8a8a;font-size:13px}
+.ffh .ffv-mrp small{display:block;font-size:10px;font-weight:700}
+.ffh .ffv-price{font-size:21px;font-weight:800;line-height:1}
+.ffh .ffv-foot-out{flex-direction:column;align-items:stretch}
+.ffh .ffv-foot-out .ffv-price{color:#555}
+.ffh .ffv-notify-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ffh .ffv-notify-text{font-size:13px;color:#555}
+.ffh .ffv-notify{display:inline-flex;align-items:center;gap:6px;border:1px solid #f1d4d4;background:#fff;color:#c41c3b;font:inherit;font-weight:700;font-size:14px;height:40px;padding:0 14px;border-radius:12px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.ffh .ffv-notify[disabled]{color:#1e6b36;border-color:#cfe8d6;cursor:default}
+/* Add button and stepper: same look as the current site */
+.ffh .ff-product-actions{display:flex;align-items:center;gap:8px;flex:none}
+.ffh .ff-compare-button{display:grid;place-items:center;width:34px;height:34px;border:1px solid #ecebe8;border-radius:50%;background:#fff;color:#595959}
+.ffh .ff-compare-button:hover{border-color:#ffbca8;color:#e63a17}
+.ffh .ff-add{border:0;border-radius:999px;padding:.6rem 1.1rem;background:var(--accent);color:#fff;font-size:.86rem;font-weight:700;box-shadow:0 8px 16px rgba(247,2,2,.18)}
+.ffh .ff-add:hover{filter:brightness(.96)}
+.ffh .ff-quantity-stepper{display:flex;align-items:center;gap:.5rem;padding:.22rem;border:1px solid #ffd2c4;border-radius:999px;background:#fff6f2}
+.ffh .ff-quantity-stepper[hidden]{display:none}
+.ffh .ff-quantity-button{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:50%;background:var(--accent);color:#fff;font-size:1.1rem;font-weight:700;line-height:1}
+.ffh .ff-quantity-value{min-width:1.1rem;font-weight:800;text-align:center}
+
+/* Coupons: ticket style, one colour each */
+.ffh .ffh-coupons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.ffh .ffh-ticket{position:relative;display:flex;min-height:176px;filter:drop-shadow(0 12px 18px rgba(30,20,10,.16))}
+.ffh .ffh-ticket-body{flex:1;min-width:0;color:#fff;border-radius:16px 0 0 16px;padding:18px 16px 16px 20px;display:flex;flex-direction:column;align-items:flex-start}
+.ffh .ffh-ticket-kicker{font-size:11px;font-weight:600;letter-spacing:.16em;opacity:.9;text-transform:uppercase}
+.ffh .ffh-ticket-flat{font-size:15px;font-weight:500;margin-top:6px}
+.ffh .ffh-ticket-big{font-size:30px;font-weight:900;line-height:1}
+.ffh .ffh-ticket-desc{font-size:14px;font-weight:500;margin-top:4px}
+.ffh .ffh-ticket-code{margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:#fff;border:0;border-radius:8px;height:36px;padding:0 12px;font:inherit;font-size:14px;font-weight:800;letter-spacing:.06em;cursor:pointer}
+.ffh .ffh-ticket-exp{font-size:12px;font-weight:500;margin-top:10px;opacity:.9}
+.ffh .ffh-ticket-stub{flex:0 0 52px;background:#fff;border-radius:0 16px 16px 0;border-left:2px dashed #d9d4cf;display:flex;align-items:center;justify-content:center;position:relative}
+.ffh .ffh-ticket-stub::before,.ffh .ffh-ticket-stub::after{content:"";position:absolute;left:-11px;width:20px;height:20px;border-radius:50%;background:var(--bg)}
+.ffh .ffh-ticket-stub::before{top:-10px}.ffh .ffh-ticket-stub::after{bottom:-10px}
+.ffh .ffh-barcode{width:22px;height:70%;background:repeating-linear-gradient(0deg,#2b2b2d 0 2px,transparent 2px 4px,#2b2b2d 4px 5px,transparent 5px 8px,#2b2b2d 8px 11px,transparent 11px 13px)}
+.ffh .ffh-coupon-img{display:block;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.ffh .ffh-coupon-img img{display:block;width:100%;aspect-ratio:2/1;object-fit:cover}
+
+@media (prefers-reduced-motion: reduce){.ffh .ffv-card,.ffh .ffv-card:hover,.ffh .ffv-card:hover .ffv-foot,.ffh .ffh-cat:hover img{transform:none}.ffh-chipbar{transition:none}}
+@media (max-width:1100px){.ffh .ffh-cats{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (max-width:991px){.ffh .ffh-grid,.ffh .ffh-coupons,.ffh .ffh-again-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ffh .ffh-tiles{grid-template-columns:1fr}.ffh .ffh-trust{grid-template-columns:repeat(2,minmax(0,1fr))}.ffh .ffh-cats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:575px){.ffh .ffh-wrap{padding:0 12px}.ffh .ffh-section{margin-top:30px}.ffh .ffh-grid{gap:10px}.ffh .ffv-body{padding:10px}.ffh .ffv-name{font-size:14px}.ffh .ffv-price{font-size:17px}.ffh .ffv-foot{flex-wrap:wrap}.ffh .ffh-cat-panel{padding:18px 12px;border-radius:20px}.ffh .ffh-cats{gap:16px 6px}.ffh .ffh-cat span{font-size:12px}.ffh .ffh-coupons{grid-template-columns:1fr}.ffh .ffh-again-grid{grid-template-columns:1fr}.ffh .ffh-trust-item{padding:10px}.ffh .ffv-card:hover{transform:none}.ffh-chipbar .ffh-chip-track{padding:8px 12px}}
+
+/* Floating cart bar (it lives in the shared footer; only its look changes, and only on this page). */
+.ff-cart-float .ff-cart-float-inner{display:flex!important;align-items:center!important;gap:14px!important;background:#1c1c1e!important;color:#fff!important;border:0!important;border-radius:999px!important;padding:8px 8px 8px 10px!important;box-shadow:0 20px 40px -12px rgba(0,0,0,.45)!important;font-family:'Outfit',system-ui,sans-serif}
+.ff-cart-float .ff-cart-float-icon{width:44px;height:44px;flex:none;border-radius:50%;display:grid!important;place-items:center;background:#2e2e31!important;color:#fff!important;font-size:1.15rem}
+.ff-cart-float strong{flex:1;font-size:16px;font-weight:700;color:#fff!important}
+.ff-cart-float .ff-cart-float-sep{opacity:.4;margin:0 8px}
+.ff-cart-float button[data-bs-toggle]{border:0!important;border-radius:999px!important;background:linear-gradient(110deg,#F70202 0%,#FF5500 100%)!important;color:#fff!important;font-weight:700!important;height:48px;padding:0 22px!important}
+.ff-cart-float .ff-cart-float-close{background:transparent!important;border:0!important;color:#bdbdbd!important;width:36px;height:36px}
+</style>
+@endpush
+
+@section('content')
+<main class="ffh">
+    <div class="ffh-wrap">
+
+        @if ($banners->isNotEmpty())
+            <section class="ffh-banner" aria-label="Freshful offers">
+                <div class="ffh-banner-track" id="ffh-banner-track">
+                    @foreach ($banners as $banner)
+                        <a class="ffh-banner-slide" href="{{ filled($banner->url) ? $banner->url : url('/view_product/all') }}" aria-label="{{ $banner->title ?: 'Shop Freshful' }}">
+                            <img src="{{ asset('uploads/images/banners/'.$banner->image) }}" alt="{{ $banner->title ?: 'Freshful offer' }}" @if (! $loop->first) loading="lazy" @endif>
+                        </a>
+                    @endforeach
+                </div>
+                @if ($banners->count() > 1)
+                    <button class="ffh-banner-arrow prev" type="button" data-ffh-slide="-1" aria-label="Previous banner"><i class="bi bi-chevron-left"></i></button>
+                    <button class="ffh-banner-arrow next" type="button" data-ffh-slide="1" aria-label="Next banner"><i class="bi bi-chevron-right"></i></button>
+                    <div class="ffh-dots" id="ffh-dots">
+                        @foreach ($banners as $banner)
+                            <button type="button" data-ffh-dot="{{ $loop->index }}" aria-label="Banner {{ $loop->iteration }}" class="{{ $loop->first ? 'on' : '' }}"></button>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+        @endif
+
+        <section class="ffh-tiles" aria-label="Delivery and offers">
+            <div class="ffh-tile ffh-tile-white">
+                <span class="ffh-tile-icon" style="background:#1c1c1e;color:#fff">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+                </span>
+                <div>
+                    <h3>Express in 30 minutes</h3>
+                    <p>From your nearest store, 7 AM to 9 PM. Or choose a time slot that suits you.</p>
+                </div>
+            </div>
+            @if ($firstOrderOffer)
+                <div class="ffh-tile ffh-tile-navy">
+                    <div>
+                        <p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.1em">FIRST ORDER OFFER</p>
+                        <h3 style="margin-top:4px">{{ rtrim(rtrim(number_format((float) $firstOrderOffer->percentage, 2), '0'), '.') }}% off your first order</h3>
+                        <button type="button" class="ffh-code" data-ffh-copy="{{ $firstOrderOffer->title }}">{{ $firstOrderOffer->title }} <i class="bi bi-copy" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+            @else
+                <div class="ffh-tile ffh-tile-navy">
+                    <span class="ffh-tile-icon" style="background:rgba(255,255,255,.12);color:#fff">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/></svg>
+                    </span>
+                    <div>
+                        <h3>Fresh from your nearest store</h3>
+                        <p>Cleaned, cut and packed close to you.</p>
+                    </div>
+                </div>
+            @endif
+            <div class="ffh-tile ffh-tile-indigo">
+                <span class="ffh-tile-icon" style="background:#f5c451;color:#2d2a6e">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18"/><path d="M12 8c-2-4-6-3-5 0h5zm0 0c2-4 6-3 5 0h-5z"/></svg>
+                </span>
+                <div>
+                    <h3>Refer a friend</h3>
+                    <p>Earn wallet money when their first order is ₹400 or more.</p>
+                    <a class="ffh-tile-btn" href="{{ url('/refer_earn') }}">Invite friends</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="ffh-trust" aria-label="Why Freshful">
+            <div class="ffh-trust-item"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21c0-9 6-15 16-16-1 10-7 16-16 16z"/><path d="M5 21 14 12"/></svg></span><div><strong>Never older than 2 days</strong><small>Stock is sold fresh or removed</small></div></div>
+            <div class="ffh-trust-item"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><div><strong>Weighed before dispatch</strong><small>Pay only for what you get</small></div></div>
+            <div class="ffh-trust-item"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></span><div><strong>Cash, UPI or card</strong><small>Pay online or at your door</small></div></div>
+            <div class="ffh-trust-item"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/></svg></span><div><strong>Stores near you</strong><small>Ambur, Vaniyambadi, Bengaluru</small></div></div>
+        </section>
+
+        @if ($categories->isNotEmpty())
+            <section class="ffh-section ffh-cat-panel" aria-labelledby="ffh-cat-title">
+                <div class="ffh-head">
+                    <div><h2 id="ffh-cat-title">Shop by category</h2><p>Freshest meats, seafood, fruits and vegetables</p></div>
+                    <a class="ffh-link" href="{{ route('categories') }}">All {{ $categories->count() }} categories <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div class="ffh-cats">
+                    @foreach ($categories->take(16) as $category)
+                        <a class="ffh-cat" href="{{ url('/view_product/'.$category->id) }}">
+                            <img src="{{ asset('uploads/images/'.$category->circle_image) }}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+                            <span>{{ $category->name }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+            <div id="ffh-cat-end" aria-hidden="true" style="height:1px"></div>
+        @endif
+
+        @if ($buyAgain->isNotEmpty())
+            <section class="ffh-section ffh-again" aria-labelledby="ffh-again-title">
+                <div class="ffh-head" style="margin-bottom:14px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="width:34px;height:34px;border-radius:10px;background:#1c1c1e;color:#fff;display:grid;place-items:center"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
+                        <h2 id="ffh-again-title" style="font-size:22px">Buy again</h2>
+                        <span style="color:var(--muted);font-size:14px">From your last orders</span>
+                    </div>
+                </div>
+                <div class="ffh-again-grid">
+                    @foreach ($buyAgain as $product)
+                        @php $againOut = ($stock[$product->id]['out'] ?? false); @endphp
+                        <div class="ffh-again-item">
+                            <img src="{{ asset('uploads/images/products/'.$product->product_image) }}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+                            <div class="t">
+                                <a href="{{ route('product_detail', ['id' => $product->id]) }}">{{ $product->product_name }}</a>
+                                <small>{{ trim(($product->gross_quantity ?? '').' '.($product->product_unit ?? '')) }} · <strong style="color:var(--ink)">{{ \App\Services\Storefront\HomeV2Data::money($product->main_price) }}</strong></small>
+                            </div>
+                            @if ($againOut)
+                                <button type="button" class="ffv-notify" data-stock-alert="{{ $product->id }}" style="height:36px;padding:0 10px">Notify</button>
+                            @else
+                                <div class="ff-quantity-control" data-product-quantity="{{ $product->id }}">
+                                    <button type="button" class="ff-add product-add-button" onclick="addToCart({{ $product->id }})">Add</button>
+                                    <div class="ff-quantity-stepper" hidden aria-label="Change quantity for {{ $product->product_name }}">
+                                        <button type="button" class="ff-quantity-button" onclick="changeProductQuantity({{ $product->id }}, -1)" aria-label="Decrease quantity">&minus;</button>
+                                        <span class="ff-quantity-value" aria-live="polite">0</span>
+                                        <button type="button" class="ff-quantity-button" onclick="changeProductQuantity({{ $product->id }}, 1)" aria-label="Increase quantity">+</button>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        @php $sfCouponsShown = false; @endphp
+        @forelse ($homeTagSections as $sectionIndex => $section)
+            <section class="ffh-section" aria-labelledby="ffh-tag-{{ $sectionIndex }}">
+                <div class="ffh-head">
+                    <div><h2 id="ffh-tag-{{ $sectionIndex }}">{{ $section['name'] }}</h2></div>
+                    <a class="ffh-link" href="{{ url('/view_product/all/'.rawurlencode($section['name'])) }}">View all <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div class="ffh-grid">
+                    @foreach ($section['products'] as $product)
+                        @include('home_v2.card', ['product' => $product, 'stock' => $stock])
+                    @endforeach
+                </div>
+            </section>
+            @if ($sectionIndex === 1)
+                @include('home_v2.coupons')
+                @php $sfCouponsShown = true; @endphp
+            @endif
+        @empty
+            @if ($bestSellers->isNotEmpty())
+                <section class="ffh-section" aria-labelledby="ffh-best">
+                    <div class="ffh-head">
+                        <div><h2 id="ffh-best">Customer favourites</h2></div>
+                        <a class="ffh-link" href="{{ url('/view_product/all') }}">Shop all <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    </div>
+                    <div class="ffh-grid">
+                        @foreach ($bestSellers as $product)
+                            @include('home_v2.card', ['product' => $product, 'stock' => $stock])
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+        @endforelse
+        @if (! $sfCouponsShown)
+            @include('home_v2.coupons')
+        @endif
+    </div>
+</main>
+
+@if ($categories->isNotEmpty())
+    <nav class="ffh-chipbar" id="ffh-chipbar" aria-label="Jump to a category">
+        <div class="ffh-chip-track">
+            <a class="all" href="{{ route('categories') }}">All</a>
+            @foreach ($categories as $category)
+                <a href="{{ url('/view_product/'.$category->id) }}"><img src="{{ asset('uploads/images/'.$category->circle_image) }}" alt="" loading="lazy">{{ $category->name }}</a>
+            @endforeach
+        </div>
+    </nav>
+@endif
+@endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Banner slider: arrows, dots and a gentle auto-advance that pauses on hover.
+    var track = document.getElementById('ffh-banner-track');
+    if (track) {
+        var slides = track.children.length, timer = null;
+        var current = function () { return Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); };
+        var go = function (i) { track.scrollTo({ left: ((i + slides) % slides) * track.clientWidth, behavior: 'smooth' }); };
+        document.querySelectorAll('[data-ffh-slide]').forEach(function (b) { b.addEventListener('click', function () { go(current() + Number(b.dataset.ffhSlide)); }); });
+        document.querySelectorAll('[data-ffh-dot]').forEach(function (b) { b.addEventListener('click', function () { go(Number(b.dataset.ffhDot)); }); });
+        track.addEventListener('scroll', function () {
+            var i = current();
+            document.querySelectorAll('[data-ffh-dot]').forEach(function (b) { b.classList.toggle('on', Number(b.dataset.ffhDot) === i); });
+        }, { passive: true });
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var start = function () { if (!reduce && slides > 1) timer = setInterval(function () { go(current() + 1); }, 5000); };
+        var stop = function () { clearInterval(timer); };
+        track.parentNode.addEventListener('mouseenter', stop);
+        track.parentNode.addEventListener('mouseleave', start);
+        start();
+    }
+
+    // Copy a promo code.
+    document.querySelectorAll('[data-ffh-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var code = btn.dataset.ffhCopy, original = btn.innerHTML;
+            var done = function () { btn.innerHTML = 'Copied <i class="bi bi-check2" aria-hidden="true"></i>'; setTimeout(function () { btn.innerHTML = original; }, 1400); };
+            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(code).then(done); }
+            else { var f = document.createElement('textarea'); f.value = code; document.body.appendChild(f); f.select(); document.execCommand('copy'); f.remove(); done(); }
+        });
+    });
+
+    // Category chips appear under the header once the category section has scrolled away.
+    var bar = document.getElementById('ffh-chipbar'), end = document.getElementById('ffh-cat-end');
+    if (bar && end) {
+        var header = document.getElementById('myHeader');
+        var setTop = function () { var h = header ? header.getBoundingClientRect().height : 0; bar.style.setProperty('--ffh-top', Math.max(0, Math.round(h)) + 'px'); return h; };
+        var update = function () { var h = setTop(); bar.classList.toggle('on', end.getBoundingClientRect().top < h); };
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+    }
+
+    // "Notify me" for out-of-stock products.
+    var csrf = function () { var m = document.querySelector('meta[name="csrf-token"]'); if (m && m.content) return m.content; var i = document.querySelector('input[name="_token"]'); return i ? i.value : ''; };
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-stock-alert]');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        fetch(@json(route('storefront.stock_alert')), {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
+            body: JSON.stringify({ product_id: Number(btn.dataset.stockAlert) })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && data.result) {
+                btn.innerHTML = 'Done <i class="bi bi-check2" aria-hidden="true"></i>';
+                var row = btn.closest('.ffv-notify-row'); var t = row && row.querySelector('.ffv-notify-text'); if (t) t.textContent = 'We will tell you when it is back';
+                if (typeof notify === 'function') notify(data.message, 'success');
+                return;
+            }
+            btn.disabled = false;
+            if (data && data.login) {
+                var el = document.getElementById('loginoffcanvas');
+                if (el && window.bootstrap) { bootstrap.Modal.getOrCreateInstance(el).show(); }
+                else if (typeof notify === 'function') { notify(data.message, 'error'); }
+                return;
+            }
+            if (typeof notify === 'function') notify((data && data.message) || 'Please try again', 'error');
+        }).catch(function () { btn.disabled = false; if (typeof notify === 'function') notify('Network error, please try again', 'error'); });
+    });
+})();
+</script>
+@endpush

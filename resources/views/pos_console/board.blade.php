@@ -63,7 +63,7 @@
   <nav class="pc-tabs" aria-label="Views">
     <button type="button" class="pc-tab is-on" data-tab="board">Live board <span class="n" id="tnBoard">0</span></button>
     <button type="button" class="pc-tab" data-tab="sla">SLA <span class="n" id="tnSla">0</span></button>
-    <button type="button" class="pc-tab" data-tab="riders">Riders &amp; cash <span class="n" id="tnRiders">0</span></button>
+    <button type="button" class="pc-tab" data-tab="riders">Delivery boys & cash <span class="n" id="tnRiders">0</span></button>
     <button type="button" class="pc-tab" data-tab="later">Scheduled later <span class="n" id="tnLater">0</span></button>
     <button type="button" class="pc-tab" data-tab="done">Done today <span class="n" id="tnDone">0</span></button>
     <button type="button" class="pc-tab" data-tab="history">History</button>

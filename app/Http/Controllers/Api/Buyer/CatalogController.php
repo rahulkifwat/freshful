@@ -220,8 +220,8 @@ class CatalogController extends BuyerController
             // Legacy matched wishlist and inventory on products.product_id, cart on products.id.
             'wishlist' => DB::table('wishlist')->where('buyer_id', $buyerId)
                 ->selectRaw('product_id, COUNT(*) as total')->groupBy('product_id')->pluck('total', 'product_id'),
-            'stock'    => DB::table('inventory')->where('hub_id', $hubId)->orderBy('id')
-                ->get(['product_id', 'live_stock'])->unique('product_id')->pluck('live_stock', 'product_id'),
+            'stock'    => \App\Services\Stock\StockGuard::net((int) $hubId, DB::table('inventory')->where('hub_id', $hubId)->orderBy('id')
+                ->get(['product_id', 'live_stock'])->unique('product_id')->pluck('live_stock', 'product_id')),
         ];
     }
 

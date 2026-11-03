@@ -1030,3 +1030,24 @@ if (file_exists(__DIR__.'/country_console.php')) { require __DIR__.'/country_con
 
 // Freshful production console (production update 1, 28 Oct 2026): /production/console
 if (file_exists(__DIR__.'/production_console.php')) { require __DIR__.'/production_console.php'; }
+
+// Freshful home v2 (29 Oct 2026): new home page; switch STOREFRONT_HOME_V2 in .env
+if (file_exists(__DIR__.'/home_v2.php')) { require __DIR__.'/home_v2.php'; }
+
+// INV1 (30 Oct 2026): invoices and order details
+Route::get('/invoice/s/{type}/{id}', [\App\Http\Controllers\InvoiceController::class, 'signed'])->where('type', 'order|outlet')->where('id', '[A-Za-z0-9\-]+')->middleware('signed')->name('invoice.signed');
+Route::get('/invoice/{orderId}', [\App\Http\Controllers\InvoiceController::class, 'order'])->where('orderId', '[A-Za-z0-9\-]+')->name('invoice.order');
+Route::get('/account/orders/{orderId}', [\App\Http\Controllers\InvoiceController::class, 'details'])->where('orderId', '[A-Za-z0-9\-]+')->name('account.order');
+
+// KIO1 (30 Oct 2026): self-order kiosk
+Route::prefix('kiosk/{key}')->where(['key' => '[A-Za-z0-9]{16,64}'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\KioskController::class, 'page'])->name('kiosk.page');
+    Route::get('/ping', [\App\Http\Controllers\KioskController::class, 'ping'])->middleware('throttle:30,1');
+    Route::get('/catalog', [\App\Http\Controllers\KioskController::class, 'catalog'])->middleware('throttle:120,1');
+    Route::post('/place', [\App\Http\Controllers\KioskController::class, 'place'])->middleware('throttle:20,1');
+    Route::get('/status/{id}/{tok}', [\App\Http\Controllers\KioskController::class, 'status'])->whereNumber('id')->middleware('throttle:60,1');
+    Route::post('/cancel/{id}/{tok}', [\App\Http\Controllers\KioskController::class, 'cancel'])->whereNumber('id')->middleware('throttle:20,1');
+});
+
+// DM1 (30 Oct 2026): Digital Menu
+if (is_file(__DIR__.'/digital_menu.php')) { require __DIR__.'/digital_menu.php'; }
