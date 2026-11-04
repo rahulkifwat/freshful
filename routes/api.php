@@ -116,6 +116,7 @@ Route::prefix('driver')->group(function () use ($any) {
         Route::get('orders/assigned-orders', [DriverOrderController::class, 'assigned']);
         Route::post('orders/deliver', [DriverOrderController::class, 'deliver']);
         Route::post('orders/accept', [DriverOrderController::class, 'accept']);
+        Route::get('/orders/delivered', [DriverOrderController::class, 'delivered']);
 
         Route::get('wallet/balance', [WalletController::class, 'balance']);
         Route::get('wallet/transactions', [WalletController::class, 'transactions']);

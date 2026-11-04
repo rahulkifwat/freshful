@@ -264,4 +264,79 @@ class OrderController extends DriverController
                 'h.hub as hub_name', 'h.hub_lat', 'h.hub_lng'
             );
     }
+    public function delivered(Request $request): JsonResponse
+{
+    $rows = $this->ordersWithDetails()
+        ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
+        ->addSelect('p.product_name', 'p.product_image', 'p.product_unit')
+        ->where('o.rider_id', $this->driverId($request))
+        ->where('o.order_status', 'Order Delivered')
+        ->orderByDesc('o.delivery_complete_time')
+        ->orderByDesc('o.id')
+        ->get();
+
+    $orders = [];
+
+    foreach ($rows as $row) {
+        $order = &$orders[$row->order_id];
+
+        $order ??= [
+            'order_id'          => $row->order_id,
+            'order_status'      => $row->order_status,
+            'total_amount'      => $row->total_amount,
+            'amount_to_collect' => $row->amount_to_collect,
+            'payment_type'      => $row->payment_type,
+            'payment_status'    => $row->payment_status,
+            'delivery_type'     => $row->delivery_type,
+            'schedule_date'     => $row->schedule_date,
+            'schedule_time'     => $row->schedule_time,
+            'date_added'        => $row->date_added,
+            'delivery_complete_time' => $row->delivery_complete_time,
+
+            'buyer' => [
+                'name'  => $row->buyer_name,
+                'phone' => $row->buyer_phone,
+            ],
+
+            'address' => [
+                'name'        => $row->address_name,
+                'phone'       => $row->address_phone,
+                'street_name' => $row->street_name,
+                'locality'    => $row->locality,
+                'landmark'    => $row->landmark,
+                'city'        => $row->city,
+                'user_lat'    => $row->user_lat,
+                'user_lng'    => $row->user_lng,
+            ],
+
+            'hub' => [
+                'hub'     => $row->hub_name,
+                'hub_lat' => $row->hub_lat,
+                'hub_lng' => $row->hub_lng,
+            ],
+
+            'items' => [],
+        ];
+
+        $order['items'][] = [
+            'product_id'    => $row->product_id,
+            'product_name'  => $row->product_name,
+            'product_image' => $this->uploadsUrl('images/products', $row->product_image),
+            'product_unit'  => $row->product_unit,
+            'quantity'      => $row->quantity,
+        ];
+
+        unset($order);
+    }
+
+    $orders = array_values($orders);
+
+    return $this->respond([
+        'result'  => true,
+        'message' => $orders ? 'success' : 'No delivered orders',
+        'orders'  => $orders,
+        'count'   => count($orders),
+    ]);
 }
+}
+
