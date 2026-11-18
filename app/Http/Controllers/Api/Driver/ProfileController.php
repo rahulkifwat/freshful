@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Driver;
 
+use Carbon\Carbon;
 use App\Exceptions\ApiException;
 use App\Services\DriverManagementService;
 use App\Support\DriverJwt;
@@ -9,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends DriverController
 {
@@ -54,6 +57,8 @@ class ProfileController extends DriverController
     
 public function personalInformation(Request $request): JsonResponse
 {
+    $regid = null;
+
     try {
         $regid = $this->driverId($request);
 
@@ -61,15 +66,16 @@ public function personalInformation(Request $request): JsonResponse
             throw new ApiException('Driver ID is missing or invalid');
         }
 
+        // Check driver registration
         if (!DB::table('driver_registration')->where('id', $regid)->exists()) {
             throw new ApiException('Driver not found');
         }
 
-        // Validate request data
+        // Validate request
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'father_name' => 'nullable|string|max:255',
-            'dob' => 'nullable|date',
+            'dob' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
             'emergency_name' => 'nullable|string|max:255',
@@ -77,7 +83,7 @@ public function personalInformation(Request $request): JsonResponse
             'emergency_phone' => 'nullable|string|max:20',
             'referral_code' => 'nullable|string|max:100',
             'address' => 'nullable|string',
-            'language' => 'nullable|string|max:100',
+            'language' => 'nullable|string|max:255',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
@@ -92,7 +98,7 @@ public function personalInformation(Request $request): JsonResponse
             'emergency_phone',
             'referral_code',
             'address',
-            'language'
+            'language',
         ];
 
         $save = [];
@@ -101,72 +107,132 @@ public function personalInformation(Request $request): JsonResponse
             $save[$field] = $validated[$field] ?? '';
         }
 
-        // DOB should be NULL when empty
-        $save['dob'] = !empty($save['dob']) ? $save['dob'] : null;
+        /*
+         * DOB FORMAT CONVERSION
+         * Accepts:
+         * DD-MM-YYYY
+         * YYYY-MM-DD
+         */
+        if (!empty($save['dob'])) {
+
+            $dob = trim($save['dob']);
+
+            try {
+                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $dob)) {
+
+                    $date = Carbon::createFromFormat('!d-m-Y', $dob);
+
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+
+                    $date = Carbon::createFromFormat('!Y-m-d', $dob);
+
+                } else {
+                    throw new \Exception('Unsupported date format');
+                }
+
+                // Check actual date validity
+                if (!$date || $date->format(
+                    preg_match('/^\d{2}-\d{2}-\d{4}$/', $dob)
+                        ? 'd-m-Y'
+                        : 'Y-m-d'
+                ) !== $dob) {
+                    throw new \Exception('Invalid date');
+                }
+
+                $save['dob'] = $date->format('Y-m-d');
+
+            } catch (\Throwable $e) {
+
+                throw ValidationException::withMessages([
+                    'dob' => [
+                        'Invalid date of birth. Please use DD-MM-YYYY or YYYY-MM-DD format.'
+                    ]
+                ]);
+            }
+
+        } else {
+            $save['dob'] = null;
+        }
 
         // Upload profile photo
         $photo = $request->file('profile_photo');
 
         if ($photo) {
+
             if (!$photo->isValid()) {
-                throw new \Exception('Profile photo upload failed: ' . $photo->getErrorMessage());
+                throw new \Exception(
+                    'Profile photo upload failed: ' . $photo->getErrorMessage()
+                );
             }
 
-            $save['profile_photo'] = $this->storeImage(
+            $photoName = Str::random(5) . time();
+
+            $photoPath = $this->storeImage(
                 $photo,
                 'profile_photos',
-                Str::random(5) . time(),
+                $photoName,
                 'profile_photo'
             );
 
-            if (empty($save['profile_photo'])) {
-                throw new \Exception('Profile photo could not be saved');
+            if (empty($photoPath)) {
+                throw new \Exception('Profile photo could not be uploaded');
             }
+
+            $save['profile_photo'] = $photoPath;
         }
 
+        // Database transaction
         DB::beginTransaction();
 
-        try {
-            $profile = DB::table('driver_profile')
+        $profileExists = DB::table('driver_profile')
+            ->where('regid', $regid)
+            ->exists();
+
+        if ($profileExists) {
+
+            DB::table('driver_profile')
                 ->where('regid', $regid)
-                ->exists();
+                ->update($save);
 
-            if ($profile) {
-                DB::table('driver_profile')
-                    ->where('regid', $regid)
-                    ->update($save);
+            $message = 'Profile updated successfully';
 
-                $message = 'Profile updated successfully';
-            } else {
-                $save['regid'] = $regid;
+        } else {
 
-                // Do not overwrite an uploaded photo
-                $save['profile_photo'] = $save['profile_photo'] ?? '';
+            $save['regid'] = $regid;
+            $save['profile_photo'] = $save['profile_photo'] ?? '';
 
-                DB::table('driver_profile')->insert($save);
+            DB::table('driver_profile')->insert($save);
 
-                $message = 'Profile created successfully';
-            }
-
-            DB::commit();
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
+            $message = 'Profile created successfully';
         }
+
+        DB::commit();
 
         return $this->respond([
             'result' => true,
             'message' => $message
         ]);
 
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        throw $e;
+    } catch (ValidationException $e) {
+
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
+
+        return response()->json([
+            'result' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
 
     } catch (\Throwable $e) {
 
-        \Log::error('Driver Personal Information API Error', [
-            'driver_id' => $regid ?? null,
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
+
+        Log::error('Driver Personal Information API Error', [
+            'driver_id' => $regid,
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
@@ -175,7 +241,9 @@ public function personalInformation(Request $request): JsonResponse
 
         return response()->json([
             'result' => false,
-            'message' => $e->getMessage(),
+            'message' => config('app.debug')
+                ? $e->getMessage()
+                : 'Something went wrong. Please try again later.',
             'error_file' => config('app.debug') ? $e->getFile() : null,
             'error_line' => config('app.debug') ? $e->getLine() : null,
         ], 500);
