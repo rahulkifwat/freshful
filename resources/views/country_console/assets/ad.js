@@ -123,13 +123,34 @@ window.CCX = function (K) {
 
   /* ------------------------------------------------------------------ generic master lists (AdminRecords) */
   var RES = { 'ad-maincat': 'maincat', 'ad-category': 'category', 'ad-units': 'units', 'ad-tags': 'tags', 'ad-filters': 'filters', 'ad-buyers': 'buyers',
-    'ad-cities': 'cities', 'ad-delivery': 'delivery', 'ad-banners': 'banners', 'ad-appbanners': 'appbanners', 'ad-slider': 'slider', 'ad-offers': 'offers', 'ad-promos': 'promos',
+    'ad-cities': 'cities', 'ad-delivery': 'delivery', 'ad-banners': 'banners', 'ad-appbanners': 'appbanners', 'ad-apphome': 'apphome', 'ad-apptheme': 'apptheme', 'ad-slider': 'slider', 'ad-offers': 'offers', 'ad-promos': 'promos',
     'ad-coupons': 'coupons', 'ad-certs': 'certs', 'ad-policies': 'policies', 'ad-grievcat': 'grievcat', 'ad-newsletter': 'newsletter' };
 
+  /* Colour field (category tile colour): hex box + live preview + preset buttons. Added by the admin colour installer. */
+  var AD_PRESETS = ['#F70202', '#FF5500', '#FFB300', '#F4A6B7', '#FDE68A', '#BFDBFE', '#C7D2FE', '#DDD6FE', '#FBCFE8', '#FED7AA', '#E5E7EB', '#1F2937'];
+  function colorField(f, val) {
+    var ok = /^#[0-9a-fA-F]{6}$/.test(val || '');
+    var sw = AD_PRESETS.map(function (c) { return '<button type="button" data-adc="' + c + '" title="' + c + '" style="width:26px;height:26px;border-radius:50%;border:1px solid #0003;background:' + c + ';cursor:pointer;margin:0 6px 6px 0;padding:0"></button>'; }).join('');
+    return '<div class="cc-f ad-color"><span>' + esc(f.label) + '</span>' +
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><i class="ad-cdot" style="width:34px;height:34px;border-radius:8px;border:1px solid #0003;display:inline-block;background:' + (ok ? esc(val) : 'transparent') + '"></i>' +
+      '<input class="cc-in" type="text" name="' + f.name + '" value="' + esc(val || '') + '" maxlength="7" placeholder="#F70202 (empty = automatic)" style="max-width:240px"></div>' +
+      '<div>' + sw + '<button type="button" class="cc-btn" data-adc="">No colour</button></div>' +
+      '<small class="muted">Background of this category tile in the customer app. Empty = automatic.</small></div>';
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-adc]') : null; if (!b) return;
+    var w = b.closest('.ad-color'); if (!w) return;
+    var i = w.querySelector('input'); i.value = b.getAttribute('data-adc'); i.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target; if (!t || !t.closest) return; var w = t.closest('.ad-color'); if (!w || t.tagName !== 'INPUT') return;
+    var d = w.querySelector('.ad-cdot'); if (d) d.style.background = /^#[0-9a-fA-F]{6}$/.test(t.value) ? t.value : 'transparent';
+  });
   function fieldHtml(f, v, row) {
     var ro = f.ro ? ' disabled' : '', req = f.req ? ' *' : '', val = v == null ? '' : v;
     if (f.t === 'image') return imageField(f.name, f.label, f.folder, val, row ? row[f.name + '_url'] : '', f.req);
     if (f.t === 'status') return '<label class="ad-check"><input type="checkbox" name="' + f.name + '"' + (row ? (row[f.name] ? ' checked' : '') : ' checked') + '> On (visible / active)</label>';
+    if (f.t === 'color') return colorField(f, val);
     if (f.t === 'citypick') return '<div class="cc-f ad-citypick"><span>' + esc(f.label) + req + '</span><select class="cc-sel" data-citysel><option value="">Choose the state first</option></select>' +
       '<input class="cc-in" name="' + f.name + '" value="' + esc(val) + '" maxlength="' + (f.max || 80) + '" placeholder="Type the town name" hidden><small class="muted" data-citysrc></small></div>';
     if (f.t === 'select') {
@@ -221,6 +242,7 @@ window.CCX = function (K) {
             if (!f) return null;
             if (f.t === 'image') return { k: c, t: f.label, nosort: 1, csv: false, f: function (x) { return thumb(x[c + '_url']); } };
             if (f.t === 'status') return { k: c, t: 'On / off', v: function (x) { return x[c] ? 1 : 0; }, c: function (x) { return x[c] ? 'On' : 'Off'; }, f: function (x) { return d.edit ? sw(x[c], 'data-tg="' + x.id + '"') : (x[c] ? pill('On', 'p-ok') : pill('Off')); } };
+            if (f.t === 'color') return { k: c, t: 'Colour', nosort: 1, csv: false, f: function (x) { return /^#[0-9a-fA-F]{6}$/.test(x[c] || '') ? '<i style="display:inline-block;width:18px;height:18px;border-radius:5px;border:1px solid #0003;vertical-align:middle;margin-right:6px;background:' + x[c] + '"></i>' + esc(x[c]) : '<span class="muted">automatic</span>'; } };
             if (f.t === 'select') return { k: c, t: f.label, v: function (x) { return x[c + '_label'] || x[c]; }, f: function (x) { return esc(x[c + '_label'] || x[c] || '–') + (x[c] && !x[c + '_label'] ? ' <small class="down">not in list</small>' : ''); } };
             if (f.t === 'money') return { k: c, t: f.label, n: 1, v: function (x) { return +x[c]; }, f: function (x) { return money2(x[c]); } };
             if (f.t === 'number') return { k: c, t: f.label, n: 1, v: function (x) { return +x[c]; }, f: function (x) { return num(x[c]); } };
@@ -603,7 +625,7 @@ window.CCX = function (K) {
       var m = { kind: kind, items: [] };
       if (kind === 'g') {
         var G = google.maps;
-        var map = new G.Map(box, { center: { lat: center[0], lng: center[1] }, zoom: zoom || 12, mapTypeControl: true, streetViewControl: false, fullscreenControl: true, clickableIcons: false, gestureHandling: 'greedy' });
+        var map = new G.Map(box, { center: { lat: center[0], lng: center[1] }, zoom: zoom || 12, mapTypeControl: true, scaleControl: true, streetViewControl: false, fullscreenControl: true, clickableIcons: false, gestureHandling: 'greedy' });
         m.map = map;
         var ll = function (p) { return { lat: p[0], lng: p[1] }; }, back = function (x) { return [+x.lat().toFixed(7), +x.lng().toFixed(7)]; };
         m.poly = function (pts, o) {
@@ -643,7 +665,7 @@ window.CCX = function (K) {
       } else {
         var Lf = window.L;
         var lm = Lf.map(box, { zoomControl: true }).setView(center, zoom || 12);
-        Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(lm);
+        Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(lm); Lf.control.scale({ imperial: false }).addTo(lm);
         m.map = lm; setTimeout(function () { lm.invalidateSize(); }, 150);
         var grp = function (x) { m.items.push(x); return x; };
         m.poly = function (pts, o) { o = o || {}; var pg = grp(Lf.polygon(pts, { color: o.color || '#EA4A1F', weight: o.weight || 2, fillOpacity: o.opacity == null ? .12 : o.opacity }).addTo(lm)); if (o.onclick) pg.on('click', o.onclick); return { remove: function () { lm.removeLayer(pg); }, raw: pg }; };
@@ -653,7 +675,7 @@ window.CCX = function (K) {
         m.marker = function (p, o) {
           o = o || {};
           var mk = o.dot ? Lf.circleMarker(p, { radius: o.size || 7, color: o.ring || '#fff', weight: o.ringW || 2, fillColor: o.color || '#2563EB', fillOpacity: 1 }) : Lf.marker(p, { draggable: !!o.draggable, title: o.title || '' });
-          grp(mk.addTo(lm)); if (o.title && o.dot) mk.bindTooltip(o.title);
+          grp(mk.addTo(lm)); if (o.label) mk.bindTooltip(o.label, { permanent: true, direction: 'top', offset: [0, o.dot ? -6 : -18], className: 'ad-maplbl' }); else if (o.title && o.dot) mk.bindTooltip(o.title);
           if (o.ondrag) mk.on('dragend', function () { var q = mk.getLatLng(); o.ondrag([+q.lat.toFixed(7), +q.lng.toFixed(7)]); });
           if (o.onclick) mk.on('click', o.onclick);
           return { remove: function () { lm.removeLayer(mk); }, move: function (q) { mk.setLatLng(q); }, raw: mk };
@@ -680,7 +702,7 @@ window.CCX = function (K) {
     o = o || {}; var col = h.active === false ? '#94A3B8' : (o.color || '#EA4A1F'), pts = [];
     if (h.kind === 'polygon' && h.points && h.points.length >= 3) { m.poly(h.points, { color: col, opacity: o.opacity == null ? .06 : o.opacity, weight: 1.5 }); pts = pts.concat(h.points); }
     else if (h.kind === 'circle' && (h.lat != null || (h.points && h.points[0]))) { var c = h.lat != null ? [h.lat, h.lng] : h.points[0]; m.circle(c, h.radius_m || C.circleKm * 1000, { color: col, opacity: o.opacity == null ? .05 : o.opacity, weight: 1.5 }); pts.push(c); }
-    if (h.lat != null && h.lng != null) { m.marker([h.lat, h.lng], { pin: true, color: col, title: h.name, onclick: function () { if (K.hubDrawer) K.hubDrawer(h); } }); pts.push([h.lat, h.lng]); }
+    if (h.lat != null && h.lng != null) { m.marker([h.lat, h.lng], { pin: true, color: col, title: h.name, label: String(h.name || '').slice(0, 10), onclick: function () { if (K.hubDrawer) K.hubDrawer(h); } }); pts.push([h.lat, h.lng]); }
     return pts;
   }
 
@@ -702,12 +724,16 @@ window.CCX = function (K) {
           { k: 'hub_users', t: 'Staff', n: 1, v: function (h) { return h.hub_users + h.pos_users; }, f: function (h) { return num(h.hub_users, 0) + ' hub · ' + num(h.pos_users, 0) + ' POS'; } }, { k: 'riders', t: 'Riders', n: 1 }, { k: 'addresses', t: 'Customer addresses', n: 1 },
           { k: 'active', t: 'Open', v: function (h) { return h.active ? 1 : 0; }, c: function (h) { return h.active ? 'Open' : 'Closed'; }, f: function (h) { return sw(h.active, 'data-tg="' + h.id + '"'); } },
           { k: 'issues', t: 'Check', v: function (h) { return h.issues.length; }, c: function (h) { return h.issues.join('; '); }, f: function (h) { return h.issues.map(function (i) { return pill(i, /No delivery area|No hub/.test(i) ? 'p-bad' : 'p-warn'); }).join(' ') || '<span class="muted">ok</span>'; } },
-          { k: '_a', t: '', nosort: 1, csv: false, f: function (h) { return '<div class="ad-acts"><button type="button" class="cc-btn" data-ed="' + h.id + '">' + (h.kind ? 'Edit area' : 'Draw area') + '</button></div>'; } }],
+          { k: '_a', t: '', nosort: 1, csv: false, f: function (h) { return '<div class="ad-acts"><button type="button" class="cc-btn" data-ed="' + h.id + '">' + (h.kind ? 'Edit area' : 'Draw area') + '</button>' + (h.active ? '' : '<button type="button" class="cc-btn" style="color:#B91C1C" data-dl="' + h.id + '">Delete</button>') + '</div>'; } }],
           rows, { csv: 'freshful-hubs.csv', click: function (h) { hubEditor(h, d, reload); }, after: function (w) {
             w.querySelectorAll('[data-ed]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); hubEditor(d.rows.filter(function (x) { return String(x.id) === b.getAttribute('data-ed'); })[0], d, reload); }); });
             w.querySelectorAll('[data-tg]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); var id = b.getAttribute('data-tg'), h = d.rows.filter(function (x) { return String(x.id) === id; })[0];
               ask({ title: (h.active ? 'Close ' : 'Open ') + h.name + '?', text: h.active ? 'New orders will not go to this hub. Orders already placed stay with it.' : 'The hub starts receiving orders from its delivery area.', ok: h.active ? 'Close hub' : 'Open hub', tone: h.active ? 'danger' : 'info' })
                 .then(function (y) { if (y) post('/ad/hubs/' + id + '/toggle', {}).then(function (x) { toast(x.message, x.ok ? 'ok' : 'bad'); if (x.ok) { h.active = x.on; b.classList.toggle('is-on', x.on); } }); }); }); });
+            w.querySelectorAll('[data-dl]').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); var h = d.rows.filter(function (x) { return String(x.id) === b.getAttribute('data-dl'); })[0];
+              ask({ title: 'Delete hub ' + h.name + ' for ever?', text: 'The hub and its delivery area are removed. Its hub and POS staff logins are switched off (not deleted). Order history is kept, and a hub with orders cannot be deleted. Type the hub name to confirm.', input: { label: 'Hub name', placeholder: h.name }, ok: 'Delete hub', tone: 'danger' })
+                .then(function (v) { if (v == null || v === false) return; if (String(v).trim().toLowerCase() !== String(h.name).trim().toLowerCase()) { toast('The name did not match. Nothing was deleted.', 'bad'); return; }
+                  post('/ad/hubs/' + h.id + '/delete', { confirm: v }).then(function (x) { toast(x.message, x.ok ? 'ok' : 'bad'); if (x.ok) reload(); }); }); }); });
           } });
         n.classList.add('ad-tbl'); var s = root.querySelector('[data-slot="t"]') || root.querySelector('.ad-tbl'); s.replaceWith(n);
       }
@@ -730,13 +756,24 @@ window.CCX = function (K) {
       '<label class="cc-f" id="hmRadW"><span>Circle radius (km)</span><input class="cc-in" type="number" min="0.3" max="30" step="0.1" id="hmRad"></label></div>' +
       '<div class="ad-tools"><input class="cc-in" id="hmFind" placeholder="Find a place on the map (area, street, landmark)" style="flex:1;min-width:200px"><button type="button" class="cc-btn" id="hmFindGo">Find</button></div>' +
       '<p class="cc-note" id="hmHelp"></p>' +
-      '<div class="ad-maptools"><button type="button" class="cc-btn sm" id="hmUndo">Remove last corner</button><button type="button" class="cc-btn sm" id="hmClear">Start again</button><button type="button" class="cc-btn sm" id="hmMid">Put hub pin in the middle</button></div>' +
+      '<div class="ad-maptools"><button type="button" class="cc-btn sm" id="hmUndo">Remove last corner</button><button type="button" class="cc-btn sm" id="hmClear">Start again</button><button type="button" class="cc-btn sm" id="hmMid">Put hub pin in the middle</button><button type="button" class="cc-btn sm" id="hmRuler">Measure distance</button><button type="button" class="cc-btn sm" id="hmRulerOff" hidden>Stop measuring</button><span class="pill p-mute" id="hmDist" hidden></span>' + (h && h.kind ? '<button type="button" class="cc-btn sm" id="hmDel" style="margin-left:auto;color:#B91C1C">Remove delivery area</button>' : '') + '</div>' +
       '<div class="ad-map tall" id="hmMap"><div class="cc-load"><i></i>Loading map…</div></div>' +
       '<details class="ad-det"><summary>Type the points instead (one "latitude, longitude" per line)</summary><label class="cc-f"><span>Hub pin</span><input class="cc-in" id="hmPin" placeholder="12.9716, 77.5946"></label><label class="cc-f"><span>Area corners</span><textarea id="hmPts" rows="5" placeholder="12.97, 77.59&#10;12.98, 77.60&#10;12.96, 77.61"></textarea></label><button type="button" class="cc-btn sm" id="hmApply">Use these points</button></details>' +
-      '<div class="ad-checks"><label class="ad-check"><input type="checkbox" name="active"' + (h && h.active ? ' checked' : '') + '> Open for orders</label><label class="ad-check"><input type="checkbox" name="confirm_outside"> The hub is outside its area</label></div>' +
+      '<div class="ad-checks"><label class="ad-check"><input type="checkbox" name="active"' + (h && h.active ? ' checked' : '') + '> Open for orders</label><label class="ad-check"><input type="checkbox" name="confirm_outside"> The hub is outside its area</label><label class="ad-check"><input type="checkbox" id="hmOthers" checked> Show other hubs (grey)</label></div><p class="cc-note" id="hmOthList"></p>' +
       (h && h.issues.length ? '<p class="cc-note">' + h.issues.map(function (i) { return pill(i, 'p-warn'); }).join(' ') + '</p>' : '') + '</div>');
-    var M = null, shapes = [], pin = null;
-    var q = function (s) { return body.querySelector(s); };
+    var M = null, shapes = [], pin = null, ms = { on: false, pts: [], items: [] };
+    function hav(a, b) { var R = 6371000, rad = Math.PI / 180, dl = (b[0] - a[0]) * rad, dn = (b[1] - a[1]) * rad, x = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dn / 2) * Math.sin(dn / 2); return 2 * R * Math.asin(Math.sqrt(x)); }
+    function fmtM(m) { return m >= 1000 ? (m / 1000).toFixed(2) + ' km' : Math.round(m) + ' m'; }
+    function areaKm2(p) { if (p.length < 3) return 0; var rad = Math.PI / 180, la0 = p[0][0] * rad, s = 0; for (var i = 0; i < p.length; i++) { var a = p[i], b = p[(i + 1) % p.length]; s += (a[1] * rad * 6371 * Math.cos(la0)) * (b[0] * rad * 6371) - (b[1] * rad * 6371 * Math.cos(la0)) * (a[0] * rad * 6371); } return Math.abs(s) / 2; }
+    function drawMeasure() {
+      ms.items.forEach(function (x) { x.remove(); }); ms.items = []; if (!M) return;
+      var t = 0; for (var i = 1; i < ms.pts.length; i++) t += hav(ms.pts[i - 1], ms.pts[i]);
+      if (ms.pts.length >= 2) ms.items.push(M.line(ms.pts, { color: '#2563EB' }));
+      ms.pts.forEach(function (p, i) { ms.items.push(M.marker(p, { dot: true, size: 4, color: '#2563EB', title: i ? fmtM(ms.pts.slice(0, i + 1).reduce(function (s, x, j) { return j ? s + hav(ms.pts[j - 1], x) : 0; }, 0)) : 'Start' })); });
+      var d = q('#hmDist'); d.hidden = !ms.on; d.textContent = ms.pts.length < 2 ? 'Click the map to start measuring' : 'Distance ' + fmtM(t) + ' (' + ms.pts.length + ' points)';
+    }
+    function setMeasure(on) { ms.on = on; if (!on) { ms.pts = []; } q('#hmRuler').hidden = on; q('#hmRulerOff').hidden = !on; drawMeasure(); redraw(); }
+    var q = function (s) { return body.querySelector(s); }, others = [];
     function centre() { var a = 0, cx = 0, cy = 0, n = st.points.length; if (n < 3) return null; for (var i = 0; i < n; i++) { var p = st.points[i], w = st.points[(i + 1) % n], f = p[1] * w[0] - w[1] * p[0]; a += f; cx += (p[1] + w[1]) * f; cy += (p[0] + w[0]) * f; } if (Math.abs(a) < 1e-12) return [st.points.reduce(function (s, p) { return s + p[0]; }, 0) / n, st.points.reduce(function (s, p) { return s + p[1]; }, 0) / n]; return [cy / (3 * a), cx / (3 * a)]; }
     function txt() { q('#hmPin').value = st.lat != null ? st.lat + ', ' + st.lng : ''; q('#hmPts').value = st.points.map(function (p) { return p[0] + ', ' + p[1]; }).join('\n'); q('#hmRad').value = (st.radius / 1000).toFixed(1); }
     function ui() {
@@ -744,19 +781,19 @@ window.CCX = function (K) {
       var help = { polygon: 'Click the map to place the corners one after another (at least 3). Drag a corner to move it; drag the orange pin to the hub.', box: 'Click two opposite corners of the box. Drag its edges to resize.', circle: 'Click the map (or drag the pin) to set the hub; drag the circle edge or type the radius. Customers inside are served.', point: 'Drag the pin (or click the map) to set the exact hub location. The delivery area stays as it is.' }[st.kind];
       q('#hmHelp').textContent = help;
       q('#hmUndo').hidden = st.kind !== 'polygon'; q('#hmClear').hidden = st.kind === 'point'; q('#hmMid').hidden = st.kind === 'circle' || st.kind === 'point'; q('#hmRadW').hidden = st.kind !== 'circle';
-      q('#hmCnt').textContent = st.kind === 'circle' ? 'radius ' + (st.radius / 1000).toFixed(1) + ' km' : st.kind === 'point' ? (st.lat != null ? 'pin set' : 'no pin') : st.points.length + ' corners';
+      q('#hmCnt').textContent = st.kind === 'circle' ? 'radius ' + (st.radius / 1000).toFixed(1) + ' km' : st.kind === 'point' ? (st.lat != null ? 'pin set' : 'no pin') : st.points.length + ' corners' + (st.points.length >= 3 ? ' · about ' + areaKm2(st.points).toFixed(2) + ' sq km' : '');
     }
     function redraw() {
       txt(); ui(); if (!M) return;
       shapes.forEach(function (x) { x.remove(); }); shapes = [];
       if ((st.kind === 'polygon' || st.kind === 'box' || st.kind === 'point') && st.points.length) {
-        if (st.points.length >= 3) shapes.push(M.poly(st.points, { editable: st.kind === 'polygon', opacity: .14, onchange: function (p) { st.points = p; txt(); ui(); } }));
+        if (st.points.length >= 3) shapes.push(M.poly(st.points, { editable: st.kind === 'polygon' && !ms.on, opacity: .14, onchange: function (p) { st.points = p; txt(); ui(); } }));
         else shapes.push(M.line(st.points));
         if (st.kind === 'polygon') st.points.forEach(function (p, i) { if (st.points.length < 3) shapes.push(M.marker(p, { dot: true, size: 5, color: '#EA4A1F', title: 'Corner ' + (i + 1) })); });
       }
       if (st.kind === 'box' && st.boxA) shapes.push(M.marker(st.boxA, { dot: true, size: 6, color: '#EA4A1F', title: 'First corner' }));
-      if (st.kind === 'circle' && st.lat != null) shapes.push(M.circle([st.lat, st.lng], st.radius, { editable: M.kind === 'g', onchange: function (c, r) { st.lat = c[0]; st.lng = c[1]; st.radius = r; txt(); ui(); if (pin) pin.move(c); } }));
-      if (st.lat != null) { if (!pin) pin = M.marker([st.lat, st.lng], { draggable: true, pin: true, color: '#EA4A1F', title: 'Hub', ondrag: function (p) { st.lat = p[0]; st.lng = p[1]; if (st.kind === 'circle') redraw(); else { txt(); ui(); } } }); else pin.move([st.lat, st.lng]); }
+      if (st.kind === 'circle' && st.lat != null) shapes.push(M.circle([st.lat, st.lng], st.radius, { editable: M.kind === 'g' && !ms.on, onchange: function (c, r) { st.lat = c[0]; st.lng = c[1]; st.radius = r; txt(); ui(); if (pin) pin.move(c); } }));
+      if (st.lat != null) { if (!pin) pin = M.marker([st.lat, st.lng], { draggable: true, pin: true, color: '#EA4A1F', title: 'Hub', label: h ? String(h.name).slice(0, 10) : 'New', ondrag: function (p) { st.lat = p[0]; st.lng = p[1]; if (st.kind === 'circle') redraw(); else { txt(); ui(); } } }); else pin.move([st.lat, st.lng]); }
     }
     body.querySelectorAll('.ad-mapkinds button').forEach(function (b) { b.addEventListener('click', function () {
       var k = b.getAttribute('data-k');
@@ -768,11 +805,22 @@ window.CCX = function (K) {
       st.kind = k; redraw();
     }); });
     q('#hmUndo').addEventListener('click', function () { st.points.pop(); redraw(); });
+    q('#hmRuler').addEventListener('click', function () { setMeasure(true); toast('Click points on the map to measure. Your delivery area is not changed.', 'ok'); });
+    q('#hmRulerOff').addEventListener('click', function () { setMeasure(false); });
+    if (q('#hmDel')) q('#hmDel').addEventListener('click', function () {
+      ask({ title: 'Remove the delivery area of ' + h.name + '?', text: 'The drawn area is deleted. The hub keeps its name, city and pin, and cannot take orders until a new area is drawn. The hub must be closed first.', ok: 'Remove area', tone: 'danger' })
+        .then(function (y) { if (y) post('/ad/hubs/' + h.id + '/clear-area', {}).then(function (x) { toast(x.message, x.ok ? 'ok' : 'bad'); if (x.ok) { closeModal(); after(); } }); });
+    });
     q('#hmClear').addEventListener('click', function () { st.points = []; st.boxA = null; if (st.kind === 'circle') { st.lat = null; st.lng = null; if (pin) { pin.remove(); pin = null; } } redraw(); });
     q('#hmMid').addEventListener('click', function () { var c = centre(); if (!c) { toast('Draw the area first (at least 3 corners).', 'bad'); return; } st.lat = +c[0].toFixed(7); st.lng = +c[1].toFixed(7); redraw(); });
     q('#hmRad').addEventListener('change', function () { var v = +this.value; if (v >= 0.3 && v <= 30) { st.radius = Math.round(v * 1000); redraw(); } else toast('Radius: between 0.3 and 30 km.', 'bad'); });
     var doFind = function () { var t = q('#hmFind').value.trim(); if (!t) return; q('#hmFindGo').textContent = 'Finding…'; findPlace(t + ', India').then(function (p) { q('#hmFindGo').textContent = 'Find'; if (!p) { toast('Place not found. Try another name.', 'bad'); return; } if (M) M.center(p, 15); }); };
     q('#hmFindGo').addEventListener('click', doFind); q('#hmFind').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doFind(); } });
+    q('[name=city_id]').addEventListener('change', function () {
+      var sel = this.value, c = d.cities.filter(function (x) { return String(x.id) === sel; })[0];
+      if (!c || !M) return;
+      findPlace(c.name + ', India').then(function (p) { if (p && M) M.center(p, 12); else toast('Could not find ' + c.name + ' on the map.', 'bad'); });
+    });
     q('#hmApply').addEventListener('click', function () {
       var pts = q('#hmPts').value.split(/\n+/).map(function (l) { var m = l.match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/); return m ? [+m[1], +m[2]] : null; }).filter(Boolean);
       var pm = q('#hmPin').value.match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
@@ -784,12 +832,28 @@ window.CCX = function (K) {
       if (st.kind === 'box' && st.points.length !== 4) { toast('Click two opposite corners to draw the box.', 'bad'); return; }
       act(b, '/ad/hubs/save', { id: h ? h.id : '', values: v }, function () { closeModal(); after(); });
     } }], true);
+    (function () { var mo = $('ccModal'); mo.classList.add('ad-hubfull'); var ob = new MutationObserver(function () { if (!mo.classList.contains('is-on')) { mo.classList.remove('ad-hubfull'); ob.disconnect(); } }); ob.observe(mo, { attributes: true, attributeFilter: ['class'] }); })();
     txt(); ui();
     var start = st.lat != null ? [st.lat, st.lng] : (st.points[0] || (d.rows.filter(function (x) { return x.lat != null; })[0] ? [d.rows.filter(function (x) { return x.lat != null; })[0].lat, d.rows.filter(function (x) { return x.lat != null; })[0].lng] : [12.97, 77.59]));
     makeMap(q('#hmMap'), start, 14).then(function (m) {
       M = m;
-      d.rows.forEach(function (o) { if (!h || o.id !== h.id) drawHubShape(m, o, { color: '#64748B', opacity: .03 }); });
+      if (m.kind === 'g' && m.map && m.map.setOptions) m.map.setOptions({ fullscreenControl: false });
+      function drawOthers() {
+        others.forEach(function (x) { x.remove(); }); others = []; if (!q('#hmOthers').checked) return;
+        d.rows.forEach(function (o) {
+          if (h && o.id === h.id) return;
+          var kindTxt = o.kind === 'polygon' ? 'drawn area' : (o.kind === 'circle' ? 'circle area' : 'no area'), tip = o.name + ' (' + o.city + ')';
+          var info = function () { m.info([o.lat, o.lng], '<b>' + esc(o.name) + '</b><br>' + esc(o.city) + ' · ' + kindTxt + ' · ' + (o.active ? 'open' : 'closed')); };
+          if (o.kind === 'polygon' && o.points.length >= 3) others.push(m.poly(o.points, { color: '#64748B', opacity: .03, weight: 1.5 }));
+          else if (o.kind === 'circle' && (o.lat != null || o.points[0])) others.push(m.circle(o.lat != null ? [o.lat, o.lng] : o.points[0], o.radius_m || C.circleKm * 1000, { color: '#64748B', opacity: .03, weight: 1.5 }));
+          if (o.lat != null && o.lng != null) others.push(m.marker([o.lat, o.lng], { pin: true, color: '#64748B', title: tip, label: String(o.name || '').slice(0, 10), onclick: info }));
+        });
+      }
+      var oth = d.rows.filter(function (o) { return !h || o.id !== h.id; });
+      q('#hmOthList').textContent = oth.length ? 'Grey on the map = the other ' + oth.length + ' hub' + (oth.length > 1 ? 's' : '') + ': ' + oth.map(function (o) { return o.name + ' (' + o.city + ', ' + (o.kind === 'polygon' ? 'drawn area' : o.kind === 'circle' ? 'circle' : 'no area') + ')'; }).join(', ') + '. Click a grey pin to see its name.' : 'There are no other hubs.';
+      q('#hmOthers').addEventListener('change', drawOthers); drawOthers();
       m.click(function (la, ln) {
+        if (ms.on) { ms.pts.push([la, ln]); drawMeasure(); return; }
         if (st.kind === 'polygon') { st.points.push([la, ln]); if (st.lat == null && st.points.length >= 3) { var c = centre(); st.lat = +c[0].toFixed(7); st.lng = +c[1].toFixed(7); } }
         else if (st.kind === 'box') { if (!st.boxA || st.points.length === 4) { st.boxA = [la, ln]; st.points = []; } else { var a = st.boxA; st.points = [[Math.min(a[0], la), Math.min(a[1], ln)], [Math.min(a[0], la), Math.max(a[1], ln)], [Math.max(a[0], la), Math.max(a[1], ln)], [Math.max(a[0], la), Math.min(a[1], ln)]]; st.boxA = null; if (st.lat == null) { var c2 = centre(); st.lat = +c2[0].toFixed(7); st.lng = +c2[1].toFixed(7); } } }
         else { st.lat = la; st.lng = ln; }
@@ -1116,6 +1180,201 @@ window.CCX = function (K) {
         var f = $('pf'), t = f.querySelector('[name=title]').value.trim(), m = f.querySelector('[name=body]').value.trim();
         if (!t || !m) { toast('Write the title and the message.', 'bad'); return; }
         ask({ title: 'Send to every app user?', text: '"' + t + '" goes to all customers with the app. It cannot be taken back.', ok: 'Send', tone: 'warn' }).then(function (y) { if (y) act(b, '/ad/push', { title: t, body: m, image: f.querySelector('[name=image]').value }, function () { V['ad-push'].run(root); }); });
+      });
+    });
+  } };
+
+  /* ------------------------------------------------------------------ App control (update 2, 5 Nov 2026)
+     One page: drag-to-reorder home blocks, top section colour with live preview, product card style, frame colour per tag. */
+  V['ad-appcontrol'] = { t: 'App control', dates: false, nofilter: true, run: function (root) {
+    return api('/ad/appcontrol', {}, false).then(function (d) {
+      var TYPES = { banners: 'Hero banners', categories: 'Shop by category', products: 'Product row', rewards: 'Rewards strip', strip: 'Strip banner', coupons: 'Coupons', cuts: 'Shop by cut tiles', reviews: 'Customer reviews' };
+      var HEX = /^#[0-9a-fA-F]{6}$/;
+      var PAIRS = [['#F70202', '#FF5500'], ['#1F2937', '#1F2937'], ['#F4A6B7', '#FDE68A'], ['#FFB300', '#FF5500'], ['#7F1D1D', '#B91C1C'], ['#FFFFFF', '#FFFFFF']];
+      var TAGPAIRS = [['#FFF3EC', '#FFD6C2'], ['#EEF6FF', '#CFE3F8'], ['#F4EFFF', '#DCD0F7'], ['#ECFDF3', '#BFEBD2'], ['#FFF8E1', '#FFE49A'], ['#FDECF1', '#F8C4D3']];
+      var COLOURS = [['Peach','#FFF3EC','#FFD6C2'],['Sky blue','#EEF6FF','#CFE3F8'],['Lavender','#F4EFFF','#DCD0F7'],['Mint green','#ECFDF3','#BFEBD2'],['Sunshine yellow','#FFF8E1','#FFE49A'],['Rose pink','#FDECF1','#F8C4D3'],['Sand','#FAF3E6','#EBDDBF'],['Aqua','#E8FAFA','#BDEBEB'],['Coral','#FFEDEA','#FFC9C0'],['Lilac pink','#FBEFFA','#EFC9EC'],['Light grey','#F3F4F6','#D9DCE1'],['White','#FFFFFF','#EDEDED']], tagOpts = d.tag_options || [];
+      var blocks = d.blocks.slice(), th = d.theme, cs = d.card, tags = d.tags.slice(), dragFrom = -1;
+      var opt = function (v, t, sel) { return '<option value="' + esc(v) + '"' + (String(sel) === String(v) ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+      var row = function (label, ctl, hint) { return '<label class="cc-f" style="margin:0 0 10px"><span>' + esc(label) + '</span>' + ctl + (hint ? '<small class="muted">' + esc(hint) + '</small>' : '') + '</label>'; };
+      var sel = function (name, opts, val) { return '<select class="cc-sel" name="' + name + '">' + opts.map(function (o) { return opt(o[0], o[1], val); }).join('') + '</select>'; };
+      var flag = function (name, label, val) { return '<label class="ad-check" style="display:block;margin:0 0 8px"><input type="checkbox" name="' + name + '"' + (+val ? ' checked' : '') + '> ' + esc(label) + '</label>'; };
+      var grad = function (a, b) { return 'linear-gradient(135deg,' + (HEX.test(a) ? a : '#ccc') + ',' + (HEX.test(b) ? b : (HEX.test(a) ? a : '#ccc')) + ')'; };
+
+      function blocksHtml() {
+        if (!blocks.length) return '<p class="cc-note">There are no blocks yet, so the app shows its normal home page. Create the standard blocks to start arranging them.</p><div><button type="button" class="cc-btn pri" id="acSeed">Create the standard blocks</button></div>';
+        return blocks.map(function (b, i) {
+          var name = esc(TYPES[b.type] || b.type), sub = [b.title, b.key ? 'row: ' + b.key : ''].filter(Boolean).map(esc).join(' · ');
+          return '<div data-i="' + i + '" draggable="true" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #0002;border-radius:10px;margin-bottom:6px;background:#fff' + (b.on ? '' : ';opacity:.6') + '">' +
+            '<span style="cursor:grab;color:#888;font-size:18px;letter-spacing:-4px;user-select:none" title="Drag to reorder" aria-hidden="true">&#8942;&#8942;</span>' +
+            '<span style="flex:1;min-width:0"><b>' + name + '</b>' + (sub ? '<small class="muted" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + sub + '</small>' : '') + '</span>' +
+            '<button type="button" class="cc-btn" data-up="' + i + '" title="Move up"' + (i === 0 ? ' disabled' : '') + '>&uarr;</button>' +
+            '<button type="button" class="cc-btn" data-down="' + i + '" title="Move down"' + (i === blocks.length - 1 ? ' disabled' : '') + '>&darr;</button>' +
+            '<label class="ad-check" style="margin:0"><input type="checkbox" data-on="' + i + '"' + (b.on ? ' checked' : '') + '> On</label></div>';
+        }).join('') + '<p class="muted" style="margin:8px 0 0"><a href="#ad-apphome">Edit block texts and links, or add a new block</a></p>';
+      }
+      function drawBlocks() { var c = $('acBlocks'); c.innerHTML = blocksHtml(); var s = $('acSeed'); if (s) s.addEventListener('click', function () { act(s, '/ad/appcontrol/seed', {}, function () { V['ad-appcontrol'].run(root); }); }); }
+
+      function colourIdx(t) { for (var k = 0; k < COLOURS.length; k++) { if (COLOURS[k][1].toLowerCase() === String(t.from).toLowerCase() && COLOURS[k][2].toLowerCase() === String(t.to).toLowerCase()) return k; } return -1; }
+      function tagRowHtml(t, i) {
+        var names = tagOpts.slice(); if (t.tag && names.map(function (x) { return x.toLowerCase(); }).indexOf(t.tag.toLowerCase()) < 0) names.unshift(t.tag);
+        var ci = colourIdx(t), custom = ci < 0 && t.from;
+        return '<div data-trow="' + i + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap"><i data-tsw style="width:34px;height:34px;border-radius:9px;border:1px solid #0003;flex:none;background:' + grad(t.from, t.to) + '"></i>' +
+          '<select class="cc-sel" data-tag style="flex:1;min-width:150px"><option value="">Choose a tag...</option>' + names.map(function (n) { return opt(n, n, t.tag); }).join('') + '</select>' +
+          '<select class="cc-sel" data-tcol style="width:170px"><option value="">Choose a colour...</option>' + COLOURS.map(function (c, k) { return opt(k, c[0], ci); }).join('') + (custom ? opt('keep', 'Custom (kept)', 'keep') : '') + '</select>' +
+          '<input type="hidden" data-tfrom value="' + esc(t.from) + '"><input type="hidden" data-tto value="' + esc(t.to) + '">' +
+          '<button type="button" class="cc-btn" data-tdel="' + i + '">Remove</button></div>';
+      }
+      function readTags() {
+        tags = [].slice.call(root.querySelectorAll('[data-trow]')).map(function (r) { return { tag: r.querySelector('[data-tag]').value.trim(), from: r.querySelector('[data-tfrom]').value.trim(), to: r.querySelector('[data-tto]').value.trim() }; });
+      }
+      function drawTags() { $('acTags').innerHTML = tags.map(tagRowHtml).join('') || '<p class="cc-note">No tag colours yet. Cards use the standard peach frame.</p>'; }
+
+      function prev() {
+        var f = $('acFrom').value.trim(), t = $('acTo').value.trim(), p = $('acPrev'), dark = $('acText').value === 'dark';
+        p.style.background = grad(f, t); p.style.color = dark ? '#1B1B1F' : '#fff';
+        p.querySelector('[data-pin]').style.background = dark ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.95)';
+      }
+
+      var c = cs;
+      root.innerHTML = '<div class="cc-grid"><p class="cc-note">Everything here controls the customer app. Change what you want, press <b>Save all changes</b> at the bottom, and the app shows it within a minute. No new app build is needed.</p>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px;align-items:start">' +
+        card('Home blocks (drag to reorder)', '<div id="acBlocks"></div>') +
+        card('Top section colour', '<div style="margin-bottom:10px">' + PAIRS.map(function (p, i) { return '<button type="button" data-pair="' + i + '" title="' + p[0] + ' to ' + p[1] + '" style="width:30px;height:30px;border-radius:50%;border:1px solid #0003;background:' + grad(p[0], p[1]) + ';cursor:pointer;margin:0 6px 6px 0;padding:0"></button>'; }).join('') + '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + row('Start colour', '<input class="cc-in" id="acFrom" maxlength="7" value="' + esc(th.color_from) + '">') + row('End colour', '<input class="cc-in" id="acTo" maxlength="7" value="' + esc(th.color_to) + '">') +
+          row('Text and icons', '<select class="cc-sel" id="acText">' + opt('light', 'Light (on dark colours)', th.text_color) + opt('dark', 'Dark (on light colours)', th.text_color) + '</select>') + '<span></span>' +
+          row('Use from (optional)', '<input class="cc-in" type="date" id="acS" value="' + esc(th.starts_on || '') + '">') + row('Use until (optional)', '<input class="cc-in" type="date" id="acE" value="' + esc(th.ends_on || '') + '">') + '</div>' +
+          '<small class="muted">Live preview</small><div id="acPrev" style="border-radius:16px;padding:14px;margin-top:6px"><div style="font-size:11px;opacity:.9">Deliver to</div><div style="font-weight:600;margin-bottom:10px">Your location</div><div data-pin style="border-radius:18px;padding:10px 14px;font-size:12px;color:#777">Search "chicken curry cut"</div></div>') +
+        card('Product card style', '<div id="acCard" style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">' +
+          row('Photo fit', sel('img_fit', [['cover', 'Fill the frame (crops)'], ['contain', 'Show the whole photo']], c.img_fit)) + row('Photo shape', sel('img_shape', [['1:1', 'Square'], ['4:3', 'Wide 4:3'], ['3:2', 'Wide 3:2']], c.img_shape)) +
+          row('Photo background', '<input class="cc-in" name="img_bg" maxlength="7" value="' + esc(c.img_bg) + '">', 'Shows behind "whole photo"') + row('Photo shadow', sel('photo_shadow', [['none', 'None'], ['soft', 'Soft'], ['deep', 'Deep']], c.photo_shadow)) + row('Card (frame) shadow', sel('card_shadow', [['none', 'None'], ['soft', 'Soft'], ['deep', 'Deep']], c.card_shadow)) + '<span></span>' +
+          row('Card corner radius (16-40)', '<input class="cc-in" type="number" min="16" max="40" name="card_radius" value="' + esc(c.card_radius) + '">') + row('Photo corner radius (0-40)', '<input class="cc-in" type="number" min="0" max="40" name="img_radius" value="' + esc(c.img_radius) + '">') +
+          row('Product name lines', sel('name_lines', [['1', '1 line'], ['2', '2 lines']], c.name_lines)) + row('Description lines', sel('desc_lines', [['1', '1 line'], ['2', '2 lines']], c.desc_lines)) +
+          row('When a product has no photo', sel('no_photo', [['category', 'Show the category picture'], ['brand', 'Show the Freshful tile']], c.no_photo)) + '<span></span>' +
+          '<div style="grid-column:1/3">' + flag('show_desc', 'Show description', c.show_desc) + flag('show_weight', 'Show weight, pieces and serves under the photo', c.show_weight) + flag('show_ppk', 'Show price per kg under the price', c.show_ppk) + flag('show_chip', 'Show the "30 min" delivery chip', c.show_chip) + flag('show_rating', 'Show rating stars', c.show_rating) + '</div></div>') +
+        card('Card frame colour per tag', '<p class="cc-note">A card takes the frame colour of its first tag listed here. Tags not listed use the standard peach frame. Pick the tag and the colour from the lists.</p>' +
+          '<div id="acTags"></div><div><button type="button" class="cc-btn" id="acAddTag">Add a tag colour</button></div>') +
+        '</div><div style="position:sticky;bottom:0;background:var(--surface,#fff);padding:10px 0;border-top:1px solid #0002"><button type="button" class="cc-btn pri" id="acSave">Save all changes</button></div></div>';
+
+      drawBlocks(); drawTags(); prev();
+
+      var bl = $('acBlocks');
+      bl.addEventListener('dragstart', function (e) { var r = e.target.closest ? e.target.closest('[data-i]') : null; if (!r) return; dragFrom = +r.getAttribute('data-i'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (x) {} } });
+      bl.addEventListener('dragover', function (e) { if (dragFrom >= 0) e.preventDefault(); });
+      bl.addEventListener('drop', function (e) {
+        var r = e.target.closest ? e.target.closest('[data-i]') : null; if (!r || dragFrom < 0) return; e.preventDefault();
+        var to = +r.getAttribute('data-i'); if (to !== dragFrom) { blocks.splice(to, 0, blocks.splice(dragFrom, 1)[0]); drawBlocks(); } dragFrom = -1;
+      });
+      bl.addEventListener('dragend', function () { dragFrom = -1; });
+      bl.addEventListener('click', function (e) {
+        var u = e.target.closest ? e.target.closest('[data-up],[data-down]') : null; if (!u) return;
+        var i = +(u.getAttribute('data-up') || u.getAttribute('data-down')), j = u.hasAttribute('data-up') ? i - 1 : i + 1;
+        if (j < 0 || j >= blocks.length) return; blocks.splice(j, 0, blocks.splice(i, 1)[0]); drawBlocks();
+      });
+      bl.addEventListener('change', function (e) { var t = e.target; if (t && t.hasAttribute && t.hasAttribute('data-on')) { blocks[+t.getAttribute('data-on')].on = t.checked; drawBlocks(); } });
+
+      root.querySelectorAll('[data-pair]').forEach(function (b) { b.addEventListener('click', function () { var p = PAIRS[+b.getAttribute('data-pair')]; $('acFrom').value = p[0]; $('acTo').value = p[1]; $('acText').value = (p[0] === '#FFFFFF' || p[0] === '#F4A6B7') ? 'dark' : 'light'; prev(); }); });
+      ['acFrom', 'acTo', 'acText'].forEach(function (id) { $(id).addEventListener('input', prev); $(id).addEventListener('change', prev); });
+
+      var tg = $('acTags');
+      tg.addEventListener('change', function (e) { var r = e.target.closest ? e.target.closest('[data-trow]') : null; if (!r || !e.target.hasAttribute('data-tcol')) return; var v = e.target.value; if (v === '' || v === 'keep') return; var c = COLOURS[+v]; r.querySelector('[data-tfrom]').value = c[1]; r.querySelector('[data-tto]').value = c[2]; r.querySelector('[data-tsw]').style.background = grad(c[1], c[2]); });
+      tg.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-tdel]') : null; if (!b) return; readTags(); tags.splice(+b.getAttribute('data-tdel'), 1); drawTags(); });
+      $('acAddTag').addEventListener('click', function () { readTags(); if (tags.length >= 40) { toast('Use at most 40 tag colours.', 'bad'); return; } tags.push({ tag: '', from: '', to: '' }); drawTags(); });
+
+      $('acSave').addEventListener('click', function () {
+        var f = $('acFrom').value.trim(), t = $('acTo').value.trim();
+        if (!HEX.test(f) || (t && !HEX.test(t))) { toast('The top section colours must look like #F70202 (with the # sign).', 'bad'); return; }
+        var bg = root.querySelector('#acCard [name=img_bg]').value.trim();
+        if (!HEX.test(bg)) { toast('The photo background must look like #FFFFFF (with the # sign).', 'bad'); return; }
+        readTags();
+        for (var i = 0; i < tags.length; i++) { if (tags[i].tag && !HEX.test(tags[i].from)) { toast('Tag "' + tags[i].tag + '": choose a colour from the list.', 'bad'); return; } if (tags[i].to && !HEX.test(tags[i].to)) { toast('Tag "' + tags[i].tag + '": the end colour must look like #FFD6C2.', 'bad'); return; } }
+        var card = {}; root.querySelectorAll('#acCard [name]').forEach(function (x) { card[x.name] = x.type === 'checkbox' ? (x.checked ? 1 : 0) : x.value; });
+        act($('acSave'), '/ad/appcontrol/save', { blocks: blocks.map(function (b) { return { id: b.id, on: b.on ? 1 : 0 }; }), theme: { from: f, to: t || f, text: $('acText').value, starts_on: $('acS').value, ends_on: $('acE').value }, card: card, tags: tags }, function () { V['ad-appcontrol'].run(root); });
+      });
+    });
+  } };
+
+  /* ------------------------------------------------------------------ Home pictures (5 Nov 2026)
+     Ribbon banner and picture tiles (Shop by store, Shop by cuisine, recipes) with a picture upload for each tile. */
+  V['ad-homepics'] = { t: 'Home pictures and tiles', dates: false, nofilter: true, run: function (root) {
+    return api('/ad/apppics', {}, false).then(function (d) {
+      var tab = 'ribbon', blocks = d.blocks.slice(), gone = [], tagOpts = (d.tag_options || []).slice();
+      blocks.forEach(function (b) { if (b.after && tagOpts.map(function (x) { return x.toLowerCase(); }).indexOf(b.after.toLowerCase()) < 0) tagOpts.unshift(b.after); });
+      var opt = function (v, t, sel) { return '<option value="' + esc(v) + '"' + (String(sel || '') === String(v) ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+      var SHAPES = { store: 'Shop by store (wide tiles)', cuisine: 'Shop by cuisine (medium tiles)', recipe: 'Recipes (tall tiles)' };
+      var LINKS = ['categories', 'coupons', 'cart', 'category:12', 'section:bestsellers'];
+      var HEX = /^#[0-9a-fA-F]{6}$/;
+      var inp = 'style="width:100%;padding:7px 9px;border:1px solid #0003;border-radius:8px;font:inherit"';
+
+      function itemRow(b, bi, it, ii) {
+        var thumb = it.image ? '<img src="' + esc(it.image) + '" alt="" style="width:84px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #0002">' : '<div style="width:84px;height:56px;border-radius:8px;border:1px dashed #0004;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">No picture</div>';
+        return '<div data-b="' + bi + '" data-i="' + ii + '" style="display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid #0001">' +
+          '<div>' + thumb + '<label class="cc-btn" style="display:block;text-align:center;margin-top:6px;cursor:pointer;font-size:12px">Upload<input type="file" accept="image/jpeg,image/png,image/webp" data-up style="display:none"></label></div>' +
+          '<div style="display:grid;gap:6px">' +
+          (b.type === 'ribbon' ? '' : '<input ' + inp + ' data-f="title" placeholder="Name of the tile (shown if there is no picture)" value="' + esc(it.title) + '">') +
+          '<input ' + inp + ' data-f="image" placeholder="Picture link (filled when you upload)" value="' + esc(it.image) + '">' +
+          '<input ' + inp + ' data-f="link" list="hpLinks" placeholder="Opens: categories, coupons, cart, category:12, section:bestsellers" value="' + esc(it.link) + '">' +
+          (b.type === 'ribbon' && ii === 0 ? '' : '<div style="text-align:right"><button type="button" class="cc-btn" data-rm="1">' + (b.type === 'ribbon' ? 'Remove this picture' : 'Remove this tile') + '</button></div>') +
+          '</div></div>';
+      }
+      function blockHtml(b, bi) {
+        var ribbon = b.type === 'ribbon';
+        return '<div data-bb="' + bi + '" style="border:1px solid #0002;border-radius:12px;padding:14px;margin-bottom:14px;background:#fff' + (b.on ? '' : ';opacity:.65') + '">' +
+          '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><b>' + (ribbon ? 'Ribbon banner' : esc(SHAPES[b.shape] || 'Picture tiles')) + '</b>' +
+          '<label class="ad-check" style="margin-left:auto"><input type="checkbox" data-bon' + (b.on ? ' checked' : '') + '> Show in the app</label>' +
+          '<button type="button" class="cc-btn" data-bdel="1">Delete block</button></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px"><input ' + inp + ' data-bf="title" placeholder="' + (ribbon ? 'Heading (used if there is no picture)' : 'Block heading, for example Shop by store') + '" value="' + esc(b.title) + '">' +
+          '<input ' + inp + ' data-bf="subtitle" placeholder="Second line (optional)" value="' + esc(b.subtitle) + '"></div>' +
+          '<label class="cc-f" style="margin:6px 0"><span>Show this block</span><select class="cc-sel" data-bf="after">' + opt('', 'In the normal place (arrange in App control)', b.after) + tagOpts.map(function (n) { return opt(n, 'Right after the row: ' + n, b.after); }).join('') + '</select></label>' +
+          (ribbon ? '<small class="muted">Best picture size: 1200 x 360 pixels (wide). Add up to 3 pictures; on the website they sit side by side.</small>' : '<small class="muted">Best picture size: ' + (b.shape === 'recipe' ? '600 x 760' : b.shape === 'cuisine' ? '680 x 530' : '840 x 512') + ' pixels. The picture can carry its own words.</small>') +
+          b.items.map(function (it, ii) { return itemRow(b, bi, it, ii); }).join('') +
+          '<div style="padding-top:8px"><button type="button" class="cc-btn" data-add="1">' + (ribbon ? '+ Add another picture' : '+ Add a tile') + '</button></div>' + '</div>';
+      }
+      function draw() {
+        var TABS = [['ribbon', 'Ribbon banners', 'ribbon banner'], ['store', 'Shop by store', 'Shop by store block'], ['cuisine', 'Shop by cuisine', 'Shop by cuisine block'], ['recipe', 'Recipe tiles', 'recipe tiles block']];
+        var kindOf = function (b) { return b.type === 'ribbon' ? 'ribbon' : (b.shape || 'store'); };
+        $('hpTabs').innerHTML = TABS.map(function (t) { var n = blocks.filter(function (b) { return kindOf(b) === t[0]; }).length; return '<button type="button" class="cc-btn' + (tab === t[0] ? ' pri' : '') + '" data-tab="' + t[0] + '">' + t[1] + ' (' + n + ')</button>'; }).join('');
+        var cur = TABS.filter(function (t) { return t[0] === tab; })[0];
+        var shown = blocks.map(function (b, i) { return { b: b, i: i }; }).filter(function (x) { return kindOf(x.b) === tab; });
+        $('hpList').innerHTML = '<div style="margin:0 0 12px"><button type="button" class="cc-btn pri" data-new="' + tab + '">+ Add ' + esc(cur[2]) + '</button></div>' + (shown.length ? shown.map(function (x) { return blockHtml(x.b, x.i); }).join('') : '<p class="cc-note">Nothing here yet. Press the button above to add one.</p>');
+      }
+      function newBlock(type, shape, title) { blocks.push({ id: 0, type: type, shape: shape, title: title, subtitle: '', after: '', on: true, items: type === 'ribbon' ? [{ title: '', image: '', link: '', color: '' }] : [{ title: '', image: '', link: '', color: '' }, { title: '', image: '', link: '', color: '' }] }); draw(); }
+
+      root.innerHTML = '<div style="max-width:880px"><p class="cc-note">Add the ribbon banner and the picture tiles you see on big food apps. Upload a picture for each tile, choose where it opens, then press Save. After saving, open <b>App control</b> to drag the block to the place you want on the home page.</p>' +
+        '<datalist id="hpLinks">' + LINKS.map(function (l) { return '<option value="' + esc(l) + '">'; }).join('') + '</datalist>' +
+        '<div id="hpTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px"></div>' +
+        '<div id="hpList"></div><div style="position:sticky;bottom:0;background:var(--surface,#fff);padding:10px 0;border-top:1px solid #0002"><button type="button" class="cc-btn pri" id="hpSave">Save</button></div></div>';
+      draw();
+      var box = root.firstElementChild;
+
+      box.addEventListener('click', function (e) {
+        var t = e.target.closest ? e.target.closest('[data-tab],[data-new],[data-add],[data-rm],[data-bdel]') : null; if (!t) return;
+        if (t.hasAttribute('data-tab')) { tab = t.getAttribute('data-tab'); draw(); return; }
+        if (t.hasAttribute('data-new')) { var k = t.getAttribute('data-new'); newBlock(k === 'ribbon' ? 'ribbon' : 'tiles', k === 'ribbon' ? '' : k, k === 'store' ? 'Shop by store' : k === 'cuisine' ? 'Shop by cuisine' : k === 'recipe' ? 'Crafted for your recipes' : ''); return; }
+        var bb = t.closest('[data-bb]'); if (!bb) return; var bi = +bb.getAttribute('data-bb'), b = blocks[bi];
+        if (t.hasAttribute('data-add')) { if (b.items.length >= (b.type === 'ribbon' ? 3 : 12)) { toast(b.type === 'ribbon' ? 'Use at most 3 pictures in one ribbon.' : 'Use at most 12 tiles.', 'bad'); return; } b.items.push({ title: '', image: '', link: '', color: '' }); draw(); }
+        else if (t.hasAttribute('data-rm')) { var r = t.closest('[data-i]'); b.items.splice(+r.getAttribute('data-i'), 1); draw(); }
+        else if (t.hasAttribute('data-bdel')) { if (b.id) gone.push(b.id); blocks.splice(bi, 1); draw(); }
+      });
+      box.addEventListener('input', function (e) {
+        var el = e.target, bb = el.closest ? el.closest('[data-bb]') : null; if (!bb) return; var b = blocks[+bb.getAttribute('data-bb')];
+        if (el.hasAttribute('data-bf')) { b[el.getAttribute('data-bf')] = el.value; return; }
+        var r = el.closest('[data-i]'); if (r && el.hasAttribute('data-f')) { b.items[+r.getAttribute('data-i')][el.getAttribute('data-f')] = el.value; }
+      });
+      box.addEventListener('change', function (e) {
+        var el = e.target, bb = el.closest ? el.closest('[data-bb]') : null; if (!bb) return; var b = blocks[+bb.getAttribute('data-bb')];
+        if (el.hasAttribute('data-bon')) { b.on = el.checked; draw(); return; }
+        if (!el.hasAttribute('data-up') || !el.files || !el.files[0]) return;
+        var it = b.items[+el.closest('[data-i]').getAttribute('data-i')], fd = new FormData(); fd.append('image', el.files[0]);
+        var tok = document.querySelector('meta[name="csrf-token"]');
+        toast('Uploading the picture...');
+        fetch(location.origin + '/admin/console/api/ad/apppics/image', { method: 'POST', body: fd, credentials: 'same-origin', headers: Object.assign({ Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, tok ? { 'X-CSRF-TOKEN': tok.getAttribute('content') } : {}) })
+          .then(function (r) { return r.json(); })
+          .then(function (j) { if (j && j.ok && j.url) { it.image = j.url; draw(); toast('Picture added. Press Save to keep it.'); } else { toast((j && j.message) || 'The upload did not work.', 'bad'); } })
+          .catch(function () { toast('The upload did not work. Check your internet and try again.', 'bad'); });
+      });
+      $('hpSave').addEventListener('click', function () {
+        for (var i = 0; i < blocks.length; i++) { for (var j = 0; j < blocks[i].items.length; j++) { var c = blocks[i].items[j].color; if (c && !HEX.test(c)) { toast('A colour must look like #FFD9DE.', 'bad'); return; } } }
+        act($('hpSave'), '/ad/apppics/save', { blocks: blocks, delete: gone }, function () { gone = []; V['ad-homepics'].run(root); });
       });
     });
   } };

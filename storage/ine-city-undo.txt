@@ -1,0 +1,1 @@
+UPDATE hubs SET city_id = 35 WHERE id = 1;

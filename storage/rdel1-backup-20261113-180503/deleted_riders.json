@@ -1,0 +1,28 @@
+[
+    {
+        "id": 2,
+        "name": "rupesh",
+        "phone": "07777777777",
+        "gender": "Male",
+        "employee_id": "EMP400002",
+        "password": "123456",
+        "hub_id": 4,
+        "status": "active",
+        "regid": null,
+        "date_added": "2019-11-09 12:21:22",
+        "driver_id": null
+    },
+    {
+        "id": 4,
+        "name": "xyz",
+        "phone": "9898989898",
+        "gender": "Other",
+        "employee_id": "EMP400004",
+        "password": "laabhaa",
+        "hub_id": 7,
+        "status": "active",
+        "regid": null,
+        "date_added": "2021-01-07 09:39:50",
+        "driver_id": null
+    }
+]

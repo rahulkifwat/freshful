@@ -142,7 +142,7 @@ class HubConsoleController extends Controller
 
     public function riderSave(Request $r)
     {
-        $v = $r->validate(['id' => 'nullable|integer|min:1', 'name' => 'required|string|max:60', 'phone' => 'required|string|max:16', 'employee_id' => 'required|string|max:20',
+        $v = $r->validate(['id' => 'nullable|integer|min:1', 'name' => 'required|string|max:60', 'phone' => 'required|string|max:16', 'employee_id' => 'nullable|string|max:20' /* empno-v1:g */,
             'password' => 'nullable|string|max:60', 'gender' => 'nullable|string|max:10', 'status' => 'nullable|in:active,inactive']);
         return $this->out($this->people($r)->saveRider(isset($v['id']) ? (int) $v['id'] : null, $v, $this->actor($r)));
     }

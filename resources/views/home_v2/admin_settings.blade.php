@@ -107,6 +107,67 @@ select,input[type=number],input[type=text]{border:1px solid #d9d4cf;border-radiu
                     <label><input type="checkbox" name="hidden[]" value="{{ $t }}" @checked(in_array(mb_strtolower($t), $hiddenNow, true))> Hide <strong>{{ $t }}</strong></label>
                 @endforeach
             </div>
+            <h3>5. Main banner: animation and colours</h3>
+            <p class="sub">Banner pictures are added in Admin &rarr; Marketing &rarr; Website banners. Best picture size: 1880 x 660 pixels (wide). Pictures are never stretched; the extra edges are trimmed to fit.</p>
+            <div class="row">
+                <div><label for="ha">How slides change</label>
+                    <select id="ha" name="hero_anim">
+                        <option value="slide" @selected($settings['hero_anim'] === 'slide')>Slide sideways</option>
+                        <option value="fade" @selected($settings['hero_anim'] === 'fade')>Fade</option>
+                        <option value="zoom" @selected($settings['hero_anim'] === 'zoom')>Fade with a slow zoom</option>
+                    </select></div>
+                <div class="checks" style="margin:0"><label><input type="checkbox" name="hero_auto" value="1" @checked($settings['hero_auto'] !== '0')> Change slides by themselves</label></div>
+                <div><label for="c_hero_bg">Product slide background</label><input type="color" id="c_hero_bg" name="hero_bg" value="{{ $settings['hero_bg'] }}"></div>
+                <div><label for="c_hero_text">Product name colour</label><input type="color" id="c_hero_text" name="hero_text" value="{{ $settings['hero_text'] }}"></div>
+                <div><label for="c_hero_btn_from">Button colour 1</label><input type="color" id="c_hero_btn_from" name="hero_btn_from" value="{{ $settings['hero_btn_from'] }}"></div>
+                <div><label for="c_hero_btn_to">Button colour 2</label><input type="color" id="c_hero_btn_to" name="hero_btn_to" value="{{ $settings['hero_btn_to'] }}"></div>
+            </div>
+
+            <h3>6. Express and offer tiles (next to the banner)</h3>
+            <div class="row">
+                <div><label for="et">Express heading</label><input type="text" id="et" name="express_title" maxlength="60" value="{{ $settings['express_title'] }}" style="min-width:260px"></div>
+                <div><label for="es">Express line</label><input type="text" id="es" name="express_sub" maxlength="160" value="{{ $settings['express_sub'] }}" style="min-width:420px"></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+                <div><label for="c_express_bg">Express tile background</label><input type="color" id="c_express_bg" name="express_bg" value="{{ $settings['express_bg'] }}"></div>
+                <div><label for="c_express_text">Express text colour</label><input type="color" id="c_express_text" name="express_text" value="{{ $settings['express_text'] }}"></div>
+                <div><label for="c_express_icon">Express icon colour</label><input type="color" id="c_express_icon" name="express_icon" value="{{ $settings['express_icon'] }}"></div>
+                <div><label for="c_offer_from">Offer tile colour 1</label><input type="color" id="c_offer_from" name="offer_from" value="{{ $settings['offer_from'] }}"></div>
+                <div><label for="c_offer_to">Offer tile colour 2</label><input type="color" id="c_offer_to" name="offer_to" value="{{ $settings['offer_to'] }}"></div>
+                <div><label for="c_offer_text">Offer text colour</label><input type="color" id="c_offer_text" name="offer_text" value="{{ $settings['offer_text'] }}"></div>
+            </div>
+
+            <h3>7. Coupons for you</h3>
+            <div class="row">
+                <div class="checks" style="margin:0"><label><input type="checkbox" name="coupon_scroll" value="1" @checked($settings['coupon_scroll'] !== '0')> Move the coupon row by itself</label></div>
+                <div><label for="cs2">Move every (seconds)</label><input type="number" id="cs2" name="coupon_seconds" min="2" max="15" value="{{ $settings['coupon_seconds'] }}"></div>
+            </div>
+
+            <h3>8. Ribbon banners and picture tiles</h3>
+            <p class="sub">Add them once in Admin &rarr; Marketing &rarr; App control. They then show in the app and here on the website, in the same place. If no place is set, the ribbon sits in the middle of the page.</p>
+            <div class="checks"><label><input type="checkbox" name="show_ribbons" value="1" @checked($settings['show_ribbons'] !== '0')> Show ribbon banners and picture tiles on the website</label></div>
+            <h3>9. Ribbon and Shop by store sizes</h3>
+            <p class="sub">Type the size (in pixels) of the pictures you will upload. The website and the app then show them in exactly that shape, never stretched. Example: a slim ribbon is 1600 wide by 320 tall.</p>
+            <div class="row">
+                <div><label for="rw">Ribbon picture width</label><input type="number" id="rw" name="ribbon_w" min="100" max="4000" value="{{ $settings['ribbon_w'] }}"></div>
+                <div><label for="rh">Ribbon picture height</label><input type="number" id="rh" name="ribbon_h" min="40" max="2000" value="{{ $settings['ribbon_h'] }}"></div>
+                <div><label for="rp">Ribbons in one row (computer)</label>
+                    <select id="rp" name="ribbon_per_row">
+                        <option value="1" @selected($settings['ribbon_per_row'] === '1')>1</option>
+                        <option value="2" @selected($settings['ribbon_per_row'] === '2')>2</option>
+                        <option value="3" @selected($settings['ribbon_per_row'] === '3')>3</option>
+                    </select></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+                <div><label for="tw">Store tile picture width</label><input type="number" id="tw" name="tile_w" min="100" max="4000" value="{{ $settings['tile_w'] }}"></div>
+                <div><label for="th">Store tile picture height</label><input type="number" id="th" name="tile_h" min="100" max="4000" value="{{ $settings['tile_h'] }}"></div>
+                <div><label for="tm">Biggest width of one tile on a computer (px)</label><input type="number" id="tm" name="tile_max" min="200" max="900" value="{{ $settings['tile_max'] }}"></div>
+                <div><label for="ta">Tiles sit on the</label>
+                    <select id="ta" name="tile_align">
+                        <option value="left" @selected($settings['tile_align'] !== 'center')>Left</option>
+                        <option value="center" @selected($settings['tile_align'] === 'center')>Centre</option>
+                    </select></div>
+            </div>
             <p style="margin-top:16px"><button class="btn" type="submit">Save controls</button></p>
         </form>
     </div>

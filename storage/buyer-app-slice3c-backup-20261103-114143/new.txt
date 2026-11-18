@@ -1,0 +1,6 @@
+app/Http/Controllers/Api/BuyerApp/CheckoutController.php
+app/Http/Controllers/Api/BuyerApp/CouponsController.php
+app/Services/BuyerApp/Checkout/Checkout.php
+app/Services/BuyerApp/Checkout/Coupons.php
+app/Services/BuyerApp/Checkout/Slots.php
+app/Services/BuyerApp/PaymentOptions.php

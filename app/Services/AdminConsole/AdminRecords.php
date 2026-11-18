@@ -203,6 +203,9 @@ class AdminRecords
                 case 'image':
                     if ($v !== '' && !preg_match('/^[A-Za-z0-9_\-\.]{1,120}$/', $v)) return [null, 'Upload the image again.'];
                     break;
+                case 'color':
+                    if ($v !== '' && !preg_match('/^#[0-9A-Fa-f]{6}$/', $v)) return [null, $f['label'] . ': use a colour like #F70202, or leave it empty.'];
+                    $v = strtoupper($v); break;
                 case 'html': break;
                 case 'citypick': $v = trim(preg_replace('/\s+/', ' ', $v)); break;
                 default: $v = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $v);

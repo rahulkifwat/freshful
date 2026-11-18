@@ -58,14 +58,14 @@ class HubPeopleService
         if (strlen($phone) === 12 && str_starts_with($phone, '91')) $phone = substr($phone, 2);
         if (mb_strlen($name) < 2) return ['ok' => false, 'message' => 'Enter the rider\'s name.'];
         if (!preg_match('/^[6-9]\d{9}$/', $phone)) return ['ok' => false, 'message' => 'Enter a valid 10-digit mobile number.'];
-        if ($emp === '' || !preg_match('/^[A-Z0-9_\-]{2,20}$/', $emp)) return ['ok' => false, 'message' => 'Enter an employee ID (letters and numbers).'];
+        if ($emp !== '' /* empno-v1:a */ && !preg_match('/^[A-Z0-9_\-]{2,20}$/', $emp)) return ['ok' => false, 'message' => 'Enter an employee ID (letters and numbers).'];   // an empty box means automatic (new rider) or keep the current number (edit)
         if (!$id && strlen($pass) < 6) return ['ok' => false, 'message' => 'Set a password of at least 6 characters for the rider app.'];
         if ($id && $pass !== '' && strlen($pass) < 6) return ['ok' => false, 'message' => 'The new password must have at least 6 characters.'];
         if (!in_array($gender, ['Male', 'Female', 'Other', ''], true)) $gender = '';
-        $status = ($d['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+        $status = in_array(($d['status'] ?? 'active'), ['inactive', 'disabled'], true) ? 'disabled' : 'active';   // rstat-v1: the column only accepts active, disabled, pending
         $dupe = fn ($col, $val) => DB::table('delivery_boy')->where($col, $val)->when($id, fn ($q) => $q->where('id', '<>', $id))->exists();
         if ($dupe('phone', $phone)) return ['ok' => false, 'message' => 'Another rider already uses this mobile number.'];
-        if ($dupe('employee_id', $emp)) return ['ok' => false, 'message' => 'This employee ID is already taken.'];
+        if ($emp !== '' /* empno-v1:b */ && $dupe('employee_id', $emp)) return ['ok' => false, 'message' => 'This employee ID is already taken.'];
 
         $row = ['name' => mb_substr($name, 0, 60), 'phone' => $phone, 'gender' => $gender];
         if ($pass !== '') $row['password'] = self::passwordValue($pass);
@@ -77,10 +77,11 @@ class HubPeopleService
             Log::info('[freshful-audit] hub-rider-update', ['hub' => $this->hubId, 'rider' => $id, 'by' => $actor['id'] ?? null]);
             return ['ok' => true, 'message' => $name . ' updated.' . ($pass !== '' ? ' New app password is set.' : '')];
         }
+        if ($emp === '') { try { $emp = \App\Services\Driver\EmployeeNo::issue($this->hubId); } catch (\Throwable $e) { return ['ok' => false, 'message' => $e->getMessage()]; } }   // empno-v1:c
         $row += ['employee_id' => $emp, 'hub_id' => $this->hubId, 'status' => $status, 'date_added' => now()];
         $newId = DB::table('delivery_boy')->insertGetId($row);
         Log::info('[freshful-audit] hub-rider-add', ['hub' => $this->hubId, 'rider' => $newId, 'by' => $actor['id'] ?? null]);
-        return ['ok' => true, 'message' => $name . ' added' . ($status === 'inactive' ? ' (switched off)' : '') . '.'];
+        return ['ok' => true, 'message' => $name . ' added' . ($status === 'disabled' ? ' (switched off)' : '') . '. Employee ID ' . $emp . '.' /* empno-v1:d */];
     }
 
     public function toggleRider(int $id, array $actor): array
@@ -92,7 +93,7 @@ class HubPeopleService
             $busy = DB::table('orders')->where('hub_id', $this->hubId)->where('rider_id', $id)->whereIn('order_status', OrderFlow::statusesFor(['out']))->exists();
             if ($busy) return ['ok' => false, 'message' => $r->name . ' still has orders out for delivery. Finish them first.'];
         }
-        DB::table('delivery_boy')->where('id', $id)->update(['status' => $on ? 'active' : 'inactive']);
+        DB::table('delivery_boy')->where('id', $id)->update(['status' => $on ? 'active' : 'disabled']);
         Log::info('[freshful-audit] hub-rider-status', ['hub' => $this->hubId, 'rider' => $id, 'on' => $on, 'by' => $actor['id'] ?? null]);
         return ['ok' => true, 'message' => $r->name . ($on ? ' is active again.' : ' is switched off and will not get orders.')];
     }

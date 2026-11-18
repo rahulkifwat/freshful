@@ -158,6 +158,47 @@ class AdminHubs
         return ['ok' => true, 'id' => $id, 'message' => $old ? 'Hub saved.' : 'Hub added. It is switched off: add its staff and stock, then switch it on to take orders.'];
     }
 
+    /** Remove the drawn delivery area of a hub (the hub itself stays). The hub must be closed first, so no order can reach a hub that has no area. */
+    public static function clearArea(int $id, array $actor): array
+    {
+        $old = DB::table('hubs')->where('id', $id)->first();
+        if (!$old) return ['ok' => false, 'message' => 'Hub not found.'];
+        if (AdminRecords::isOn($old->status)) return ['ok' => false, 'message' => 'Close the hub first (switch it off), then remove its area.'];
+        if (!self::shape($old->type ?? null, $old->all_latlng ?? null)['kind']) return ['ok' => false, 'message' => 'This hub has no delivery area to remove.'];
+        try { DB::table('hubs')->where('id', $id)->update(['type' => '', 'all_latlng' => '']); }
+        catch (\Throwable $e) { return ['ok' => false, 'message' => 'Could not remove: ' . AdminRecords::dbError($e)]; }
+        if (self::h('hub_area_meta')) DB::table('hub_area_meta')->where('hub_id', $id)->update(['radius_m' => null, 'drawn_as' => '', 'updated_at' => date('Y-m-d H:i:s')]);
+        AdminAudit::log($actor, 'edit', 'Locations', 'hubs', $id, 'Removed the delivery area of hub ' . $old->hub, $old, DB::table('hubs')->where('id', $id)->first());
+        CountryScope::forget();
+        return ['ok' => true, 'message' => 'The delivery area of ' . $old->hub . ' is removed. Draw a new one before opening the hub.'];
+    }
+
+    /** Delete a hub for good. Only when the hub is closed, the typed name matches, and no order references it. Staff logins of the hub are switched off, never deleted. Riders are left untouched (reassign them in the delivery boy screens). */
+    public static function destroy(int $id, array $in, array $actor): array
+    {
+        $old = DB::table('hubs')->where('id', $id)->first();
+        if (!$old) return ['ok' => false, 'message' => 'Hub not found.'];
+        if (AdminRecords::isOn($old->status)) return ['ok' => false, 'message' => 'Close the hub first (switch it off), then delete it.'];
+        if (mb_strtolower(trim((string) ($in['confirm'] ?? ''))) !== mb_strtolower(trim((string) $old->hub))) return ['ok' => false, 'message' => 'Type the exact hub name to confirm the delete.'];
+        if (self::h('orders', 'hub_id')) {
+            $n = (int) DB::table('orders')->where('hub_id', $id)->count();
+            if ($n > 0) return ['ok' => false, 'message' => 'This hub has ' . $n . ' order line(s) in its history. Keep it closed instead of deleting it, so old orders and reports stay correct.'];
+        }
+        $offed = [];
+        foreach (['hub_user' => 'hub user', 'pos_user' => 'POS user'] as $t => $label) {
+            if (!self::h($t, 'hub_id') || !self::h($t, 'status')) continue;
+            $n = (int) DB::table($t)->where('hub_id', $id)->count();
+            if ($n) { DB::table($t)->where('hub_id', $id)->update(['status' => AdminRecords::statusValues($t)[1]]); $offed[] = $n . ' ' . $label . ($n > 1 ? 's' : ''); }
+        }
+        try {
+            DB::table('hubs')->where('id', $id)->delete();
+            if (self::h('hub_area_meta')) DB::table('hub_area_meta')->where('hub_id', $id)->delete();
+        } catch (\Throwable $e) { return ['ok' => false, 'message' => 'Could not delete: ' . AdminRecords::dbError($e)]; }
+        AdminAudit::log($actor, 'delete', 'Locations', 'hubs', $id, 'Deleted hub ' . $old->hub . ($offed ? ' (switched off ' . implode(' and ', $offed) . ')' : ''), $old, null);
+        CountryScope::forget();
+        return ['ok' => true, 'message' => 'Hub ' . $old->hub . ' is deleted.' . ($offed ? ' Switched off: ' . implode(' and ', $offed) . '.' : '')];
+    }
+
     public static function toggle(int $id, array $actor): array
     {
         $old = DB::table('hubs')->where('id', $id)->first();

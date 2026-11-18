@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\BuyerApp;
 
+use App\Services\BuyerApp\Payments\CancelRefund;
 use App\Services\BuyerApp\Shop\Latin1;
 use App\Services\BuyerApp\Shop\OrderStage;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,7 @@ class OrderTrackingController extends AppController
         if ($stage === 'new') {
             $stockTaken = DB::table('hub_stock_moves')->where('type', 'sale')->where('ref', $orderId)->exists();
         }
-        $decision = OrderStage::cancelDecision($o['order_status'], $o['payment_type'], $stockTaken);
+        $decision = OrderStage::cancelDecision($o['order_status'], $o['payment_type'], $stockTaken, $o['payment_status']);
 
         // The rider is shown only while the order is out for delivery.
         $rider = null;
@@ -65,6 +66,7 @@ class OrderTrackingController extends AppController
             'timeline'       => OrderStage::timeline($o),
             'rider'          => $rider,
             'can_cancel'     => $decision['ok'],
+            'refund_on_cancel' => ($decision['ok'] && $decision['refund']) ? CancelRefund::amountFor($rows->first()) : null,
             'cancel_message' => $decision['ok'] ? '' : $decision['message'],
         ]);
     }
@@ -92,7 +94,7 @@ class OrderTrackingController extends AppController
             }
             $first = $rows->first();
             $stockTaken = DB::table('hub_stock_moves')->where('type', 'sale')->where('ref', $orderId)->exists();
-            $d = OrderStage::cancelDecision($first->order_status, $first->payment_type, $stockTaken);
+            $d = OrderStage::cancelDecision($first->order_status, $first->payment_type, $stockTaken, $first->payment_status);
             if (! $d['ok']) {
                 return [$d['message'], $d['code']];
             }
@@ -102,14 +104,29 @@ class OrderTrackingController extends AppController
                 ->where('order_status', 'Order Pending')
                 ->update(['order_status' => 'Order Cancel', 'reason_for_order_cancel' => substr($text, 0, 255), 'updated_at' => date('Y-m-d H:i:s')]);
 
-            return $n > 0 ? null : ['The store has just accepted your order, so it cannot be cancelled here. Please contact support.', 'order_accepted'];
+            if ($n < 1) {
+                return ['The store has just accepted your order, so it cannot be cancelled here. Please contact support.', 'order_accepted'];
+            }
+
+            // Paid in advance: the money goes back to the wallet in this same transaction (if anything fails, the cancel is undone too).
+            $refund = $d['refund'] ? CancelRefund::toWallet($orderId, $buyerId, $first) : null;
+
+            return [null, null, $refund];
         });
 
-        if ($result !== null) {
+        if ($result[0] !== null) {
             return $this->fail($result[0], $result[1]);
         }
+        $refund = $result[2];
 
         // Cancelling releases the packs held for this order automatically (the stock hold is worked out from the status).
-        return $this->ok(['order_id' => $orderId, 'status' => 'Order Cancel'], 'Order cancelled successfully');
+        if ($refund && ! $refund['already']) {
+            return $this->ok([
+                'order_id' => $orderId, 'status' => 'Order Cancel',
+                'refund' => ['amount' => $refund['amount'], 'to' => 'wallet', 'wallet_balance' => $refund['wallet_balance']],
+            ], 'Order cancelled. ₹' . rtrim(rtrim(number_format($refund['amount'], 2, '.', ''), '0'), '.') . ' was added to your Freshful wallet.');
+        }
+
+        return $this->ok(['order_id' => $orderId, 'status' => 'Order Cancel', 'refund' => null], 'Order cancelled successfully');
     }
 }

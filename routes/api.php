@@ -61,7 +61,7 @@ Route::middleware('buyer.api')->group(function () use ($any) {
     Route::match($any, 'update_address', [AddressController::class, 'update']);
     Route::match($any, 'delete_address', [AddressController::class, 'destroy']);
 
-    Route::match($any, 'add_order', [BuyerOrderController::class, 'store']);
+    Route::match($any, 'add_order', [BuyerOrderController::class, 'store'])->middleware('throttle:12,1');
     Route::match($any, 'get_my_orders', [BuyerOrderController::class, 'index']);
     Route::match($any, 'get_order_details', [BuyerOrderController::class, 'show']);
 });

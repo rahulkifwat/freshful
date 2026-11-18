@@ -384,19 +384,6 @@ class ProductionController extends Controller
         return view('production.delivery_boy', compact('rows'));
     }
 
-    public function hubKmlList(Request $request)
-    {
-        $rows = collect();
-        if (Schema::hasTable('hubs')) {
-            $rows = DB::table('hubs')
-                ->leftJoin('cities', 'cities.id', '=', 'hubs.city_id')
-                ->select('hubs.*', 'cities.name as city_name')
-                ->orderByDesc('hubs.id')
-                ->paginate(25)->withQueryString();
-        }
-        return view('production.hub_kml_list', compact('rows'));
-    }
-
     // ── Marketing ────────────────────────────────────────────────────────────
 
     public function banner(Request $request)
@@ -520,6 +507,13 @@ class ProductionController extends Controller
 
     public function addWalletMoneySubmit(Request $request)
     {
+        // Wallet guard (16 Nov 2026): one controlled path for manager top-ups. 'production' is not an allowed role, so this is refused unless the owner adds it in .env.
+        if (class_exists(\App\Services\Wallet\ManagerWallet::class)) {
+            $mw = \App\Services\Wallet\ManagerWallet::topup('production', null, $request->all());
+            return $mw['ok']
+                ? back()->with('success', $mw['message'])
+                : back()->withInput()->with('error', $mw['message'])->withErrors(['wallet' => $mw['message']]);
+        }
         $request->validate(['buyer_id' => 'required', 'amount' => 'required|numeric|min:1']);
         if (Schema::hasTable('wallet_transaction_history') && Schema::hasTable('buyers')) {
             DB::table('wallet_transaction_history')->insert([

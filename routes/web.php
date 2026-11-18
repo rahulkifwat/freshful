@@ -702,7 +702,6 @@ Route::prefix('operation_manager')->group(function () {
 
         // Delivery & Hub
         Route::get('/delivery_boy',   [OperationManagerController::class, 'deliveryBoy'])->name('operation_manager.delivery_boy');
-        Route::get('/hub_kml_list',   [OperationManagerController::class, 'hubKmlList'])->name('operation_manager.hub_kml_list');
 
         // Marketing
         Route::get('/banner',         [OperationManagerController::class, 'banner'])->name('operation_manager.banner');
@@ -812,7 +811,6 @@ Route::prefix('planning_manager')->group(function () {
 
         // Delivery & Hub
         Route::get('/delivery_boy', [PlanningManagerController::class, 'deliveryBoy'])->name('planning_manager.delivery_boy');
-        Route::get('/hub_kml_list', [PlanningManagerController::class, 'hubKmlList'])->name('planning_manager.hub_kml_list');
 
         // Marketing
         Route::get('/banner',         [PlanningManagerController::class, 'banner'])->name('planning_manager.banner');
@@ -961,7 +959,6 @@ Route::prefix('production')->group(function () {
 
         // Delivery / Hub
         Route::get('/delivery_boy', [ProductionController::class, 'deliveryBoy'])->name('production.delivery_boy');
-        Route::get('/hub_kml_list', [ProductionController::class, 'hubKmlList'])->name('production.hub_kml_list');
 
         // Marketing
         Route::get('/banner',         [ProductionController::class, 'banner'])->name('production.banner');
@@ -1051,3 +1048,7 @@ Route::prefix('kiosk/{key}')->where(['key' => '[A-Za-z0-9]{16,64}'])->group(func
 
 // DM1 (30 Oct 2026): Digital Menu
 if (is_file(__DIR__.'/digital_menu.php')) { require __DIR__.'/digital_menu.php'; }
+
+// Public legal pages (Google Play: privacy policy URL and account deletion URL).
+Route::view('/privacy-policy', 'legal.privacy')->name('legal.privacy');
+Route::view('/delete-account', 'legal.delete')->name('legal.delete');

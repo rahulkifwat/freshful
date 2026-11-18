@@ -41,6 +41,8 @@ Route::prefix('ad')->group(function () {
 
     Route::get('/hubs', [A::class, 'hubs'])->name('adc.ad.hubs');
     Route::post('/hubs/save', [A::class, 'hubSave'])->middleware('throttle:30,1')->name('adc.ad.hub.save');
+    Route::post('/hubs/{id}/clear-area', [A::class, 'hubClearArea'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.hub.cleararea');
+    Route::post('/hubs/{id}/delete', [A::class, 'hubDelete'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.hub.delete');
     Route::post('/hubs/{id}/toggle', [A::class, 'hubToggle'])->whereNumber('id')->middleware('throttle:30,1')->name('adc.ad.hub.toggle');
 
     Route::get('/push', [A::class, 'push'])->name('adc.ad.push');
@@ -58,6 +60,16 @@ Route::prefix('ad')->group(function () {
     Route::post('/live/dispatch/act', [A::class, 'boardAct'])->middleware('throttle:60,1')->name('adc.ad.dispatch.act');
     Route::get('/refunds', [A::class, 'refunds'])->name('adc.ad.refunds');
     Route::post('/refunds/pay', [A::class, 'refundPay'])->middleware('throttle:30,1')->name('adc.ad.refund.pay');
+
+    // App control update 2
+    Route::get('/appcontrol', [A::class, 'appControl'])->name('adc.ad.appcontrol');
+    Route::post('/appcontrol/save', [A::class, 'appControlSave'])->middleware('throttle:30,1')->name('adc.ad.appcontrol.save');
+    Route::post('/appcontrol/seed', [A::class, 'appControlSeed'])->middleware('throttle:10,1')->name('adc.ad.appcontrol.seed');
+
+    // Home pictures
+    Route::get('/apppics', [A::class, 'homePics'])->name('adc.ad.apppics');
+    Route::post('/apppics/save', [A::class, 'homePicsSave'])->middleware('throttle:30,1')->name('adc.ad.apppics.save');
+    Route::post('/apppics/image', [A::class, 'homePicsImage'])->middleware('throttle:40,1')->name('adc.ad.apppics.image');
     Route::post('/refunds/reject', [A::class, 'refundReject'])->middleware('throttle:30,1')->name('adc.ad.refund.reject');
     Route::get('/tickets', [A::class, 'tickets'])->name('adc.ad.tickets');
     Route::post('/tickets', [A::class, 'ticketCreate'])->middleware('throttle:30,1')->name('adc.ad.ticket.create');
@@ -76,4 +88,7 @@ Route::prefix('ad')->group(function () {
 
     // Driver management (drivers update 1, 28 Oct 2026)
     if (file_exists(__DIR__ . '/admin_drivers.php')) require __DIR__ . '/admin_drivers.php';
+
+    // Control Centre update 1 (15 Nov 2026)
+    if (file_exists(__DIR__ . '/control_centre.php')) require __DIR__ . '/control_centre.php';
 });

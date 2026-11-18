@@ -1,0 +1,4 @@
+app/Http/Controllers/Api/BuyerApp/AppCartController.php
+app/Http/Controllers/Api/BuyerApp/CatalogController.php
+app/Services/BuyerApp/Catalog/Catalog.php
+database/migrations/2026_11_03_190000_add_bg_color_to_category.php

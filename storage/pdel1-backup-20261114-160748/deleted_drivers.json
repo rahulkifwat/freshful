@@ -1,0 +1,501 @@
+[
+    {
+        "row": {
+            "id": 8,
+            "name": null,
+            "emp_no": "102",
+            "email": "shivramwarchetan@gmail.com",
+            "phone": "9977599759",
+            "password": "$2y$12$Lm6gVvQK40WAoM4Uf8HOJ.z6KN9CppLMcY\/7snp8m35M073BJ8jBO",
+            "status": "active",
+            "verification_status": "approved",
+            "approved_by": 1,
+            "approved_at": "2026-03-19 16:51:37",
+            "rejection_reason": "Not ",
+            "verified_at": null
+        },
+        "children": {
+            "driver_profile": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "regid": 8,
+                        "name": "",
+                        "father_name": "",
+                        "dob": null,
+                        "phone": "",
+                        "blood_group": "",
+                        "emergency_name": "",
+                        "emergency_relationship": "",
+                        "emergency_phone": "",
+                        "referral_code": "",
+                        "address": "",
+                        "language": "",
+                        "working_status": "off_duty",
+                        "working_status_at": "2026-10-30 18:35:06",
+                        "profile_photo": null,
+                        "created_at": "2026-03-19 11:19:31",
+                        "updated_at": "2026-10-30 13:05:06"
+                    }
+                ]
+            },
+            "driver_locations": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "regid": 8,
+                        "address": "13, near Hotel Silvotel, pu 4, Vijay Nagar, Malviya Nagar, Indore, Madhya Pradesh 452010, India",
+                        "lat": "22.7471681",
+                        "lng": "75.8969902",
+                        "created_at": "2026-10-22 18:00:44",
+                        "updated_at": "2026-10-30 18:30:21"
+                    }
+                ]
+            },
+            "driver_vehicles": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "regid": 8,
+                        "vehicle_type": "bike",
+                        "vehicle_number": "Ind 95",
+                        "created_at": "2026-03-20 13:37:25",
+                        "updated_at": "2026-04-02 07:31:36"
+                    }
+                ]
+            },
+            "driver_identity_documents": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 3,
+                        "regid": 8,
+                        "aadhaar_card_front": "aadhaar_card_front_1776773127_735320868_8.jpeg",
+                        "aadhaar_card_back": "aadhaar_card_back_1775112994_752807486_8.jpeg",
+                        "driving_license_front": "driving_license_front_1775112994_738328246_8.jpeg",
+                        "driving_license_back": "driving_license_back_1775112994_476643133_8.jpeg",
+                        "pan_card_front": "pan_card_front_1775112994_165390400_8.jpeg",
+                        "pan_card_back": "pan_card_back_1775112994_188587798_8.jpeg",
+                        "aadhaar_card_status": "action",
+                        "driving_license_status": "action",
+                        "pan_card_status": "action",
+                        "created_at": "2026-03-20 07:57:54",
+                        "updated_at": "2026-03-20 07:57:54"
+                    }
+                ]
+            },
+            "driver_bank_details": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "regid": 8,
+                        "account_holder_name": "Chetan Shivramwar",
+                        "account_number": "1234567890",
+                        "ifsc_code": "bhvsduib",
+                        "bank_name": "vsvd",
+                        "branch_name": "vd ev",
+                        "created_at": "2026-03-20 09:03:56",
+                        "updated_at": "2026-03-20 09:03:56"
+                    }
+                ]
+            },
+            "driver_wallet": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "regid": 8,
+                        "balance": "1210.00",
+                        "currency": "INR",
+                        "status": "active",
+                        "created_at": "2026-03-09 06:36:43",
+                        "updated_at": "2026-06-15 14:57:51"
+                    }
+                ]
+            },
+            "driver_wallet_transactions": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 1,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "credit",
+                        "amount": "500.00",
+                        "reference_id": "CR8001",
+                        "description": "Manual wallet credit",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 2,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "debit",
+                        "amount": "100.00",
+                        "reference_id": "DB8001",
+                        "description": "Service fee deduction",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 3,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "withdrawal_request",
+                        "amount": "300.00",
+                        "reference_id": "WD8001",
+                        "description": "Driver requested withdrawal",
+                        "status": "pending",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 4,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "withdrawal_approved",
+                        "amount": "300.00",
+                        "reference_id": "WD8001",
+                        "description": "Withdrawal approved by admin",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 5,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "withdrawal_rejected",
+                        "amount": "200.00",
+                        "reference_id": "WD8002",
+                        "description": "Withdrawal rejected by admin",
+                        "status": "failed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 6,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "admin_credit",
+                        "amount": "1000.00",
+                        "reference_id": "ADCR8001",
+                        "description": "Admin bonus credit",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 7,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "admin_debit",
+                        "amount": "150.00",
+                        "reference_id": "ADDB8001",
+                        "description": "Admin penalty debit",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 8,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "trip_earning",
+                        "amount": "250.00",
+                        "reference_id": "TR8001",
+                        "description": "Trip earning from delivery",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 9,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "penalty",
+                        "amount": "50.00",
+                        "reference_id": "PN8001",
+                        "description": "Late delivery penalty",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:06:53"
+                    },
+                    {
+                        "id": 10,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "tip",
+                        "amount": "50.00",
+                        "reference_id": "TIP8001",
+                        "description": "Customer tip for good service",
+                        "status": "completed",
+                        "created_at": "2026-03-09 07:09:30"
+                    },
+                    {
+                        "id": 13,
+                        "wallet_id": 1,
+                        "regid": 8,
+                        "type": "credit",
+                        "amount": "10.00",
+                        "reference_id": "ORD200000",
+                        "description": "Wallet credited for Order ORD200000",
+                        "status": "completed",
+                        "created_at": "2026-06-15 14:57:51"
+                    }
+                ]
+            }
+        },
+        "boys": [
+            {
+                "id": 8,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "9977599759",
+                "gender": "Male",
+                "employee_id": "EMP400007",
+                "password": "Chetan@123",
+                "hub_id": 1,
+                "status": "active",
+                "regid": "8",
+                "date_added": "2026-02-25 09:55:49",
+                "driver_id": 8
+            },
+            {
+                "id": 9,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "9977599759",
+                "gender": "Male",
+                "employee_id": "EMP0103",
+                "password": "84399343",
+                "hub_id": 1,
+                "status": "disabled",
+                "regid": "8",
+                "date_added": "2026-03-13 07:31:20",
+                "driver_id": null
+            },
+            {
+                "id": 10,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "123456789",
+                "gender": "Male",
+                "employee_id": "EMP0103",
+                "password": "123456",
+                "hub_id": 1,
+                "status": "disabled",
+                "regid": "8",
+                "date_added": "2026-03-24 06:31:33",
+                "driver_id": null
+            },
+            {
+                "id": 11,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "9977599759",
+                "gender": "Male",
+                "employee_id": "EMP0103",
+                "password": "Vinod123456",
+                "hub_id": 1,
+                "status": "disabled",
+                "regid": "8",
+                "date_added": "2026-03-24 07:58:27",
+                "driver_id": null
+            },
+            {
+                "id": 12,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "8124200242",
+                "gender": "Male",
+                "employee_id": "EMP0103",
+                "password": "123456",
+                "hub_id": 1,
+                "status": "disabled",
+                "regid": "8",
+                "date_added": "2026-03-24 16:37:39",
+                "driver_id": null
+            },
+            {
+                "id": 14,
+                "name": "shivramwarchetan@gmail.com",
+                "phone": "8319554799",
+                "gender": "Male",
+                "employee_id": "EMP0103",
+                "password": "Vinod123456",
+                "hub_id": 1,
+                "status": "disabled",
+                "regid": "8",
+                "date_added": "2026-04-02 06:54:33",
+                "driver_id": null
+            }
+        ]
+    },
+    {
+        "row": {
+            "id": 9,
+            "name": "Nikesh",
+            "emp_no": "103",
+            "email": "adsf@gmail.com",
+            "phone": "1234567893",
+            "password": "1234567",
+            "status": "active",
+            "verification_status": "",
+            "approved_by": null,
+            "approved_at": null,
+            "rejection_reason": null,
+            "verified_at": null
+        },
+        "children": {
+            "driver_profile": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 2,
+                        "regid": 9,
+                        "name": "Nikesh",
+                        "father_name": "Bhusal",
+                        "dob": null,
+                        "phone": "1234567893",
+                        "blood_group": "A+",
+                        "emergency_name": "",
+                        "emergency_relationship": "",
+                        "emergency_phone": "",
+                        "referral_code": "",
+                        "address": "no. 8860656316, Punjabi Bagh Cooperative Housing Soceity, MO, Karol Bagh, New Delhi, Delhi 110001, India",
+                        "language": "[{\"label\":\"English\",\"value\":\"En\"}]",
+                        "working_status": "off_duty",
+                        "working_status_at": "2026-10-22 18:27:04",
+                        "profile_photo": "",
+                        "created_at": "2026-04-11 04:46:42",
+                        "updated_at": "2026-11-14 20:04:24"
+                    }
+                ]
+            },
+            "driver_vehicles": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 3,
+                        "regid": 9,
+                        "vehicle_type": "bike",
+                        "vehicle_number": "",
+                        "created_at": "2026-04-11 10:15:12",
+                        "updated_at": "2026-11-14 20:04:24"
+                    }
+                ]
+            },
+            "driver_bank_details": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 3,
+                        "regid": 9,
+                        "account_holder_name": "Ashok",
+                        "account_number": "69003783",
+                        "ifsc_code": "Icici0253",
+                        "bank_name": "",
+                        "branch_name": "Indian ",
+                        "created_at": "2026-04-11 04:45:27",
+                        "updated_at": "2026-04-11 04:47:47"
+                    }
+                ]
+            }
+        },
+        "boys": [
+            {
+                "id": 15,
+                "name": "Nikesh",
+                "phone": "1234567893",
+                "gender": "Male",
+                "employee_id": "103",
+                "password": "1234567",
+                "hub_id": 3,
+                "status": "active",
+                "regid": "9",
+                "date_added": "2026-04-02 07:53:42",
+                "driver_id": 9
+            }
+        ]
+    },
+    {
+        "row": {
+            "id": 10,
+            "name": "Vinod",
+            "emp_no": "104",
+            "email": "vinod.iroyal@gmail.com",
+            "phone": "1234567890",
+            "password": "$2y$12$EgLRDRcDRXSxmP6Btc9gluVGiQOf2OwuGu3KwOvwHpaPOFYX0s9tu",
+            "status": "active",
+            "verification_status": "approved",
+            "approved_by": 1,
+            "approved_at": null,
+            "rejection_reason": null,
+            "verified_at": null
+        },
+        "children": {
+            "driver_profile": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 4,
+                        "regid": 10,
+                        "name": null,
+                        "father_name": null,
+                        "dob": null,
+                        "phone": null,
+                        "blood_group": null,
+                        "emergency_name": null,
+                        "emergency_relationship": null,
+                        "emergency_phone": null,
+                        "referral_code": null,
+                        "address": null,
+                        "language": null,
+                        "working_status": "off_duty",
+                        "working_status_at": "2026-11-13 12:29:25",
+                        "profile_photo": null,
+                        "created_at": "2026-10-22 12:50:27",
+                        "updated_at": "2026-11-13 06:59:25"
+                    }
+                ]
+            },
+            "driver_locations": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 3,
+                        "regid": 10,
+                        "address": "389-390, above Tisva Light Showroom, in front of Retina Speciality Hospital, Vijay Nagar, Scheme 54 PU4, Indore, Madhya Pradesh 452010, India",
+                        "lat": "22.7475479",
+                        "lng": "75.8968761",
+                        "created_at": "2026-10-22 18:20:32",
+                        "updated_at": "2026-11-13 12:27:58"
+                    }
+                ]
+            },
+            "driver_wallet": {
+                "col": "regid",
+                "rows": [
+                    {
+                        "id": 5,
+                        "regid": 10,
+                        "balance": "0.00",
+                        "currency": "INR",
+                        "status": "active",
+                        "created_at": "2026-10-28 12:06:08",
+                        "updated_at": "2026-10-28 12:06:08"
+                    }
+                ]
+            }
+        },
+        "boys": [
+            {
+                "id": 16,
+                "name": "Vinod",
+                "phone": "1234567890",
+                "gender": "Male",
+                "employee_id": "EMP0104",
+                "password": "Vinod123456",
+                "hub_id": 1,
+                "status": "active",
+                "regid": "10",
+                "date_added": "2026-07-01 13:36:38",
+                "driver_id": 10
+            }
+        ]
+    }
+]

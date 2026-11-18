@@ -53,12 +53,21 @@
 
     $(document).on('change', '.change_status_order, select.change_status[data-order_id]', function () {
       var $sel = $(this);
-      $.post('{{ url('hub/ajax/change-order-status') }}', {
-        id: $sel.data('id'), order_id: $sel.data('order_id'), order_status: $sel.val()
-      }).done(function (res) {
-        if (res.result) { if (typeof toastr !== 'undefined') toastr.success(res.message); }
-        else if (typeof toastr !== 'undefined') { toastr.error(res.message || 'Update failed.'); }
-      }).fail(function () { if (typeof toastr !== 'undefined') toastr.error('Network error.'); });
+      var post = function (reason) {
+        var data = { id: $sel.data('id'), order_id: $sel.data('order_id'), order_status: $sel.val() };
+        if (reason) { data.reason = reason; }
+        $.post('{{ url('hub/ajax/change-order-status') }}', data).done(function (res) {
+          if (!res.result && res.code === 'reason_required') {
+            var r = window.prompt(res.message + '\n\nType the reason:', '');
+            if (r === null || $.trim(r) === '') { window.location.reload(); return; }
+            post($.trim(r));
+            return;
+          }
+          if (res.result) { if (typeof toastr !== 'undefined') toastr.success(res.message); }
+          else if (typeof toastr !== 'undefined') { toastr.error(res.message || 'Update failed.'); }
+        }).fail(function () { if (typeof toastr !== 'undefined') toastr.error('Network error.'); });
+      };
+      post('');
     });
   })(jQuery);
 </script>

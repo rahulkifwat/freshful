@@ -90,6 +90,27 @@ class HomeSettingsController extends Controller
             'cat_columns' => ['required', 'integer', 'min:4', 'max:10'],
             'hidden' => ['nullable', 'array'],
             'hidden.*' => ['string', 'max:80'],
+            'hero_anim' => ['required', 'in:slide,fade,zoom'],
+            'ribbon_w' => ['required', 'integer', 'min:100', 'max:4000'],
+            'ribbon_h' => ['required', 'integer', 'min:40', 'max:2000'],
+            'ribbon_per_row' => ['required', 'integer', 'min:1', 'max:3'],
+            'tile_w' => ['required', 'integer', 'min:100', 'max:4000'],
+            'tile_h' => ['required', 'integer', 'min:100', 'max:4000'],
+            'tile_max' => ['required', 'integer', 'min:200', 'max:900'],
+            'tile_align' => ['required', 'in:left,center'],
+            'coupon_seconds' => ['required', 'integer', 'min:2', 'max:15'],
+            'express_title' => ['required', 'string', 'max:60'],
+            'express_sub' => ['nullable', 'string', 'max:160'],
+            'hero_bg' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'hero_text' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'hero_btn_from' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'hero_btn_to' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'express_bg' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'express_text' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'express_icon' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'offer_from' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'offer_to' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'offer_text' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $values = [
@@ -103,7 +124,23 @@ class HomeSettingsController extends Controller
             'cat_sub' => trim((string) ($data['cat_sub'] ?? '')),
             'cat_columns' => (int) $data['cat_columns'],
             'hidden_tags' => implode('|', array_map('trim', $data['hidden'] ?? [])),
+            'hero_anim' => $data['hero_anim'],
+            'ribbon_w' => (int) $data['ribbon_w'],
+            'ribbon_h' => (int) $data['ribbon_h'],
+            'ribbon_per_row' => (int) $data['ribbon_per_row'],
+            'tile_w' => (int) $data['tile_w'],
+            'tile_h' => (int) $data['tile_h'],
+            'tile_max' => (int) $data['tile_max'],
+            'tile_align' => $data['tile_align'],
+            'coupon_seconds' => (int) $data['coupon_seconds'],
+            'express_title' => trim($data['express_title']),
+            'express_sub' => trim((string) ($data['express_sub'] ?? '')),
         ];
+        foreach (['hero_bg', 'hero_text', 'hero_btn_from', 'hero_btn_to', 'express_bg', 'express_text', 'express_icon', 'offer_from', 'offer_to', 'offer_text'] as $ffHex) {
+            if (! empty($data[$ffHex])) {
+                $values[$ffHex] = strtoupper($data[$ffHex]);
+            }
+        }
         foreach (StorefrontSettings::FLAGS as $flag) {
             $values[$flag] = $request->boolean($flag) ? '1' : '0';
         }

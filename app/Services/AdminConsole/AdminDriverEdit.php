@@ -103,7 +103,8 @@ class AdminDriverEdit
             $veh = ['vehicle_type' => self::str($in['vehicle_type'] ?? '', 50), 'vehicle_number' => $vno, 'updated_at' => $now];
             if (DB::table('driver_vehicles')->where('regid', $id)->exists()) DB::table('driver_vehicles')->where('regid', $id)->update($veh);
             elseif ($veh['vehicle_type'] !== '' || $vno !== '') DB::table('driver_vehicles')->insert($veh + ['regid' => $id, 'created_at' => $now]);
-            if ($boy) DB::table('delivery_boy')->where('id', $boy->id)->update(['name' => $name, 'phone' => $phone, 'hub_id' => $hub, 'status' => $bs] + ($emp !== '' ? ['employee_id' => $emp] : []));
+            if ($boy) DB::table('delivery_boy')->where('id', $boy->id)->update(['name' => $name, 'phone' => $phone, 'hub_id' => $hub, 'status' => $bs] + ($emp !== '' && !\App\Services\Driver\EmployeeNo::isStd((string) $boy->employee_id) /* empno-v1:e */ ? ['employee_id' => $emp] : []));
+            if ($boy && $hub > 0 && (int) $boy->hub_id === 0 && !\App\Services\Driver\EmployeeNo::isStd((string) $boy->employee_id)) { try { DB::table('delivery_boy')->where('id', $boy->id)->update(['employee_id' => \App\Services\Driver\EmployeeNo::issue($hub)]); } catch (\Throwable $e) { throw new ApiException($e->getMessage()); } }   // empno-v1:f the first hub link gives the standard number
         });
         CountryScope::forget();
         $after = self::data($id)['fields'];

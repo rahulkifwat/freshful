@@ -104,11 +104,23 @@ class AdminConsoleController extends Controller
     /* ---------------- hubs */
     public function hubs(Request $r) { if ($g = $this->guard($r)) return $g; return $this->json(AdminHubs::list()); }
     public function hubSave(Request $r) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => AdminHubs::save($r->input('id') ? (int) $r->input('id') : null, (array) $r->input('values', []), $this->actor($r))); }
+    public function hubClearArea(Request $r, int $id) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => AdminHubs::clearArea($id, $this->actor($r))); }
+    public function hubDelete(Request $r, int $id) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => AdminHubs::destroy($id, (array) $r->all(), $this->actor($r))); }
     public function hubToggle(Request $r, int $id) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => AdminHubs::toggle($id, $this->actor($r))); }
 
     /* ---------------- push */
     public function push(Request $r) { if ($g = $this->guard($r)) return $g; return $this->json(AdminPush::list()); }
     public function pushSend(Request $r) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => AdminPush::send((string) $r->input('title', ''), (string) $r->input('body', ''), (string) $r->input('image', ''), $this->actor($r))); }
+
+    /* ---------------- home pictures (5 Nov 2026) */
+    public function homePics(Request $r) { if ($g = $this->guard($r)) return $g; return $this->json(\App\Services\AdminConsole\HomePics::state()); }
+    public function homePicsSave(Request $r) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => \App\Services\AdminConsole\HomePics::save((array) $r->all())); }
+    public function homePicsImage(Request $r) { if ($g = $this->guard($r)) return $g; return $this->json(\App\Services\AdminConsole\HomePics::image($r->file('image'))); }
+
+    /* ---------------- app control (App control update 2, 5 Nov 2026) */
+    public function appControl(Request $r) { if ($g = $this->guard($r)) return $g; return $this->json(\App\Services\AdminConsole\AppControl::state()); }
+    public function appControlSave(Request $r) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => \App\Services\AdminConsole\AppControl::save((array) $r->all())); }
+    public function appControlSeed(Request $r) { if ($g = $this->guard($r)) return $g; return $this->safe(fn () => \App\Services\AdminConsole\AppControl::seed()); }
 
     /* ---------------- reports */
     public function invReport(Request $r)

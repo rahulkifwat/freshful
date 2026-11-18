@@ -1,0 +1,54 @@
+[
+    {
+        "id": 1,
+        "name": "lokesh laabhaa",
+        "phone": "07610546518",
+        "gender": "Male",
+        "employee_id": "EMP400001",
+        "password": "123456",
+        "hub_id": 27,
+        "status": "active",
+        "regid": null,
+        "date_added": "2019-11-04 13:22:15",
+        "driver_id": null
+    },
+    {
+        "id": 3,
+        "name": "Suhail Ahmed",
+        "phone": "8056006631",
+        "gender": "Male",
+        "employee_id": "EMP400003",
+        "password": "12345",
+        "hub_id": 27,
+        "status": "active",
+        "regid": "fFerfE7-QEaLj3C5t8iIut:APA91bGZcb0xYrExJf96S5vof8gm6YMezstxaDD38WT3MkbL4W08DJrNiMf7kb9sbLj1D6a__kbq7Y6_-evW4WjH40Wa2jbYs6nRCqU4SD4MP95QUs8az64c-AwsqMWnmKtjf21x3Pqb",
+        "date_added": "2020-04-11 12:26:43",
+        "driver_id": null
+    },
+    {
+        "id": 5,
+        "name": "abc",
+        "phone": "123456789",
+        "gender": "Male",
+        "employee_id": "EMP400005",
+        "password": "123456",
+        "hub_id": 20,
+        "status": "active",
+        "regid": null,
+        "date_added": "2021-01-07 12:07:23",
+        "driver_id": null
+    },
+    {
+        "id": 6,
+        "name": "Tohid sheikhh",
+        "phone": "9887767656",
+        "gender": "Male",
+        "employee_id": "EMP400006",
+        "password": "12345",
+        "hub_id": 2,
+        "status": "active",
+        "regid": "fFerfE7-QEaLj3C5t8iIut:APA91bGZcb0xYrExJf96S5vof8gm6YMezstxaDD38WT3MkbL4W08DJrNiMf7kb9sbLj1D6a__kbq7Y6_-evW4WjH40Wa2jbYs6nRCqU4SD4MP95QUs8az64c-AwsqMWnmKtjf21x3Pqb",
+        "date_added": "2022-10-24 07:59:09",
+        "driver_id": null
+    }
+]

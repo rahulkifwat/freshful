@@ -34,6 +34,19 @@ class OrderController extends BuyerController
             'amount_to_return', 'order_complete_time', 'processing_complete_time', 'shipping_complete_time', 'delivery_complete_time',
         ]);
 
+        // Order guard (15 Nov 2026): the server works out price, hub, delivery charge, status and dates; the phone's values are not trusted.
+        if (class_exists(\App\Services\Orders\LegacyOrderGuard::class)) {
+            $og = \App\Services\Orders\LegacyOrderGuard::prepare($buyerId, $request->all(), $productIds, $quantities);
+            $base = $og['base'];
+            $productIds = $og['product_ids'];
+            $quantities = $og['quantities'];
+        }
+
+        // Payment guard (15 Nov 2026): only Cash until payment is verified on the server; a blank type is saved as Cash.
+        if (class_exists(\App\Services\Orders\PaymentGuard::class)) {
+            $base['payment_type'] = \App\Services\Orders\PaymentGuard::forLegacy($base['payment_type'] ?? null);
+        }
+
         DB::transaction(function () use ($productIds, $quantities, $base) {
             // Lock the latest order so two checkouts can't get the same order_id.
             $last = DB::table('orders')->orderByDesc('id')->lockForUpdate()->value('order_id');

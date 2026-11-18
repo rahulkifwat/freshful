@@ -27,8 +27,9 @@ class AdminResources
                 'help' => 'Sub categories under a category (for example Chicken, Fish, Leafy vegetables). Lower rank shows first on the website and app.',
                 'fields' => ['group_type' => ['t' => 'select', 'label' => 'Category', 'src' => 'maincat_names', 'req' => 1], 'name' => ['t' => 'text', 'label' => 'Name', 'req' => 1, 'max' => 100],
                     'image' => ['t' => 'image', 'label' => 'Image', 'folder' => ''], 'circle_image' => ['t' => 'image', 'label' => 'Circle image (round icon)', 'folder' => ''],
+                    'bg_color' => ['t' => 'color', 'label' => 'Colour (app tile background)'],
                     'ranking' => ['t' => 'number', 'label' => 'Rank (order shown)', 'min' => 0, 'max' => 9999, 'auto_next' => 1], 'status' => $status],
-                'list' => ['ranking', 'group_type', 'name', 'image', 'circle_image', 'status'], 'search' => ['name', 'group_type'], 'order' => ['ranking', 'asc']],
+                'list' => ['ranking', 'group_type', 'name', 'image', 'circle_image', 'bg_color', 'status'], 'search' => ['name', 'group_type'], 'order' => ['ranking', 'asc']],
             'items' => ['table' => 'items', 'title' => 'Item', 'plural' => 'Items', 'module' => 'Catalogue',
                 'help' => 'An item is the thing you sell (for example "Chicken Curry Cut"). Each product is one pack size of an item, and takes its name and photo from here.',
                 'fields' => ['cat_id' => ['t' => 'select', 'label' => 'Category', 'src' => 'categories', 'req' => 1], 'item' => ['t' => 'text', 'label' => 'Item name', 'req' => 1, 'max' => 150],
@@ -96,6 +97,22 @@ class AdminResources
                 'help' => 'Licences and quality certificates shown on the website (FSSAI and others).',
                 'fields' => ['title' => ['t' => 'text', 'label' => 'Title', 'req' => 1, 'max' => 150], 'image' => ['t' => 'image', 'label' => 'Image', 'folder' => 'certificates', 'req' => 1]],
                 'list' => ['image', 'title'], 'search' => ['title'], 'order' => ['id', 'asc'], 'delete' => true],
+
+            /* ---------------- app control (App control update 1, 5 Nov 2026) */
+            'apphome' => ['table' => 'app_home_blocks', 'title' => 'App home block', 'plural' => 'App home blocks', 'module' => 'Marketing',
+                'help' => 'The order and content of the customer app home page. Lower order shows first. If you add any block here, the app shows ONLY the blocks listed here (the header colour is separate). Types: banners (the App banners), categories, products (a product row; Product row key = the row, empty = all rows), rewards, strip, coupons, cuts, reviews. Opens (link) can be: category:12, section:bestsellers, coupons, categories, cart. Items, one per line: coupons = Title | Text | CODE, reviews = Name | Review | rating 1-5, cuts = Title | Text | link | #colour.',
+                'fields' => ['type' => ['t' => 'select', 'label' => 'Block type', 'req' => 1, 'opts' => ['banners' => 'Banners', 'categories' => 'Shop by category', 'products' => 'Product row', 'rewards' => 'Rewards strip', 'strip' => 'Strip banner', 'coupons' => 'Coupons', 'cuts' => 'Shop by cut tiles', 'reviews' => 'Customer reviews']],
+                    'title' => ['t' => 'text', 'label' => 'Title', 'max' => 120], 'subtitle' => ['t' => 'text', 'label' => 'Second line', 'max' => 160], 'link' => ['t' => 'text', 'label' => 'Opens (link)', 'max' => 120],
+                    'block_key' => ['t' => 'text', 'label' => 'Product row key', 'max' => 60], 'items_text' => ['t' => 'textarea', 'label' => 'Items (one per line)', 'max' => 3000],
+                    'position' => ['t' => 'number', 'label' => 'Order (lower shows first)', 'min' => 0, 'max' => 9999, 'auto_next' => 1],
+                    'starts_on' => ['t' => 'date', 'label' => 'Show from (optional)'], 'ends_on' => ['t' => 'date', 'label' => 'Show until (optional)'], 'status' => $status],
+                'list' => ['position', 'type', 'title', 'starts_on', 'ends_on', 'status'], 'search' => ['title', 'type'], 'order' => ['position', 'asc'], 'delete' => true],
+            'apptheme' => ['table' => 'app_home_theme', 'title' => 'App header colour', 'plural' => 'App header colour', 'module' => 'Marketing',
+                'help' => 'The colour of the top section of the customer app home page. The newest switched-on row inside its dates is used. Same start and end colour = a flat colour. If none is on, the app uses the Freshful red.',
+                'fields' => ['title' => ['t' => 'text', 'label' => 'Name (for you)', 'req' => 1, 'max' => 120], 'color_from' => ['t' => 'color', 'label' => 'Start colour', 'req' => 1], 'color_to' => ['t' => 'color', 'label' => 'End colour'],
+                    'text_color' => ['t' => 'select', 'label' => 'Text and icons', 'req' => 1, 'opts' => ['light' => 'Light (use on dark colours)', 'dark' => 'Dark (use on light colours)']],
+                    'starts_on' => ['t' => 'date', 'label' => 'Use from (optional)'], 'ends_on' => ['t' => 'date', 'label' => 'Use until (optional)'], 'status' => $status],
+                'list' => ['title', 'color_from', 'color_to', 'text_color', 'starts_on', 'ends_on', 'status'], 'search' => ['title'], 'order' => ['id', 'desc'], 'delete' => true],
 
             /* ---------------- content */
             'policies' => ['table' => 'policies', 'title' => 'Policy page', 'plural' => 'Policies & pages', 'module' => 'Content',

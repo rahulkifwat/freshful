@@ -33,9 +33,33 @@ class StorefrontSettings
         'hidden_tags' => '',
         'stock_badges' => '1',
         'low_stock_at' => '5',
+        'hero_anim' => 'slide',
+        'hero_auto' => '1',
+        'hero_bg' => '#FFF1EA',
+        'hero_text' => '#1C1C1E',
+        'hero_btn_from' => '#F70202',
+        'hero_btn_to' => '#FF5500',
+        'express_title' => 'Express in 30 minutes',
+        'express_sub' => 'From your nearest store, 7 AM to 9 PM. Or choose a time slot that suits you.',
+        'express_bg' => '#FFFFFF',
+        'express_text' => '#1C1C1E',
+        'express_icon' => '#F70202',
+        'offer_from' => '#F70202',
+        'offer_to' => '#FF5500',
+        'offer_text' => '#FFFFFF',
+        'coupon_scroll' => '1',
+        'coupon_seconds' => '3',
+        'show_ribbons' => '1',
+        'ribbon_w' => '1600',
+        'ribbon_h' => '320',
+        'ribbon_per_row' => '2',
+        'tile_w' => '800',
+        'tile_h' => '500',
+        'tile_max' => '300',
+        'tile_align' => 'left',
     ];
 
-    public const FLAGS = ['show_side', 'show_trust', 'show_categories', 'show_buy_again', 'show_coupons', 'stock_badges'];
+    public const FLAGS = ['show_side', 'show_trust', 'show_categories', 'show_buy_again', 'show_coupons', 'stock_badges', 'hero_auto', 'coupon_scroll', 'show_ribbons'];
 
     public const PRESETS = [
         'Peach' => ['#FFF1E6', '#FDE6EF'],

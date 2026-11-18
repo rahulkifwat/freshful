@@ -199,7 +199,7 @@ class HomeV2Data
     /**
      * Stock signal per product for one store, keyed by products.id.
      * inventory.product_id holds the product CODE (products.product_id).
-     * A product with no inventory row for the store gets no signal (it is not shown as out of stock).
+     * A product with no inventory row for the store is OUT of stock (same as the app and checkout).
      */
     public function stockMap(Collection $products, int $hubId): array
     {
@@ -228,21 +228,29 @@ class HomeV2Data
         $cutWords = (array) config('storefront.cut_words', []);
         $map = [];
 
+        // ffstock-v1 (8 Nov 2026): same rule as the app and checkout. A product with NO stock record at this store is OUT of stock,
+        // and the number is the same net figure StockGuard gives the app (live stock minus packs held for open orders).
+        $netMap = $rows->pluck('live_stock', 'product_id');
+        try {
+            $netMap = \App\Services\Stock\StockGuard::net($hubId, $rows->pluck('live_stock', 'product_id'));
+        } catch (Throwable $e) {
+            Log::warning('[storefront] StockGuard::net failed: '.$e->getMessage());
+        }
+        $netMap = $netMap instanceof Collection ? $netMap->all() : (array) $netMap;
+
         foreach ($products as $p) {
             $row = $rows->get($p->product_id);
-            if (! $row) {
-                continue;
-            }
-            $live = (int) $row->live_stock;
-            $fresh = (int) $row->fresh_stock;
+            $liveF = $row ? (float) ($netMap[(string) $p->product_id] ?? $netMap[$p->product_id] ?? $row->live_stock) : 0.0;
+            $live = $liveF > 0 ? (int) ceil($liveF) : 0;
+            $fresh = $row ? (int) $row->fresh_stock : 0;
             $catName = Str::lower((string) (optional($p->category)->name ?? ''));
             $isCut = $catName !== '' && Str::contains($catName.' '.Str::lower((string) $p->product_name), $cutWords);
 
             $map[$p->id] = [
-                'out' => $live <= 0,
+                'out' => $liveF <= 0,
                 'left' => $live,
-                'low' => $live > 0 && $live <= $lowAt,
-                'fresh' => $live > 0 && $fresh > 0,
+                'low' => $liveF > 0 && $live <= $lowAt,
+                'fresh' => $liveF > 0 && $fresh > 0,
                 'freshLabel' => $isCut ? 'Cut today' : 'Fresh today',
             ];
         }

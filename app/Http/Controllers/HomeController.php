@@ -442,10 +442,23 @@ class HomeController extends Controller
             return response()->json(['result' => false, 'message' => 'Order not found']);
         }
 
-        DB::table('orders')
-            ->where('order_id', $order_id)
-            ->where('buyer_id', $user_id)
-            ->update(['order_status' => 'Order Cancel']);
+        // Same rule as the app: only before the store accepts the order; paid orders are refunded to the wallet.
+        $rows = DB::table('orders')->where('order_id', $order_id)->where('buyer_id', $user_id)->get();
+        $first = $rows->first();
+        $stockTaken = DB::table('hub_stock_moves')->where('type', 'sale')->where('ref', $order_id)->exists();
+        $decision = \App\Services\BuyerApp\Shop\OrderStage::cancelDecision($first->order_status, $first->payment_type, $stockTaken, $first->payment_status);
+        if (! $decision['ok']) {
+            return response()->json(['result' => false, 'message' => $decision['message']]);
+        }
+        DB::transaction(function () use ($order_id, $user_id, $first, $decision, $reason) {
+            DB::table('orders')
+                ->where('order_id', $order_id)
+                ->where('buyer_id', $user_id)
+                ->update(['order_status' => 'Order Cancel', 'reason_for_order_cancel' => substr((string) $reason, 0, 255), 'updated_at' => date('Y-m-d H:i:s')]);
+            if ($decision['refund']) {
+                \App\Services\BuyerApp\Payments\CancelRefund::toWallet($order_id, $user_id, $first, 'Cancelled on the website');
+            }
+        });
 
         return response()->json(['result' => true, 'message' => 'Order cancelled successfully']);
     }
@@ -946,6 +959,10 @@ class HomeController extends Controller
         $paymentType = (string) $request->payment_type;
         if (!in_array($paymentType, ['Cash', 'Online', 'Wallet'], true)) {
             return response()->json(['result' => false, 'message' => 'Please choose a payment method']);
+        }
+        // Payment guard (15 Nov 2026): only Cash until payment is verified on the server.
+        if (class_exists(\App\Services\Orders\PaymentGuard::class) && ($pgMsg = \App\Services\Orders\PaymentGuard::refusal($paymentType))) {
+            return response()->json(['result' => false, 'message' => $pgMsg]);
         }
 
         $cart_items = DB::table('cart')

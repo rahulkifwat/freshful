@@ -7,6 +7,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\DriverWalletService;
+use App\Services\Driver\RiderLink;
 
 class OrderController extends DriverController
 {
@@ -15,7 +17,7 @@ class OrderController extends DriverController
     /** /api/driver/orders/driver-orders — rider's orders grouped into today / weekly / monthly */
     public function index(Request $request): JsonResponse
     {
-        $orders = DB::table('orders')->where('rider_id', $this->driverId($request))->orderByDesc('date_added')->get();
+        $orders = DB::table('orders')->where('rider_id', RiderLink::boyId((int) $this->driverId($request)))->orderByDesc('date_added')->get();
 
         $now = Carbon::now(self::TZ);
         $today = $now->toDateString();
@@ -102,7 +104,7 @@ class OrderController extends DriverController
         }
 
         $orders = $this->rows($this->ordersWithDetails()
-            ->where('o.rider_id', $this->driverId($request))
+            ->where('o.rider_id', RiderLink::boyId((int) $this->driverId($request)))
             ->where('o.order_status', $status)
             ->orderByDesc('o.date_added')
             ->get());
@@ -131,7 +133,7 @@ class OrderController extends DriverController
         $rows = $this->ordersWithDetails()
             ->leftJoin('products as p', 'p.id', '=', 'o.product_id')
             ->addSelect('p.product_name', 'p.product_image', 'p.product_unit')
-            ->where('o.rider_id', $this->driverId($request))
+            ->where('o.rider_id', RiderLink::boyId((int) $this->driverId($request)))
             ->whereIn('o.order_status', $statuses)
             ->orderBy('o.date_added')
             ->orderBy('o.id')
@@ -196,59 +198,119 @@ class OrderController extends DriverController
      * Allowed from any open status (the app delivers straight from "Order Placed").
      * payment_status is not changed: nothing in the system updates it today.
      */
+    // public function deliver(Request $request): JsonResponse
+    // {
+    //     $orderId = trim((string) $this->requireFilled($request, 'order_id'));
+    //     $driverId = (int) $this->driverId($request);
+    //     $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
+
+    //     $result = DB::transaction(function () use ($orderId, $driverId, $deliverable) {
+    //         $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
+    //             ->get(['order_status', 'rider_id', 'total_amount', 'amount_to_collect', 'payment_type']);
+
+    //         if ($rows->isEmpty()) {
+    //             throw new ApiException('Order not found');
+    //         }
+    //         if ($rows->contains(fn ($r) => (int) $r->rider_id !== $driverId)) {
+    //             throw new ApiException('This order is not assigned to you');
+    //         }
+
+    //         $statuses = $rows->pluck('order_status')->unique();
+    //         if ($statuses->every(fn ($s) => $s === 'Order Delivered')) {
+    //             throw new ApiException('Order is already delivered');
+    //         }
+    //         if ($statuses->contains('Order Cancel')) {
+    //             throw new ApiException('This order was cancelled');
+    //         }
+    //         if ($statuses->diff($deliverable)->isNotEmpty()) {
+    //             throw new ApiException('Order cannot be delivered in status "'.$statuses->implode(', ').'"');
+    //         }
+
+    //         $now = $this->now();
+    //         // Status is part of the WHERE, so a double tap can't deliver twice.
+    //         $updated = DB::table('orders')
+    //             ->where('order_id', $orderId)
+    //             ->where('rider_id', $driverId)
+    //             ->whereIn('order_status', $deliverable)
+    //             ->update(['order_status' => 'Order Delivered', 'delivery_complete_time' => $now, 'updated_at' => $now]);
+
+    //         if ($updated !== $rows->count()) {
+    //             throw new ApiException('Order was just changed. Please refresh and try again.');
+    //         }
+
+    //         return ['first' => $rows->first(), 'delivered_at' => $now];
+    //     });
+
+    //     return $this->respond([
+    //         'result'            => true,
+    //         'message'           => 'Order delivered successfully',
+    //         'order_id'          => $orderId,
+    //         'order_status'      => 'Order Delivered',
+    //         'delivered_at'      => $result['delivered_at'],
+    //         'payment_type'      => $result['first']->payment_type,
+    //         'amount_to_collect' => $result['first']->amount_to_collect,
+    //     ]);
+    // }
+    
     public function deliver(Request $request): JsonResponse
-    {
-        $orderId = trim((string) $this->requireFilled($request, 'order_id'));
-        $driverId = (int) $this->driverId($request);
-        $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
+{
+    $orderId = trim((string) $this->requireFilled($request, 'order_id'));
+    $driverId = (int) $this->driverId($request);
+    $deliverable = ['Order Placed', 'Order Processed', 'Order Dispatched', 'Order Shipped'];
 
-        $result = DB::transaction(function () use ($orderId, $driverId, $deliverable) {
-            $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
-                ->get(['order_status', 'rider_id', 'total_amount', 'amount_to_collect', 'payment_type']);
+    $boyId = RiderLink::boyId((int) $driverId);
+    $result = DB::transaction(function () use ($orderId, $driverId, $deliverable, $boyId) {
+        $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()
+            ->get(['order_status', 'rider_id', 'total_amount', 'amount_to_collect', 'payment_type']);
 
-            if ($rows->isEmpty()) {
-                throw new ApiException('Order not found');
-            }
-            if ($rows->contains(fn ($r) => (int) $r->rider_id !== $driverId)) {
-                throw new ApiException('This order is not assigned to you');
-            }
+        if ($rows->isEmpty()) {
+            throw new ApiException('Order not found');
+        }
+        if ($rows->contains(fn ($r) => (int) $r->rider_id !== $boyId)) {
+            throw new ApiException('This order is not assigned to you');
+        }
 
-            $statuses = $rows->pluck('order_status')->unique();
-            if ($statuses->every(fn ($s) => $s === 'Order Delivered')) {
-                throw new ApiException('Order is already delivered');
-            }
-            if ($statuses->contains('Order Cancel')) {
-                throw new ApiException('This order was cancelled');
-            }
-            if ($statuses->diff($deliverable)->isNotEmpty()) {
-                throw new ApiException('Order cannot be delivered in status "'.$statuses->implode(', ').'"');
-            }
+        $statuses = $rows->pluck('order_status')->unique();
+        if ($statuses->every(fn ($s) => $s === 'Order Delivered')) {
+            throw new ApiException('Order is already delivered');
+        }
+        if ($statuses->contains('Order Cancel')) {
+            throw new ApiException('This order was cancelled');
+        }
+        if ($statuses->diff($deliverable)->isNotEmpty()) {
+            throw new ApiException('Order cannot be delivered in status "'.$statuses->implode(', ').'"');
+        }
 
-            $now = $this->now();
-            // Status is part of the WHERE, so a double tap can't deliver twice.
-            $updated = DB::table('orders')
-                ->where('order_id', $orderId)
-                ->where('rider_id', $driverId)
-                ->whereIn('order_status', $deliverable)
-                ->update(['order_status' => 'Order Delivered', 'delivery_complete_time' => $now, 'updated_at' => $now]);
+        $now = $this->now();
+        // Status WHERE me hai, isliye double tap se do baar deliver nahi hoga.
+        $updated = DB::table('orders')
+            ->where('order_id', $orderId)
+            ->where('rider_id', $boyId)
+            ->whereIn('order_status', $deliverable)
+            ->update(['order_status' => 'Order Delivered', 'delivery_complete_time' => $now, 'updated_at' => $now]);
 
-            if ($updated !== $rows->count()) {
-                throw new ApiException('Order was just changed. Please refresh and try again.');
-            }
+        if ($updated !== $rows->count()) {
+            throw new ApiException('Order was just changed. Please refresh and try again.');
+        }
 
-            return ['first' => $rows->first(), 'delivered_at' => $now];
-        });
+        // Monthly bonus (100 se upar har order par 10 INR)
+        $bonus = app(DriverWalletService::class)
+            ->creditMonthlyBonusIfEligible($driverId, $orderId, $now);
 
-        return $this->respond([
-            'result'            => true,
-            'message'           => 'Order delivered successfully',
-            'order_id'          => $orderId,
-            'order_status'      => 'Order Delivered',
-            'delivered_at'      => $result['delivered_at'],
-            'payment_type'      => $result['first']->payment_type,
-            'amount_to_collect' => $result['first']->amount_to_collect,
-        ]);
-    }
+        return ['first' => $rows->first(), 'delivered_at' => $now, 'bonus' => $bonus];
+    });
+
+    return $this->respond([
+        'result'            => true,
+        'message'           => 'Order delivered successfully',
+        'order_id'          => $orderId,
+        'order_status'      => 'Order Delivered',
+        'delivered_at'      => $result['delivered_at'],
+        'payment_type'      => $result['first']->payment_type,
+        'amount_to_collect' => $result['first']->amount_to_collect,
+        'bonus_credited'    => $result['bonus'] ?? 0,
+    ]);
+}
 
     private function ordersWithDetails()
     {
@@ -263,5 +325,55 @@ class OrderController extends DriverController
                 'ba.landmark', 'ba.city', 'ba.user_lat', 'ba.user_lng',
                 'h.hub as hub_name', 'h.hub_lat', 'h.hub_lng'
             );
+    }
+
+    /**
+     * POST /api/driver/orders/accept: order_id
+     * The rider the order is assigned to confirms it; the POS then shows it as seen and accepted.
+     * A rider cannot take an order that belongs to somebody else or to nobody. (orderlink-v1)
+     */
+    public function accept(Request $request): JsonResponse
+    {
+        $orderId = trim((string) $request->input('order_id', $request->input('orderId', '')));
+        if ($orderId === '') {
+            throw new ApiException('order_id is required');
+        }
+
+        $driverId = (int) $this->driverId($request);
+        $boyId = RiderLink::boyId($driverId);
+
+        $rows = DB::table('orders')->where('order_id', $orderId)->get(['order_status', 'rider_id', 'hub_id']);
+        if ($rows->isEmpty()) {
+            throw new ApiException('Order not found');
+        }
+        if ($boyId < 1 || $rows->contains(fn ($r) => (int) $r->rider_id !== $boyId)) {
+            throw new ApiException('This order is not assigned to you');
+        }
+        if (in_array((string) $rows->first()->order_status, ['Order Cancel', 'Order Delivered'], true)) {
+            throw new ApiException('This order is already closed');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        try {
+            $mine = DB::table('pos_rider_assign')->where('order_id', $orderId)->where('rider_id', $boyId);
+            if ((clone $mine)->exists()) {
+                (clone $mine)->whereNull('seen_at')->update(['seen_at' => $now]);
+                (clone $mine)->whereNull('accepted_at')->update(['accepted_at' => $now]);
+            } else {
+                DB::table('pos_rider_assign')->insert([
+                    'order_id' => $orderId, 'rider_id' => $boyId, 'hub_id' => (int) $rows->first()->hub_id,
+                    'assigned_at' => $now, 'seen_at' => $now, 'accepted_at' => $now,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[orderlink] accept could not be recorded for the POS', ['order' => $orderId, 'error' => $e->getMessage()]);
+        }
+
+        return $this->respond([
+            'result'   => true,
+            'message'  => 'Order accepted',
+            'order_id' => $orderId,
+            'rider_id' => $driverId,
+        ]);
     }
 }

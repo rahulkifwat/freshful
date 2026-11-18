@@ -150,9 +150,6 @@
             <li class="nav-item {{ request()->routeIs('production.delivery_boy') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('production.delivery_boy') }}"><i class="fa fa-motorcycle"></i> <span class="menu-title">Delivery Boy</span></a>
             </li>
-            <li class="nav-item {{ request()->routeIs('production.hub_kml_list') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('production.hub_kml_list') }}"><i class="fa fa-map-marker"></i> <span class="menu-title">Hub KML List</span></a>
-            </li>
             <li class="nav-item {{ request()->routeIs('production.setting') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('production.setting') }}"><i class="fa fa-cog"></i> <span class="menu-title">Setting</span></a>
             </li>

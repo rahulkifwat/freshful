@@ -41,7 +41,7 @@ final class OrderStage
         'other'     => 'In progress',
     ];
 
-    /** Payment types that may already be paid: cancelling needs a refund, which comes with the payments slice. */
+    /** Payment types that can be paid in advance: cancelling a PAID one gives the money back to the Freshful wallet. */
     private const NEEDS_REFUND = ['online', 'card', 'wallet'];
 
     public const CANCEL_REASONS = [
@@ -129,7 +129,7 @@ final class OrderStage
      *
      * @return array{ok: bool, code: string, message: string}
      */
-    public static function cancelDecision(?string $status, ?string $paymentType, bool $stockTaken): array
+    public static function cancelDecision(?string $status, ?string $paymentType, bool $stockTaken, ?string $paymentStatus = null): array
     {
         $stage = self::stage($status);
 
@@ -148,15 +148,28 @@ final class OrderStage
         if ($stage !== 'new') {
             return self::no('not_cancellable', 'This order cannot be cancelled here. Please contact support.');
         }
-        if (in_array(strtolower(trim((string) $paymentType)), self::NEEDS_REFUND, true)) {
-            return self::no('refund_pending', 'Orders paid by wallet, card or online cannot be cancelled in the app yet. Please contact support.');
+
+        // Money: an order that was paid in advance is refunded to the Freshful wallet in the same step as the cancel.
+        // An unpaid one (wallet or online order that was never paid, card on delivery) has nothing to refund.
+        // When we do not know the payment status, or a "paid" order is not one we can refund, a person must handle it.
+        $type = strtolower(trim((string) $paymentType));
+        $paid = strtolower(trim((string) $paymentStatus)) === 'paid';
+        if (in_array($type, self::NEEDS_REFUND, true)) {
+            if ($paymentStatus === null) {
+                return self::no('refund_pending', 'This order was paid in advance and cannot be cancelled here. Please contact support.');
+            }
+
+            return ['ok' => true, 'code' => '', 'message' => '', 'refund' => $paid];
+        }
+        if ($paid) {
+            return self::no('refund_pending', 'This order was paid in advance and cannot be cancelled here. Please contact support.');
         }
 
-        return ['ok' => true, 'code' => '', 'message' => ''];
+        return ['ok' => true, 'code' => '', 'message' => '', 'refund' => false];
     }
 
     private static function no(string $code, string $message): array
     {
-        return ['ok' => false, 'code' => $code, 'message' => $message];
+        return ['ok' => false, 'code' => $code, 'message' => $message, 'refund' => false];
     }
 }

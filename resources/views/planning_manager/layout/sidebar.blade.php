@@ -151,9 +151,6 @@
             <li class="nav-item {{ request()->routeIs('planning_manager.delivery_boy') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('planning_manager.delivery_boy') }}"><i class="fa fa-motorcycle"></i> <span class="menu-title">Delivery Boy</span></a>
             </li>
-            <li class="nav-item {{ request()->routeIs('planning_manager.hub_kml_list') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('planning_manager.hub_kml_list') }}"><i class="fa fa-map-marker"></i> <span class="menu-title">Hub KML List</span></a>
-            </li>
             <li class="nav-item {{ request()->routeIs('planning_manager.sku_report') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('planning_manager.sku_report') }}"><i class="fa fa-bar-chart"></i> <span class="menu-title">SKU Report</span></a>
             </li>

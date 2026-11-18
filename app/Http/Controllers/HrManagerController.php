@@ -378,6 +378,13 @@ class HrManagerController extends Controller
 
     public function addWalletMoneySubmit(Request $request)
     {
+        // Wallet guard (15 Nov 2026): one controlled path for manager top-ups (role, limits, reason, who added it, ledger row).
+        if (class_exists(\App\Services\Wallet\ManagerWallet::class)) {
+            $mw = \App\Services\Wallet\ManagerWallet::topup('hr', optional($this->user())->id, $request->all());
+            return $mw['ok']
+                ? back()->with('success', $mw['message'])
+                : back()->withInput()->with('error', $mw['message'])->withErrors(['wallet' => $mw['message']]);
+        }
         $request->validate([
             'buyer_id' => 'required|integer',
             'amount'   => 'required|numeric|min:1',

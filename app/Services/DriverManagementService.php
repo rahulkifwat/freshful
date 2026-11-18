@@ -269,7 +269,17 @@ class DriverManagementService
             throw new ApiException('order_id and driver are required');
         }
 
-        return DB::transaction(function () use ($orderId, $regid, $expectedRiderId) {
+                // orderlink-v4: orders.rider_id holds the delivery_boy id (what the rider app, POS and hubs use), not the driver id
+        $boyId = \App\Services\Driver\RiderLink::boyId($regid);
+        if ($boyId < 1) {
+            throw new ApiException('This driver has no rider record yet (no hub), so an order given to them would never reach the rider app. Open the driver and set a hub first.');
+        }
+        $boyStatus = strtolower(trim((string) DB::table('delivery_boy')->where('id', $boyId)->value('status')));
+        if (! in_array($boyStatus, ['active', '1'], true)) {
+            throw new ApiException('This rider is switched off, so they cannot be given orders. Switch the rider on first.');
+        }
+
+        return DB::transaction(function () use ($orderId, $regid, $expectedRiderId, $boyId) {
             // Row locks on MySQL; the compare-and-set below also covers engines without them.
             $rows = DB::table('orders')->where('order_id', $orderId)->lockForUpdate()->get(['id', 'order_status', 'rider_id']);
             if ($rows->isEmpty()) {
@@ -283,7 +293,7 @@ class DriverManagementService
             }
 
             $current = (int) $rows->max('rider_id');
-            if ($current === $regid) {
+            if ($current === $boyId) {
                 throw new ApiException('Order is already assigned to this driver');
             }
             if ($current !== $expectedRiderId) {
@@ -298,7 +308,7 @@ class DriverManagementService
                 ->where(fn ($q) => $expectedRiderId === 0
                     ? $q->whereNull('rider_id')->orWhere('rider_id', 0)
                     : $q->where('rider_id', $expectedRiderId))
-                ->update(['rider_id' => $regid]);
+                ->update(['rider_id' => $boyId]);
 
             if ($updated !== $rows->count()) {
                 throw new ApiException('This order was just changed by someone else. Refresh the list and try again.');
@@ -306,7 +316,7 @@ class DriverManagementService
 
             return [
                 'order_id'          => $orderId,
-                'rider_id'          => $regid,
+                'rider_id'          => $boyId,
                 'previous_rider_id' => $current,
                 'reassigned'        => $current > 0,
             ];

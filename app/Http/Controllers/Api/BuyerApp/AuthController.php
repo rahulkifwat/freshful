@@ -42,6 +42,10 @@ class AuthController extends AppController
             return $this->fail('This account is disabled. Please contact Freshful support.', 'account_disabled');
         }
 
+        if ($this->isReviewerPhone($phone)) {
+            return $this->ok(['is_new_user' => $buyer === null, 'expires_in' => OtpService::TTL_SECONDS, 'resend_after' => OtpService::RESEND_SECONDS], 'OTP sent');
+        }
+
         $result = $otp->issue($phone, 'login', $request->ip());
         if (! $result['ok']) {
             return $this->otpFailure($result);
@@ -61,7 +65,7 @@ class AuthController extends AppController
             return $this->fail('Please enter a valid 10-digit mobile number.', 'invalid_phone');
         }
 
-        $result = $otp->verify($phone, (string) $request->input('otp', ''));
+        $result = $this->isReviewerLogin($phone, (string) $request->input('otp', '')) ? ['ok' => true] : $otp->verify($phone, (string) $request->input('otp', ''));
         if (! $result['ok']) {
             return $this->otpFailure($result);
         }
@@ -104,6 +108,19 @@ class AuthController extends AppController
             'needs_profile' => $this->needsProfile($row),
             'buyer'         => $this->buyerPayload($row),
         ], 'Login successful');
+    }
+
+    /** Google Play review account: one test number with a fixed code, set in .env (REVIEWER_PHONE, REVIEWER_OTP). Off when empty. */
+    private function isReviewerPhone(string $phone): bool
+    {
+        $p = preg_replace('/\D+/', '', (string) config('services.reviewer.phone', ''));
+
+        return $p !== '' && (string) config('services.reviewer.otp', '') !== '' && hash_equals($p, $phone);
+    }
+
+    private function isReviewerLogin(string $phone, string $code): bool
+    {
+        return $this->isReviewerPhone($phone) && hash_equals((string) config('services.reviewer.otp'), trim($code));
     }
 
     public function passwordLogin(Request $request): JsonResponse

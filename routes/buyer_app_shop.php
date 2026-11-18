@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Route;
 | Banners, catalog, cart, address and orders stay on the existing /api/* routes.
 */
 
-Route::middleware('throttle:60,1')->group(function () {
+// Each limit has its own name (third value): without it Laravel counts all of them together per visitor.
+Route::middleware('throttle:60,1,appcontent')->group(function () {
     Route::get('content/pages', [ContentController::class, 'pages']);
     Route::get('content/pages/{type}', [ContentController::class, 'page'])->where('type', '[a-z_-]{2,30}');
     Route::get('content/cancel-reasons', [ContentController::class, 'cancelReasons']);
@@ -29,10 +30,10 @@ Route::middleware('buyer.api')->group(function () {
         ->where('orderId', '[A-Za-z0-9_-]{3,40}');
     Route::post('orders/{orderId}/cancel', [OrderTrackingController::class, 'cancel'])
         ->where('orderId', '[A-Za-z0-9_-]{3,40}')
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:10,1,appcancel');
 
     Route::post('device-token', [DeviceController::class, 'store']);
     Route::post('device-token/clear', [DeviceController::class, 'clear']);
 
-    Route::post('contact', [ContentController::class, 'contact'])->middleware('throttle:5,60');
+    Route::post('contact', [ContentController::class, 'contact'])->middleware('throttle:5,60,appcontact');
 });

@@ -56,4 +56,6 @@ return [
     'google_maps' => [
         'key' => env('GOOGLE_MAPS_API_KEY'),
     ],
+    'reviewer' => ['phone' => env('REVIEWER_PHONE'), 'otp' => env('REVIEWER_OTP')],
+
 ];

@@ -70,7 +70,7 @@
       'Delivery boy' => array_merge($nav['Delivery boy'], [['ad-riders-live', 'Live locations', 'map']]),
       'Staff & roles' => [['ad-staff', 'Staff users', 'users'], ['ad-roles', 'Roles & permissions', 'shield']],
       'Locations' => [['ad-hubs', 'Hubs & delivery areas', 'map'], ['ad-cities', 'Cities', 'map'], ['ad-delivery', 'Delivery charges', 'truck']],
-      'Marketing' => [['ad-banners', 'Website banners', 'image'], ['ad-homesettings', 'Home page settings', 'store'], ['ad-digitalmenu', 'Digital Menu', 'image'], ['ad-appbanners', 'App banners', 'image'], ['ad-slider', 'Side slider', 'image'], ['ad-offers', 'Home offers', 'tag'], ['ad-promos', 'Promo codes', 'tag'], ['ad-coupons', 'Coupons & deals', 'tag'], ['ad-certs', 'Certificates', 'shield'], ['ad-push', 'Push notifications', 'bell']],
+      'Marketing' => [['ad-banners', 'Website banners', 'image'], ['ad-homesettings', 'Home page settings', 'store'], ['ad-digitalmenu', 'Digital Menu', 'image'], ['ad-appbanners', 'App banners', 'image'], ['ad-appcontrol', 'App control (drag, colours, card)', 'store'], ['ad-homepics', 'Home pictures and tiles', 'image'], ['ad-apphome', 'App home blocks', 'image'], ['ad-apptheme', 'App header colour', 'tag'], ['ad-slider', 'Side slider', 'image'], ['ad-offers', 'Home offers', 'tag'], ['ad-promos', 'Promo codes', 'tag'], ['ad-coupons', 'Coupons & deals', 'tag'], ['ad-certs', 'Certificates', 'shield'], ['ad-push', 'Push notifications', 'bell']],
       'Enquiries' => [['ad-contact', 'Contact us', 'mail'], ['ad-franchise', 'Franchise enquiries', 'store'], ['ad-newsletter', 'Newsletter', 'mail']],
       'Content' => [['ad-policies', 'Policies & pages', 'file'], ['ad-grievcat', 'Grievance categories', 'alert']],
       'Reports' => [['targets', 'Targets', 'target'], ['ad-audit', 'Change log (who changed what)', 'history']],
@@ -85,6 +85,13 @@
       $drAt = array_search('Delivery boy', array_keys($nav), true);
       $nav = $drAt === false ? $nav + $drNav : array_slice($nav, 0, $drAt + 1, true) + $drNav + array_slice($nav, $drAt + 1, null, true);
       $navColor['Driver management'] = '#0F766E';
+    }
+    /* Control Centre update 1 (15 Nov 2026): alert centre, data health, metric definitions. Drawn by cx.js. */
+    if (file_exists(resource_path('views/country_console/assets/cx.js'))) {
+      $ccNav = ['Control centre' => [['cc-alerts', 'Alert centre', 'alert'], ['cc-ask', 'AI analyst', 'chart'], ['cc-health', 'Data health', 'shield'], ['cc-metrics', 'Metric definitions', 'filechart']]];
+      $ccAt = array_search('Head office', array_keys($nav), true);
+      $nav = $ccAt === false ? $ccNav + $nav : array_slice($nav, 0, $ccAt + 1, true) + $ccNav + array_slice($nav, $ccAt + 1, null, true);
+      $navColor['Control centre'] = '#B91C1C';
     }
   }
   $role = (string) ($actor['role'] ?? 'country'); $prefix = (string) ($actor['prefix'] ?? 'country_manager'); $names = (string) ($actor['names'] ?? 'ccc.');
@@ -228,6 +235,9 @@ window.CCC = {!! json_encode([
 @endif
 @if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/ad2.js')))
 <script>{!! file_get_contents(resource_path('views/country_console/assets/ad2.js')) !!}</script>
+@endif
+@if ($role === 'admin' && file_exists(resource_path('views/country_console/assets/cx.js')))
+{{-- control centre update 1 --}}<script>{!! file_get_contents(resource_path('views/country_console/assets/cx.js')) !!}</script>
 @endif
 @if ($role === 'production' && $prc && file_exists(resource_path('views/country_console/assets/pr.js')))
 {{-- production update 1 --}}<script>window.PRC = {!! json_encode($prc, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};</script>

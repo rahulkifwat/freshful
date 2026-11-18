@@ -158,7 +158,15 @@ class AdminAjaxController extends Controller
             'id'           => 'required|integer',
             'order_id'     => 'nullable|string',
             'order_status' => 'required|in:Order Pending,Order Cancel,Order Placed,Order Processed,Order Shipped,Order Delivered',
+            'reason'       => 'nullable|string|max:255',
         ]);
+
+        // Step 4 guard: who may move this order, one step at a time, and reason for cancel/reopen.
+        $panel = $this->panel($request);
+        $guard = \App\Services\OrderStatusGuard::check($panel, $data);
+        if (! $guard['ok']) {
+            return response()->json(['result' => false, 'message' => $guard['message'], 'code' => $guard['code']]);
+        }
 
         // Update every row sharing this order_id (orders table has one row per
         // line item). Fall back to id-only update when order_id wasn't sent.
@@ -169,13 +177,21 @@ class AdminAjaxController extends Controller
             $query->where('id', $data['id']);
         }
 
-        $updated = $query->update(['order_status' => $data['order_status']]);
+        // Status change and wallet refund (paid cancel) happen together or not at all.
+        $settled = null;
+        $updated = DB::transaction(function () use ($query, $data, $guard, $panel, &$settled) {
+            $n = $query->update(['order_status' => $data['order_status']]);
+            if ($n && $guard['refund'] && $guard['first']) {
+                $settled = \App\Services\OrderStatusGuard::settleCancel($guard['first'], 'Cancelled by ' . $panel);
+            }
+            return $n;
+        });
         if ($updated && $data['order_status'] === 'Order Delivered') {
             $deliveredOrderId = !empty($data['order_id']) ? $data['order_id'] : DB::table('orders')->where('id', $data['id'])->value('order_id');
             if ($deliveredOrderId) { try { app(\App\Services\BuyerReferralService::class)->awardForDeliveredOrder((string) $deliveredOrderId); } catch (\Throwable $e) { report($e); } }
         }
 
-        $this->audit('order-status', $this->panel($request), 'orders', ($data['order_id'] ?? null) ?: $data['id'], ['to' => $data['order_status'], 'updated' => $updated]);
+        $this->audit('order-status', $panel, 'orders', ($data['order_id'] ?? null) ?: $data['id'], ['from' => $guard['from'], 'to' => $data['order_status'], 'reason' => $guard['reason'], 'reopened' => $guard['reopen'], 'refunded' => $settled, 'updated' => $updated]);
 
         return response()->json([
             'result'  => (bool) $updated,

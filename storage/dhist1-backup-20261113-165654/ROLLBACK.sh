@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cp -p "/home/u182416408/domains/freshful.in/laravelapp/storage/dhist1-backup-20261113-165654/cc.js" "/home/u182416408/domains/freshful.in/laravelapp/resources/views/country_console/assets/cc.js" && cp -p "/home/u182416408/domains/freshful.in/laravelapp/storage/dhist1-backup-20261113-165654/dr.js" "/home/u182416408/domains/freshful.in/laravelapp/resources/views/country_console/assets/dr.js" && echo "Rolled back. cc.js and dr.js are as they were."

@@ -67,6 +67,8 @@ class AdminDrivers
     private static function boys(array $regids): array
     {
         if (!$regids || !self::has('delivery_boy', 'regid')) return [];
+        // orderlink-v2: same rider record the rider app uses (see RiderLink); the old lookup below stays as the fallback
+        try { return \App\Services\Driver\RiderLink::many($regids); } catch (\Throwable $e) { \Illuminate\Support\Facades\Log::warning('[freshful] RiderLink::many failed, using the old lookup: ' . $e->getMessage()); }
         $out = [];
         $rows = DB::table('delivery_boy')->whereIn('regid', array_map('strval', $regids))->orderBy('id')->get(['id', 'regid', 'name', 'phone', 'employee_id', 'hub_id', 'status']);
         foreach ($rows as $r) $out[(int) $r->regid] = $r;   // later (newer) rows win
@@ -366,6 +368,8 @@ class AdminDrivers
         if (!$x) return ['ok' => false, 'message' => 'Driver not found.'];
         self::actorId($actor);
         $next = self::svc()->toggleAccountStatus($id);   // deactivating also sets the driver off duty (same as before)
+        // orderlink-v3: the linked delivery_boy row follows the account switch, so the POS and hubs stop (or start) giving this rider orders
+        try { if (!empty($x['boy'])) DB::table('delivery_boy')->where('id', (int) $x['boy']->id)->update(['status' => $next === 'active' ? 'active' : 'disabled']); } catch (\Throwable $e) { \Illuminate\Support\Facades\Log::warning('[freshful] could not sync the delivery boy status: ' . $e->getMessage()); }
         AdminAudit::log($actor, 'toggle', 'Drivers', 'driver_registration', $id, ($next === 'active' ? 'Activated' : 'Deactivated') . ' driver #' . $id, ['status' => $x['driver']->status], ['status' => $next]);
         return ['ok' => true, 'status' => $next, 'message' => $next === 'active' ? 'Driver activated.' : 'Driver deactivated and set off duty. No new orders can be given to this driver.'];
     }

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cp -p "/home/u182416408/domains/freshful.in/laravelapp/storage/rbtn1-backup-20261113-163636/cc.js" "/home/u182416408/domains/freshful.in/laravelapp/resources/views/country_console/assets/cc.js" && cp -p "/home/u182416408/domains/freshful.in/laravelapp/storage/rbtn1-backup-20261113-163636/cc.css" "/home/u182416408/domains/freshful.in/laravelapp/resources/views/country_console/assets/cc.css" && echo "Rolled back. cc.js and cc.css are as they were."

@@ -204,6 +204,7 @@
     $ffhMoney = fn ($v) => \App\Services\Storefront\HomeV2Data::money($v);
     $ffhCutWords = (array) config('storefront.cut_words', []);
 @endphp
+@include('home_v2.extras')
 <main class="ffh">
     <div class="ffh-wrap">
 
@@ -258,8 +259,8 @@
                 <div class="ffh-tile ffh-tile-white">
                     <span class="ffh-tile-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></span>
                     <div>
-                        <h3>Express in 30 minutes</h3>
-                        <p>From your nearest store, 7 AM to 9 PM. Or choose a time slot that suits you.</p>
+                        <h3>{{ app(\App\Services\Storefront\StorefrontSettings::class)->get('express_title', 'Express in 30 minutes') }}</h3>
+                        <p>{{ app(\App\Services\Storefront\StorefrontSettings::class)->get('express_sub', 'From your nearest store, 7 AM to 9 PM. Or choose a time slot that suits you.') }}</p>
                     </div>
                 </div>
                 @if ($firstOrderOffer)
@@ -315,7 +316,7 @@
                             $cHidden = $ffhFirstGroup !== null ? ! in_array($ffhFirstGroup, $cg, true) : $loop->index >= 16;
                         @endphp
                         <a class="ffh-cat" href="{{ url('/view_product/'.$category->id) }}" data-ffh-groups="{{ implode(',', $cg) }}" @if ($cHidden) hidden @endif>
-                            <img src="{{ $categoryHd[(int) $category->id] ?? asset('uploads/images/'.$category->circle_image) }}" alt="{{ $category->name }}" width="160" height="160" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">
+                            <span class="ffh-cat-pic"><img src="{{ $categoryHd[(int) $category->id] ?? asset('uploads/images/'.$category->circle_image) }}" alt="{{ $category->name }}" width="160" height="160" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'"></span>
                             <span>{{ $category->name }}</span>
                         </a>
                     @endforeach
@@ -403,6 +404,7 @@
                     @endforeach
                 </div>
             </section>
+            @include('home_v2.ribbons', ['ffAfter' => $section['name'], 'ffIndex' => $sectionIndex])
             @if ($sectionIndex === 1 && $ui['coupons'])
                 @include('home_v2.coupons')
                 @php $sfCouponsShown = true; @endphp

@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Services\BuyerApp\Orders;
+
+use App\Services\BuyerApp\Shop\OrderStage;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Orders as a customer sees them. The orders table has one row per product line; every row of an order repeats the order
+ * figures (total_amount = items after the coupon, before delivery; delivery_charge). So an order's total is
+ * total_amount + delivery_charge read from its first row, never a sum over the lines.
+ * Line prices are NOT shown: the table does not store them, and today's price could differ from what was charged.
+ */
+final class OrderHistory
+{
+    public const PER_PAGE = 15;
+    private const MAX_ROWS = 900;   // newest rows read per customer; far more than 15 pages of orders
+
+    /** @return array{orders: array, page: int, per_page: int, has_more: bool} */
+    public static function listFor(int $buyerId, int $page): array
+    {
+        $page = max(1, $page);
+        $ids = [];
+        foreach (DB::table('orders')->where('buyer_id', $buyerId)->orderByDesc('id')->get(['order_id', 'id']) as $r) {
+            $o = (string) $r->order_id;
+            if ($o !== '' && ! in_array($o, $ids, true)) {
+                $ids[] = $o;
+                if (count($ids) > $page * self::PER_PAGE) {
+                    break;   // one more than needed tells us there is a next page
+                }
+            }
+        }
+        $hasMore = count($ids) > $page * self::PER_PAGE;
+        $slice = array_slice($ids, ($page - 1) * self::PER_PAGE, self::PER_PAGE);
+
+        $out = [];
+        foreach ($slice as $oid) {
+            $rows = self::rows($buyerId, $oid);
+            if ($rows) {
+                $out[] = self::summary($rows);
+            }
+        }
+
+        return ['orders' => $out, 'page' => $page, 'per_page' => self::PER_PAGE, 'has_more' => $hasMore];
+    }
+
+    /** All rows of one order of this customer, with the product names, or [] when it is not theirs. */
+    public static function rows(int $buyerId, string $orderId): array
+    {
+        $q = DB::table('orders as o')->leftJoin('products as p', 'p.id', '=', 'o.product_id')->leftJoin('items as i', 'i.id', '=', 'p.item_id')
+            ->where('o.order_id', $orderId)->where('o.buyer_id', $buyerId)->orderBy('o.id')
+            ->select('o.id', 'o.order_id', 'o.product_id', 'o.quantity', 'o.address_id', 'o.hub_id', 'o.payment_type', 'o.payment_status', 'o.delivery_type', 'o.delivery_charge',
+                'o.schedule_date', 'o.schedule_time', 'o.total_amount', 'o.order_status', 'o.date_added', 'p.product_name', 'p.product_unit', 'p.unit_quantity', 'p.status as p_status',
+                'p.main_price', 'p.MRP', 'i.item as title', 'i.image as item_image', 'p.product_image as product_image');
+
+        return array_map(fn ($r) => (array) $r, $q->get()->all());
+    }
+
+    public static function total(array $first): float
+    {
+        return round((float) $first['total_amount'] + (float) $first['delivery_charge'], 2);
+    }
+
+    /** Picture for an order line: the product's own photo first (like the catalog), then the item's; the placeholder counts as none. */
+    private static function pic(array $r): string
+    {
+        foreach (['product_image', 'item_image'] as $k) {
+            $v = trim((string) ($r[$k] ?? ''));
+            if ($v !== '' && stripos($v, 'noimage') === false) {
+                return $v;
+            }
+        }
+
+        return '';
+    }
+
+    private static function lineName(array $r): string
+    {
+        $n = trim((string) ($r['product_name'] ?? ''));
+
+        return $n !== '' ? $n : trim((string) ($r['title'] ?? 'Item'));
+    }
+
+    public static function summary(array $rows): array
+    {
+        $f = $rows[0];
+        $stage = OrderStage::stage($f['order_status']);
+        $thumbs = [];
+        foreach (array_slice($rows, 0, 4) as $r) {
+            $thumbs[] = ['name' => self::lineName($r), 'image' => self::pic($r)];
+        }
+
+        return [
+            'order_id' => (string) $f['order_id'], 'placed_at' => OrderStage::cleanTime($f['date_added']), 'status' => (string) $f['order_status'],
+            'stage' => $stage, 'stage_label' => OrderStage::LABEL[$stage] ?? OrderStage::LABEL['other'],
+            'items_count' => count($rows), 'thumbs' => $thumbs, 'total' => self::total($f),
+            'payment_type' => (string) $f['payment_type'], 'payment_status' => (string) $f['payment_status'],
+            'delivery_type' => (string) $f['delivery_type'], 'schedule_date' => (string) $f['schedule_date'], 'schedule_time' => (string) $f['schedule_time'],
+        ];
+    }
+
+    public static function detail(int $buyerId, array $rows): array
+    {
+        $f = $rows[0];
+        $lines = [];
+        foreach ($rows as $r) {
+            $lines[] = [
+                'product_id' => (int) $r['product_id'], 'name' => self::lineName($r), 'pack' => trim(($r['unit_quantity'] ?? '') . ' ' . ($r['product_unit'] ?? '')),
+                'image' => self::pic($r), 'quantity' => (int) $r['quantity'],
+            ];
+        }
+        $oid = (string) $f['order_id'];
+
+        $coupon = DB::table('buyer_coupon_relation')->where('order_id', $oid)->where('user_id', (string) $buyerId)->first();
+        $discount = $coupon ? round((float) $coupon->discount, 2) : 0.0;
+        $subtotal = round((float) $f['total_amount'] + $discount, 2);
+        $code = null;
+        if ($coupon) {
+            $code = DB::table('home_promotions')->where('id', (int) $coupon->promo_id)->value('title');
+        }
+
+        $addr = null;
+        if ((int) $f['address_id'] > 0) {
+            $a = DB::table('buyer_address')->where('id', (int) $f['address_id'])->where('buyer_id', $buyerId)->first();
+            if ($a) {
+                $addr = ['type' => (string) $a->type, 'name' => (string) $a->name, 'phone' => (string) $a->phone,
+                    'text' => implode(', ', array_filter([trim((string) $a->street_name), trim((string) $a->locality), trim((string) $a->city)], fn ($x) => $x !== ''))];
+            }
+        }
+        $hub = (int) $f['hub_id'] > 0 ? DB::table('hubs')->where('id', (int) $f['hub_id'])->value('hub') : null;
+
+        return self::summary($rows) + [
+            'lines' => $lines, 'subtotal' => $subtotal, 'discount' => $discount, 'coupon' => $code !== null ? (string) $code : null,
+            'delivery_charge' => round((float) $f['delivery_charge'], 2), 'address' => $addr, 'hub' => $hub !== null ? (string) $hub : null,
+        ];
+    }
+}
