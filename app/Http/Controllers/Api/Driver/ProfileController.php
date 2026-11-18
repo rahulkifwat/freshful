@@ -55,33 +55,33 @@ class ProfileController extends DriverController
     {
         $regid = $this->driverId($request);
 
-        if (! DB::table('driver_registration')->where('id', $regid)->exists()) {
-            throw new ApiException('Driver not found');
-        }
+        // if (! DB::table('driver_registration')->where('id', $regid)->exists()) {
+        //     throw new ApiException('Driver not found');
+        // }
 
-        $fields = ['name', 'father_name', 'dob', 'phone', 'blood_group', 'emergency_name',
-            'emergency_relationship', 'emergency_phone', 'referral_code', 'address', 'language'];
-        $save = [];
-        foreach ($fields as $field) {
-            $save[$field] = (string) $request->input($field, '');
-        }
-        // dob is a nullable DATE; '' is rejected in strict mode.
-        $save['dob'] = $save['dob'] !== '' ? $save['dob'] : null;
+        // $fields = ['name', 'father_name', 'dob', 'phone', 'blood_group', 'emergency_name',
+        //     'emergency_relationship', 'emergency_phone', 'referral_code', 'address', 'language'];
+        // $save = [];
+        // foreach ($fields as $field) {
+        //     $save[$field] = (string) $request->input($field, '');
+        // }
+        // // dob is a nullable DATE; '' is rejected in strict mode.
+        // $save['dob'] = $save['dob'] !== '' ? $save['dob'] : null;
 
-        $photo = $request->file('profile_photo');
-        if ($photo && $photo->isValid()) {
-            $save['profile_photo'] = $this->storeImage($photo, 'profile_photos', Str::random(5).time(), 'profile_photo');
-        }
+        // $photo = $request->file('profile_photo');
+        // if ($photo && $photo->isValid()) {
+        //     $save['profile_photo'] = $this->storeImage($photo, 'profile_photos', Str::random(5).time(), 'profile_photo');
+        // }
 
-        if (DB::table('driver_profile')->where('regid', $regid)->exists()) {
-            DB::table('driver_profile')->where('regid', $regid)->update($save);
-            $message = 'Profile updated successfully';
-        } else {
-            DB::table('driver_profile')->insert($save + ['regid' => $regid, 'profile_photo' => '']);
-            $message = 'Profile created successfully';
-        }
+        // if (DB::table('driver_profile')->where('regid', $regid)->exists()) {
+        //     DB::table('driver_profile')->where('regid', $regid)->update($save);
+        //     $message = 'Profile updated successfully';
+        // } else {
+        //     DB::table('driver_profile')->insert($save + ['regid' => $regid, 'profile_photo' => '']);
+        //     $message = 'Profile created successfully';
+        // }
 
-        return $this->respond(['result' => true, 'message' => $message]);
+        return $this->respond(['result' => true, 'message' => $regid]);
     }
 
     /** GET /api/driver/driver/bank-details */
