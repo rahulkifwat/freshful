@@ -53,7 +53,7 @@ class ProfileController extends DriverController
     /** POST /api/driver/driver/personal-information — was api/driver/driver/personal-information.php (now needs the driver token) */
     public function personalInformation(Request $request): JsonResponse
     {
-        $regid = $this->ownDriverId($request);
+        $regid = $this->driverId($request);
 
         if (! DB::table('driver_registration')->where('id', $regid)->exists()) {
             throw new ApiException('Driver not found');
@@ -97,7 +97,7 @@ class ProfileController extends DriverController
     /** POST /api/driver/driver/bank-details — always the token's driver */
     public function saveBankDetails(Request $request): JsonResponse
     {
-        $regid = $this->ownDriverId($request);
+        $regid = $this->driverId($request);
 
         $save = [];
         foreach (['account_holder_name', 'account_number', 'ifsc_code', 'bank_name', 'branch_name'] as $field) {
@@ -197,7 +197,7 @@ class ProfileController extends DriverController
     /** POST /api/driver/driver/vehical — always the token's driver (legacy took any regid without a token) */
     public function saveVehicle(Request $request): JsonResponse
     {
-        $regid = $this->ownDriverId($request);
+        $regid = $this->driverId($request);
         $save = [
             'vehicle_type'   => (string) $request->input('vehicle_type', ''),
             'vehicle_number' => (string) $request->input('vehicle_number', ''),
@@ -246,7 +246,8 @@ class ProfileController extends DriverController
         }
 
         $docs = $this->firstRow('driver_identity_documents', $regid);
-        if (! $docs) {
+        if (! $docs) 
+        {
             throw new ApiException('Documents are required');
         }
         $labels = ['aadhaar_card' => 'Aadhaar card', 'driving_license' => 'Driving License', 'pan_card' => 'PAN card'];
