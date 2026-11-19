@@ -243,9 +243,7 @@ public function personalInformation(Request $request): JsonResponse
 
         return response()->json([
             'result' => false,
-            'message' => config('app.debug')
-                ? $e->getMessage()
-                : 'Something went wrong. Please try again later.',
+            'message' => $e->getMessage(),
             'error_file' => config('app.debug') ? $e->getFile() : null,
             'error_line' => config('app.debug') ? $e->getLine() : null,
         ], 500);
