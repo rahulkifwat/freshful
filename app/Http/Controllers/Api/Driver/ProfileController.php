@@ -58,19 +58,17 @@ class ProfileController extends DriverController
 public function personalInformation(Request $request): JsonResponse
 {
     $regid = null;
-
-    try {
+    try 
+    {
         $regid = $this->driverId($request);
-
-        if (!$regid) {
+        if (!$regid) 
+        {
             throw new ApiException('Driver ID is missing or invalid');
         }
-
         // Check driver registration
         if (!DB::table('driver_registration')->where('id', $regid)->exists()) {
             throw new ApiException('Driver not found');
         }
-
         // Validate request
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
@@ -213,7 +211,9 @@ public function personalInformation(Request $request): JsonResponse
             'message' => $message
         ]);
 
-    } catch (ValidationException $e) {
+    } 
+    catch (ValidationException $e) 
+    {
 
         if (DB::transactionLevel() > 0) {
             DB::rollBack();
@@ -225,7 +225,9 @@ public function personalInformation(Request $request): JsonResponse
             'errors' => $e->errors()
         ], 422);
 
-    } catch (\Throwable $e) {
+    } 
+    catch (\Throwable $e) 
+    {
 
         if (DB::transactionLevel() > 0) {
             DB::rollBack();
@@ -243,7 +245,7 @@ public function personalInformation(Request $request): JsonResponse
             'result' => false,
             'message' => config('app.debug')
                 ? $e->getMessage()
-                : 'Something went wrong. Please try again later.1',
+                : 'Something went wrong. Please try again later.',
             'error_file' => config('app.debug') ? $e->getFile() : null,
             'error_line' => config('app.debug') ? $e->getLine() : null,
         ], 500);
